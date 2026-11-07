@@ -247,7 +247,7 @@ export function BookingWizard({
               <ArrowLeft className="size-5" />
             </Link>
           )}
-          <Link href="/" aria-label="OCD LIVE, accueil">
+          <Link href="/" aria-label="OCD Live, accueil">
             <OcdLiveLogo className="text-xl" />
           </Link>
           <p className="ml-auto text-sm text-white/75">
@@ -286,7 +286,7 @@ export function BookingWizard({
         {notice && (
           <p
             role="alert"
-            className="mb-6 rounded-2xl bg-live-50 p-4 text-sm font-semibold text-live"
+            className="mb-6 rounded-2xl bg-danger-50 p-4 text-sm font-semibold text-danger"
           >
             {notice}
           </p>
@@ -438,7 +438,7 @@ export function BookingWizard({
               <p className="text-muted">Il manque une information.</p>
               <button
                 type="button"
-                className="mt-2 font-bold text-live underline"
+                className="mt-2 font-bold text-live-600 underline"
                 onClick={() => goTo(s.mode ? 1 : 0)}
               >
                 Reprendre la réservation

@@ -77,13 +77,13 @@ export function StepPackage({
                       )}
                       note={
                         soldOut ? (
-                          <span className="font-semibold text-live">Complet ce mois-ci</span>
+                          <span className="font-semibold text-live-600">Complet ce mois-ci</span>
                         ) : noSlot ? (
                           <span className="font-semibold">
                             Plus de créneau de {duration(p.durationMinutes)} ce jour-là
                           </span>
                         ) : p.tier === "monthly" && packRemaining !== null ? (
-                          <span className="inline-flex rounded-full bg-live px-2.5 py-0.5 text-xs font-bold text-white">
+                          <span className="inline-flex rounded-full bg-live-600 px-2.5 py-0.5 text-xs font-bold text-white">
                             Plus que {packRemaining} place{packRemaining > 1 ? "s" : ""}
                           </span>
                         ) : null

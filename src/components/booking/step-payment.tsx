@@ -109,7 +109,9 @@ export function StepPayment({
                 key={o.id}
                 className={cn(
                   "flex min-h-13 cursor-pointer items-center justify-center rounded-xl border-2 bg-white px-3 font-bold transition",
-                  value.method === o.id ? "border-live text-live" : "border-line text-night-900",
+                  value.method === o.id
+                    ? "border-live text-live-600"
+                    : "border-line text-night-900",
                 )}
               >
                 <input
@@ -158,7 +160,7 @@ export function StepPayment({
         </Field>
 
         {formError && (
-          <p role="alert" className="rounded-xl bg-live-50 p-4 text-sm font-semibold text-live">
+          <p role="alert" className="rounded-xl bg-danger-50 p-4 text-sm font-semibold text-danger">
             {formError}
           </p>
         )}

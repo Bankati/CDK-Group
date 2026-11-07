@@ -93,14 +93,14 @@ export function StepDate({
                   "relative flex aspect-square flex-col items-center justify-center rounded-xl text-base font-semibold transition",
                   !days && "animate-pulse bg-paper text-transparent",
                   open && !isSel && "bg-night-800/[0.06] text-night-900 hover:bg-night-800/15",
-                  isSel && "bg-live text-white shadow-lg",
+                  isSel && "bg-live-600 text-white shadow-lg",
                   state === "unavailable" && "text-muted/35",
                   state === "full" && "text-muted/50 line-through",
                 )}
               >
                 {i + 1}
                 {state === "full" && (
-                  <span className="absolute bottom-1 text-[9px] font-bold text-live/70 no-underline">
+                  <span className="absolute bottom-1 text-[9px] font-bold text-live-600 no-underline">
                     complet
                   </span>
                 )}

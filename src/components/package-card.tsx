@@ -49,7 +49,9 @@ export function PackageCard({
         <span
           className={cn(
             "absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold tracking-wide",
-            vip ? "bg-gradient-to-r from-gold-300 to-gold text-night-950" : "bg-live text-white",
+            vip
+              ? "bg-gradient-to-r from-gold-300 to-gold text-night-950"
+              : "bg-live-600 text-white",
           )}
         >
           {vip ? (
@@ -98,7 +100,7 @@ export function PackageCard({
         <p
           className={cn(
             "mt-1 text-sm font-semibold",
-            featured || pkg.compareAtPrice ? "text-live" : "text-muted",
+            featured || pkg.compareAtPrice ? "text-live-600" : "text-muted",
           )}
         >
           soit {fcfa(hourlyRate(pkg.price, pkg.durationMinutes))}/h

@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { ImageResponse } from "next/og";
 import { connection } from "next/server";
 import { site } from "@/config/site";
@@ -8,7 +10,11 @@ import { displayStatus, statusLabels } from "@/lib/types";
 import { db } from "@/server/db";
 
 const NIGHT = "#020f3a";
-const RED = "#e3141b";
+
+// Logo officiel (version claire) lu sur le disque : le serveur ne peut pas se télécharger lui-même.
+const logoSrc = readFile(join(process.cwd(), "src/assets/ocd-live-blanc.png"), "base64").then(
+  (b64) => `data:image/png;base64,${b64}`,
+);
 
 /** Billet récapitulatif en image PNG (format portrait, idéal pour WhatsApp et les stories). */
 export async function GET(_req: Request, ctx: RouteContext<"/reservation/[id]/billet">) {
@@ -17,6 +23,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/reservation/[id]/bi
   const b = await db.get(id);
   if (!b) return new Response("Réservation introuvable", { status: 404 });
 
+  const logo = await logoSrc;
   const pkg = getPackage(b.packageId);
   const start = new Date(b.startsAt);
   const status = displayStatus(b);
@@ -44,39 +51,9 @@ export async function GET(_req: Request, ctx: RouteContext<"/reservation/[id]/bi
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            fontSize: 64,
-            fontWeight: 800,
-            letterSpacing: -2,
-          }}
-        >
-          OCD
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginLeft: 16,
-              background: RED,
-              borderRadius: 12,
-              padding: "6px 18px",
-              fontSize: 46,
-            }}
-          >
-            <div
-              style={{
-                width: 18,
-                height: 18,
-                borderRadius: 9,
-                background: "white",
-                marginRight: 12,
-              }}
-            />
-            LIVE
-          </div>
-        </div>
+        {/* Logo officiel OCD Live, version claire */}
+        {/* eslint-disable-next-line @next/next/no-img-element -- image rendue par ImageResponse */}
+        <img src={logo} width={220} height={135} alt="OCD Live" />
         <div style={{ display: "flex", fontSize: 26, color: "rgba(255,255,255,0.7)" }}>
           House of Challenge
         </div>

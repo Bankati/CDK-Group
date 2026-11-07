@@ -1,6 +1,6 @@
 /**
  * ╔══════════════════════════════════════════════════════════════════╗
- * ║  OCD LIVE — FICHIER DE CONFIGURATION UNIQUE                      ║
+ * ║  OCD Live — FICHIER DE CONFIGURATION UNIQUE                      ║
  * ║  Prix, numéros, horaires, liens : tout se modifie ici.           ║
  * ║  Les lignes marquées « À CONFIRMER » sont à vérifier par         ║
  * ║  Bovann Group avant la mise en ligne.                            ║
@@ -8,7 +8,7 @@
  */
 
 export const site = {
-  name: "OCD LIVE",
+  name: "OCD Live",
   tagline: "Réserve ton passage en live sur TikTok avec House of Challenge",
 
   /** Lien TikTok de House of Challenge — À CONFIRMER */

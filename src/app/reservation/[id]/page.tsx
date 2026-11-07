@@ -31,7 +31,7 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
   const end = addMinutes(start, b.durationMinutes);
   const name = pkg ? packageName(pkg, b.startsAt.slice(0, 7)) : b.packageId;
   const isNew = sp.nouveau === "1";
-  const waMessage = `Bonjour Bovann Group ! Je viens de réserver un live OCD LIVE (code ${b.code}) : ${name}, le ${formatDayFr(start)} ${formatRangeFr(start, b.durationMinutes)} (heure de Lomé). Montant : ${fcfa(b.amount)}. Je souhaite payer avec vous depuis ${b.country}.`;
+  const waMessage = `Bonjour Bovann Group ! Je viens de réserver un live OCD Live (code ${b.code}) : ${name}, le ${formatDayFr(start)} ${formatRangeFr(start, b.durationMinutes)} (heure de Lomé). Montant : ${fcfa(b.amount)}. Je souhaite payer avec vous depuis ${b.country}.`;
 
   return (
     <main className="relative flex-1 overflow-hidden bg-night-950 text-white">
@@ -39,11 +39,11 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
       {status === "pending" && <AutoRefresh />}
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-40 left-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-live/25 blur-3xl"
+        className="pointer-events-none absolute -top-40 left-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-live/15 blur-3xl"
       />
 
       <div className="relative mx-auto w-full max-w-xl px-4 pt-6 pb-16">
-        <Link href="/" aria-label="OCD LIVE, accueil">
+        <Link href="/" aria-label="OCD Live, accueil">
           <OcdLiveLogo className="text-xl" />
         </Link>
 

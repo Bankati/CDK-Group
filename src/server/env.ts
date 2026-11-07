@@ -10,7 +10,7 @@ const schema = z.object({
   SUPABASE_URL: z.url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(20).optional(),
   RESEND_API_KEY: z.string().startsWith("re_").optional(),
-  RESEND_FROM: z.string().default("OCD LIVE <onboarding@resend.dev>"),
+  RESEND_FROM: z.string().default("OCD Live <onboarding@resend.dev>"),
   NOTIFICATION_EMAIL: z.email().default("contact@bovanngroup.com"),
   ADMIN_PASSWORD: z.string().min(6).default("bovann2026"),
   ADMIN_SECRET: z.string().min(16).optional(),

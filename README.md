@@ -1,4 +1,4 @@
-# OCD LIVE
+# OCD Live
 
 Site de réservation de passages en live TikTok sur le compte de **House of Challenge**, pour **Bovann Group SAS** (Lomé, Togo).
 

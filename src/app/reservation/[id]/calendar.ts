@@ -10,7 +10,7 @@ const stamp = (d: Date) =>
 
 function texts(b: Booking, packageName: string) {
   return {
-    title: `🎥 Mon live OCD LIVE · ${b.businessName}`,
+    title: `🎥 Mon live OCD Live · ${b.businessName}`,
     details: `${packageName} sur le TikTok de House of Challenge (${site.tiktokUrl}). Code : ${b.code}.`,
     location:
       b.mode === "presentiel"
@@ -44,7 +44,7 @@ export function icsFile(b: Booking, packageName: string) {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Bovann Group//OCD LIVE//FR",
+    "PRODID:-//Bovann Group//OCD Live//FR",
     "CALSCALE:GREGORIAN",
     "METHOD:PUBLISH",
     "BEGIN:VEVENT",
@@ -58,7 +58,7 @@ export function icsFile(b: Booking, packageName: string) {
     "BEGIN:VALARM",
     "TRIGGER:-PT1H",
     "ACTION:DISPLAY",
-    "DESCRIPTION:Ton live OCD LIVE commence dans 1 heure",
+    "DESCRIPTION:Ton live OCD Live commence dans 1 heure",
     "END:VALARM",
     "END:VEVENT",
     "END:VCALENDAR",

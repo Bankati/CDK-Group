@@ -21,7 +21,14 @@ function SectionTitle({
 }) {
   return (
     <div className="max-w-2xl">
-      <p className="text-xs font-bold tracking-[0.22em] text-live uppercase">{kicker}</p>
+      <p
+        className={cn(
+          "text-xs font-bold tracking-[0.22em] uppercase",
+          light ? "text-live" : "text-live-600",
+        )}
+      >
+        {kicker}
+      </p>
       <h2
         className={cn(
           "mt-3 font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl",
@@ -111,7 +118,7 @@ export function Packages() {
         </div>
 
         {monthlyPackage && (
-          <div className="mt-10 overflow-hidden rounded-3xl bg-gradient-to-br from-live to-live-600 p-6 sm:p-8">
+          <div className="mt-10 overflow-hidden rounded-3xl bg-gradient-to-br from-live-600 to-live-800 p-6 sm:p-8">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-bold tracking-[0.2em] text-white/80 uppercase">
@@ -136,7 +143,7 @@ export function Packages() {
               </div>
               <Link
                 href={`/reserver?package=${monthlyPackage.id}`}
-                className="flex min-h-14 shrink-0 items-center justify-center rounded-2xl bg-white px-8 text-lg font-extrabold text-live transition hover:bg-white/90 active:scale-[0.98]"
+                className="flex min-h-14 shrink-0 items-center justify-center rounded-2xl bg-white px-8 text-lg font-extrabold text-live-600 transition hover:bg-white/90 active:scale-[0.98]"
               >
                 J&apos;en profite
               </Link>
@@ -203,7 +210,7 @@ export function Contact() {
         <div>
           <SectionTitle kicker="Contact" title="Une question ? On te répond sur WhatsApp" />
           <a
-            href={teamWaLink("Bonjour Bovann Group, j'ai une question sur OCD LIVE.")}
+            href={teamWaLink("Bonjour Bovann Group, j'ai une question sur OCD Live.")}
             target="_blank"
             rel="noopener"
             className="mt-8 inline-flex min-h-14 items-center gap-3 rounded-2xl bg-[#1fa855] px-6 text-lg font-bold text-white transition hover:bg-[#178a45]"

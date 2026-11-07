@@ -13,7 +13,7 @@ export function LoginForm({ demo }: { demo: boolean }) {
     <main className="flex flex-1 items-center justify-center bg-night-950 px-4 py-16">
       <div className="w-full max-w-sm">
         <Link href="/" className="mb-8 flex justify-center">
-          <OcdLiveLogo className="text-3xl" />
+          <OcdLiveLogo layout="stacked" className="w-44" />
         </Link>
         <form action={action} className="rounded-3xl bg-white p-7">
           <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-night-900 text-white">
@@ -49,7 +49,7 @@ export function LoginForm({ demo }: { demo: boolean }) {
             aria-invalid={state?.error ? true : undefined}
             className={inputClass}
           />
-          {state?.error && <p className="mt-2 text-sm font-semibold text-live">{state.error}</p>}
+          {state?.error && <p className="mt-2 text-sm font-semibold text-danger">{state.error}</p>}
           <PrimaryButton type="submit" loading={pending} className="mt-5">
             Entrer
           </PrimaryButton>

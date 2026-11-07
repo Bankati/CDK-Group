@@ -80,8 +80,8 @@ export function Hero() {
       <div aria-hidden className="absolute inset-0 -z-10 bg-night-950/35" />
 
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 pt-5 sm:px-8 sm:pt-7">
-        <Link href="/" aria-label="OCD LIVE, accueil">
-          <OcdLiveLogo className="text-[1.6rem] sm:text-3xl" />
+        <Link href="/" aria-label="OCD Live, accueil">
+          <OcdLiveLogo layout="stacked" className="w-28 sm:w-36" />
         </Link>
         <a
           href="https://bovanngroup.com"
@@ -125,7 +125,7 @@ export function Hero() {
         <div className="mt-8 grid gap-3 sm:mt-10 sm:max-w-xl sm:grid-cols-2">
           <Link
             href="/reserver?mode=presentiel"
-            className="group relative flex min-h-16 items-center justify-center gap-3 overflow-hidden rounded-2xl bg-live px-6 text-lg font-bold shadow-xl shadow-live/30 transition hover:bg-live-600 active:scale-[0.98]"
+            className="group relative flex min-h-16 items-center justify-center gap-3 overflow-hidden rounded-2xl bg-live px-6 text-lg font-bold shadow-xl shadow-live/30 transition hover:bg-live-700 active:scale-[0.98]"
           >
             <span aria-hidden className="text-2xl">
               🎥

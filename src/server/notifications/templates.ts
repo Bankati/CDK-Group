@@ -29,7 +29,7 @@ function layout(title: string, body: string, appUrl: string) {
   return `<!doctype html><html lang="fr"><body style="margin:0;background:#f3f5fa;font-family:Arial,Helvetica,sans-serif;color:#0b1533">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden">
-<tr><td style="background:#020f3a;padding:20px 24px;color:#fff;font-size:20px;font-weight:bold;letter-spacing:.5px">OCD <span style="background:#e3141b;padding:2px 8px;border-radius:6px">LIVE</span></td></tr>
+<tr><td style="background:#020f3a;padding:18px 24px"><img src="${appUrl}/brand/ocd-live-blanc.png" width="104" height="64" alt="OCD Live" style="display:block;border:0"></td></tr>
 <tr><td style="padding:24px"><h1 style="font-size:20px;margin:0 0 16px">${title}</h1>${body}</td></tr>
 <tr><td style="padding:16px 24px;background:#f7f8fc;font-size:12px;color:#5b6483">${site.company.name} · ${site.company.address}<br>${site.company.phones.join(" / ")} · ${site.company.email}<br><a href="${appUrl}" style="color:#5b6483">${appUrl.replace(/^https?:\/\//, "")}</a></td></tr>
 </table></td></tr></table></body></html>`;
@@ -54,17 +54,17 @@ function rows(items: [string, string][]) {
 export function adminNewBookingEmail(b: Booking, to: string, appUrl: string): Email {
   const d = describe(b);
   const ref = b.paymentReference ? `, réf. ${b.paymentReference}` : "";
-  const text = `🔔 Nouvelle réservation OCD LIVE : ${b.fullName} (${b.businessName}, ${b.sector.toLowerCase()}) a réservé le ${d.day}, ${d.range}, package ${d.pkg}, ${d.where}. Montant : ${fcfa(b.amount)} via ${methodLabel(b)}${ref}. Statut : en attente de validation.`;
+  const text = `🔔 Nouvelle réservation OCD Live : ${b.fullName} (${b.businessName}, ${b.sector.toLowerCase()}) a réservé le ${d.day}, ${d.range}, package ${d.pkg}, ${d.where}. Montant : ${fcfa(b.amount)} via ${methodLabel(b)}${ref}. Statut : en attente de validation.`;
   const html = layout(
-    "🔔 Nouvelle réservation OCD LIVE",
-    `<p style="font-size:15px;line-height:1.6;margin:0 0 20px">${esc(text.replace(/^🔔 Nouvelle réservation OCD LIVE : /, ""))}</p>
+    "🔔 Nouvelle réservation OCD Live",
+    `<p style="font-size:15px;line-height:1.6;margin:0 0 20px">${esc(text.replace(/^🔔 Nouvelle réservation OCD Live : /, ""))}</p>
      ${rows([
        ["Code", b.code],
        ["WhatsApp", b.whatsapp],
        ["Email", b.email],
        ["Produits", b.products],
      ])}
-     <p style="margin:24px 0 0"><a href="${appUrl}/espace-bovann" style="background:#e3141b;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block">Valider dans l'Espace Bovann</a></p>`,
+     <p style="margin:24px 0 0"><a href="${appUrl}/espace-bovann" style="background:#c2560a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block">Valider dans l'Espace Bovann</a></p>`,
     appUrl,
   );
   return {
@@ -85,7 +85,7 @@ function clientTimeNote(b: Booking) {
 export function clientPendingEmail(b: Booking, appUrl: string): Email {
   const d = describe(b);
   const link = `${appUrl}/reservation/${b.id}`;
-  const text = `Bonjour ${b.fullName}, nous avons bien reçu ta réservation OCD LIVE (${b.code}) pour le ${d.day}, ${d.range} heure de Lomé${clientTimeNote(b)}, package ${d.pkg}. Notre équipe vérifie ton paiement de ${fcfa(b.amount)} et te confirme très vite. Suivre ta réservation : ${link}`;
+  const text = `Bonjour ${b.fullName}, nous avons bien reçu ta réservation OCD Live (${b.code}) pour le ${d.day}, ${d.range} heure de Lomé${clientTimeNote(b)}, package ${d.pkg}. Notre équipe vérifie ton paiement de ${fcfa(b.amount)} et te confirme très vite. Suivre ta réservation : ${link}`;
   const html = layout(
     "Ta place est réservée ⏳",
     `<p style="font-size:15px;line-height:1.6">Bonjour ${esc(b.fullName)},<br>nous avons bien reçu ta demande. Notre équipe vérifie ton paiement et te confirme très vite.</p>
@@ -107,7 +107,7 @@ export function clientPendingEmail(b: Booking, appUrl: string): Email {
 export function clientConfirmedEmail(b: Booking, appUrl: string): Email {
   const d = describe(b);
   const link = `${appUrl}/reservation/${b.id}`;
-  const text = `Félicitations ${b.fullName} ! Ton paiement est validé : ton live OCD LIVE (${b.code}) est confirmé le ${d.day}, ${d.range} heure de Lomé${clientTimeNote(b)}, package ${d.pkg}. Ton billet et le rappel agenda : ${link}. Abonne-toi à House of Challenge sur TikTok : ${site.tiktokUrl}`;
+  const text = `Félicitations ${b.fullName} ! Ton paiement est validé : ton live OCD Live (${b.code}) est confirmé le ${d.day}, ${d.range} heure de Lomé${clientTimeNote(b)}, package ${d.pkg}. Ton billet et le rappel agenda : ${link}. Abonne-toi à House of Challenge sur TikTok : ${site.tiktokUrl}`;
   const html = layout(
     "🎉 C'est confirmé, tu passes en live !",
     `<p style="font-size:15px;line-height:1.6">Félicitations ${esc(b.fullName)} ! Ton paiement est validé.</p>
@@ -118,7 +118,7 @@ export function clientConfirmedEmail(b: Booking, appUrl: string): Email {
        ["Package", d.pkg],
        ["Mode", d.where],
      ])}
-     <p style="margin:24px 0 0"><a href="${link}" style="background:#e3141b;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block">Voir mon billet</a></p>
+     <p style="margin:24px 0 0"><a href="${link}" style="background:#c2560a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block">Voir mon billet</a></p>
      <p style="font-size:14px;margin-top:20px">En attendant ton live, abonne-toi à <a href="${site.tiktokUrl}">House of Challenge sur TikTok</a>.</p>`,
     appUrl,
   );

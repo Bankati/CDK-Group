@@ -167,7 +167,7 @@ export function Dashboard({
               <Icon className="size-4" aria-hidden />
               {label}
               {id === "emails" && emails.length > 0 && (
-                <span className="rounded-full bg-live px-1.5 text-[10px] text-white">
+                <span className="rounded-full bg-live-600 px-1.5 text-[10px] text-white">
                   {emails.length}
                 </span>
               )}
@@ -316,7 +316,7 @@ function BookingRow({ b }: { b: AdminBooking }) {
   const canValidate = b.display === "pending" || b.display === "expired";
   const wa = waLink(
     b.whatsapp,
-    `Bonjour ${b.fullName.split(" ")[0]}, ici l'équipe OCD LIVE (Bovann Group) au sujet de ta réservation ${b.code} du ${formatDayFr(startDate)} à ${formatRangeFr(startDate, b.durationMinutes)}.`,
+    `Bonjour ${b.fullName.split(" ")[0]}, ici l'équipe OCD Live (Bovann Group) au sujet de ta réservation ${b.code} du ${formatDayFr(startDate)} à ${formatRangeFr(startDate, b.durationMinutes)}.`,
   );
 
   return (
@@ -423,7 +423,7 @@ function BookingRow({ b }: { b: AdminBooking }) {
                 if (!res.ok) setError(res.message);
               });
             }}
-            className="ml-auto flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-muted hover:text-live"
+            className="ml-auto flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-muted hover:text-danger"
           >
             <X className="size-4" />
             Annuler
@@ -431,7 +431,7 @@ function BookingRow({ b }: { b: AdminBooking }) {
         )}
         <span className="w-full font-mono text-xs text-muted sm:w-auto">{b.code}</span>
       </div>
-      {error && <p className="mt-2 text-sm font-semibold text-live">{error}</p>}
+      {error && <p className="mt-2 text-sm font-semibold text-danger">{error}</p>}
     </li>
   );
 }
@@ -503,7 +503,9 @@ function CalendarView({ rows, now }: { rows: AdminBooking[]; now: number }) {
               <span
                 className={cn(
                   "text-xs font-semibold",
-                  key === today ? "w-fit rounded-full bg-live px-1.5 text-white" : "text-night-900",
+                  key === today
+                    ? "w-fit rounded-full bg-live-600 px-1.5 text-white"
+                    : "text-night-900",
                 )}
               >
                 {i + 1}

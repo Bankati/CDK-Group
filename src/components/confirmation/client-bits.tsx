@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { useTimeZone } from "@/components/booking/ui";
 import { formatHourFr, formatHourInZone, zoneCity } from "@/lib/time";
 
-/** Pluie de confettis aux couleurs OCD LIVE (une seule fois par réservation). */
+/** Pluie de confettis aux couleurs OCD Live (une seule fois par réservation). */
 export function Confetti({ id }: { id: string }) {
   useEffect(() => {
     const key = `ocd-confetti-${id}`;
@@ -14,7 +14,7 @@ export function Confetti({ id }: { id: string }) {
       if (sessionStorage.getItem(key)) return;
       sessionStorage.setItem(key, "1");
     } catch {}
-    const colors = ["#e3141b", "#ffffff", "#d9ad4f", "#1d3c9a"];
+    const colors = ["#ee6b07", "#ffffff", "#d9ad4f", "#1d3c9a"];
     const fire = (x: number, angle: number) =>
       confetti({
         particleCount: 70,

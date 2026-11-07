@@ -32,7 +32,7 @@ export function Field({
       </label>
       {children}
       {error ? (
-        <p id={`${htmlFor}-error`} className="mt-1.5 text-sm font-medium text-live">
+        <p id={`${htmlFor}-error`} className="mt-1.5 text-sm font-medium text-danger">
           {error}
         </p>
       ) : (
@@ -64,7 +64,7 @@ export function PrimaryButton({
       {...props}
       disabled={props.disabled || loading}
       className={cn(
-        "flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-live px-6 text-lg font-bold text-white shadow-lg shadow-live/25 transition hover:bg-live-600 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60",
+        "flex min-h-14 w-full items-center justify-center gap-2 rounded-2xl bg-live px-6 text-lg font-bold text-white shadow-lg shadow-live/25 transition hover:bg-live-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-60",
         className,
       )}
     >

@@ -22,7 +22,7 @@ Dès que les clés Supabase sont présentes, le site quitte automatiquement le m
 1. Crée un compte sur **https://resend.com** → **API Keys** → **Create API Key** → copie la clé (`re_…`) → `RESEND_API_KEY`.
 2. **Important** : tant qu'aucun domaine n'est vérifié, Resend n'envoie qu'à l'adresse du compte Resend.
    Pour envoyer aux clients : **Domains** → **Add domain** → `bovanngroup.com` → ajouter les enregistrements DNS indiqués chez l'hébergeur du domaine.
-   Ensuite : `RESEND_FROM=OCD LIVE <reservations@bovanngroup.com>`.
+   Ensuite : `RESEND_FROM=OCD Live <reservations@bovanngroup.com>`.
 
 ## C. Tester en local avec les vraies clés
 

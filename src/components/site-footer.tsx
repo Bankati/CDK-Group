@@ -63,7 +63,7 @@ export function SiteFooter() {
           </ul>
         </div>
         <div className="mt-10 flex flex-col gap-2 border-t border-white/10 pt-6 text-xs sm:flex-row sm:justify-between">
-          <p>© 2026 {site.company.name}. OCD LIVE, en partenariat avec House of Challenge.</p>
+          <p>© 2026 {site.company.name}. OCD Live, en partenariat avec House of Challenge.</p>
           <Link href="/espace-bovann" className="hover:text-white">
             Espace Bovann
           </Link>

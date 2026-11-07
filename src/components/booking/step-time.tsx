@@ -74,7 +74,7 @@ export function StepTime({
           <button
             type="button"
             onClick={onChangeDate}
-            className="mt-3 font-bold text-live underline underline-offset-4"
+            className="mt-3 font-bold text-live-600 underline underline-offset-4"
           >
             Choisir une autre date
           </button>
