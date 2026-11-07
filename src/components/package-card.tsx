@@ -36,8 +36,8 @@ export function PackageCard({
       className={cn(
         "relative flex h-full flex-col rounded-3xl p-6 text-left transition",
         dark ? "text-white" : "bg-white text-ink",
-        bovann && "bg-night-700",
-        vip && "bg-night-950 ring-1 ring-gold/70",
+        bovann && "bg-coal-700",
+        vip && "bg-coal-950 ring-1 ring-gold/70",
         featured && "ring-2 ring-live md:-my-3 md:py-9",
         selected && "shadow-2xl ring-4! shadow-live/20 ring-live!",
         disabled && "opacity-45 grayscale",
@@ -49,9 +49,7 @@ export function PackageCard({
         <span
           className={cn(
             "absolute -top-3 left-6 inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold tracking-wide",
-            vip
-              ? "bg-gradient-to-r from-gold-300 to-gold text-night-950"
-              : "bg-live-600 text-white",
+            vip ? "bg-gradient-to-r from-gold-300 to-gold text-coal-950" : "bg-live-600 text-white",
           )}
         >
           {vip ? (
@@ -75,7 +73,7 @@ export function PackageCard({
         <span
           className={cn(
             "shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold",
-            dark ? "bg-white/10 text-white/90" : "bg-paper text-night-800",
+            dark ? "bg-white/10 text-white/90" : "bg-paper text-coal-800",
           )}
         >
           {duration(pkg.durationMinutes)}

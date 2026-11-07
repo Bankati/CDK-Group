@@ -50,7 +50,7 @@ export function Hero() {
   const slide = slides[active]!;
 
   return (
-    <section className="relative isolate flex h-svh min-h-[620px] flex-col overflow-hidden bg-night-950 text-white">
+    <section className="relative isolate flex h-svh min-h-[620px] flex-col overflow-hidden bg-coal-950 text-white">
       {/* Photos : fondu enchaîné + zoom lent */}
       {slides.map((s, i) => (
         <div
@@ -72,12 +72,15 @@ export function Hero() {
         </div>
       ))}
 
-      {/* Voile bleu nuit */}
+      {/* Voile anthracite : la photo garde ses couleurs, le texte reste lisible */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-t from-night-950/95 via-night-900/80 to-night-800/55"
+        className="absolute inset-0 -z-10 bg-gradient-to-t from-coal-950 via-coal-950/70 to-coal-950/30"
       />
-      <div aria-hidden className="absolute inset-0 -z-10 bg-night-950/35" />
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-gradient-to-r from-coal-950/70 via-coal-950/25 to-transparent"
+      />
 
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 pt-5 sm:px-8 sm:pt-7">
         <Link href="/" aria-label="OCD Live, accueil">

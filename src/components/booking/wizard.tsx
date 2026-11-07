@@ -227,7 +227,7 @@ export function BookingWizard({
 
   return (
     <div className="flex min-h-svh flex-col bg-paper">
-      <header className="sticky top-0 z-20 bg-night-900 text-white shadow-lg">
+      <header className="sticky top-0 z-20 bg-coal-900 text-white shadow-lg">
         <div className="mx-auto flex h-16 w-full max-w-2xl items-center gap-3 px-4">
           {step > 0 ? (
             <button
@@ -275,7 +275,7 @@ export function BookingWizard({
             {summary.map((t) => (
               <span
                 key={t}
-                className="rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold text-night-900"
+                className="rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold text-coal-900"
               >
                 {t}
               </span>
@@ -336,7 +336,7 @@ export function BookingWizard({
                       {icon}
                     </span>
                     <span>
-                      <span className="block font-display text-xl font-bold text-night-900">
+                      <span className="block font-display text-xl font-bold text-coal-900">
                         {title}
                       </span>
                       <span className="mt-1 block text-muted">{text}</span>

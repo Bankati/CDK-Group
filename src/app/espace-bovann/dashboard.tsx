@@ -48,7 +48,7 @@ const methodLabel = (m: string) =>
   m === "whatsapp" ? "WhatsApp" : (payment.operators.find((o) => o.id === m)?.label ?? m);
 
 const selectClass =
-  "border-line text-ink focus:border-night-700 min-h-11 w-full rounded-xl border bg-white px-3 text-sm outline-none";
+  "border-line text-ink focus:border-coal-700 min-h-11 w-full rounded-xl border bg-white px-3 text-sm outline-none";
 
 export function Dashboard({
   bookings,
@@ -83,7 +83,7 @@ export function Dashboard({
 
   return (
     <div className="flex-1 bg-paper">
-      <header className="bg-night-900 text-white">
+      <header className="bg-coal-900 text-white">
         <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
           <Link href="/" aria-label="Voir le site">
             <OcdLiveLogo className="text-xl" />
@@ -128,7 +128,7 @@ export function Dashboard({
 
         {kpis.next && (
           <p className="mt-3 text-sm text-muted">
-            Prochain live : <strong className="text-night-900">{kpis.next.businessName}</strong>,{" "}
+            Prochain live : <strong className="text-coal-900">{kpis.next.businessName}</strong>,{" "}
             {formatDayFr(new Date(kpis.next.startsAt))} ·{" "}
             {formatRangeFr(new Date(kpis.next.startsAt), kpis.next.durationMinutes)}
           </p>
@@ -160,8 +160,8 @@ export function Dashboard({
               className={cn(
                 "-mb-px flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-4 text-sm font-semibold transition",
                 tab === id
-                  ? "border-live text-night-900"
-                  : "border-transparent text-muted hover:text-night-900",
+                  ? "border-live text-coal-900"
+                  : "border-transparent text-muted hover:text-coal-900",
               )}
             >
               <Icon className="size-4" aria-hidden />
@@ -228,14 +228,14 @@ export function Dashboard({
                 <button
                   type="button"
                   onClick={() => setFilters({})}
-                  className="min-h-11 rounded-xl border border-line bg-white px-3 text-sm font-semibold text-muted hover:text-night-900"
+                  className="min-h-11 rounded-xl border border-line bg-white px-3 text-sm font-semibold text-muted hover:text-coal-900"
                 >
                   Effacer
                 </button>
               )}
               <a
                 href={exportHref}
-                className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-night-900 px-3 text-sm font-bold text-white hover:bg-night-800"
+                className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-coal-900 px-3 text-sm font-bold text-white hover:bg-coal-800"
               >
                 <Download className="size-4" aria-hidden />
                 Excel / CSV
@@ -268,7 +268,7 @@ function Kpi({
     <div
       className={cn(
         "rounded-2xl p-4 sm:p-5",
-        strong ? "bg-night-900 text-white" : "border border-line bg-white",
+        strong ? "bg-coal-900 text-white" : "border border-line bg-white",
       )}
     >
       <p className={cn("text-xs font-semibold", strong ? "text-white/70" : "text-muted")}>
@@ -277,7 +277,7 @@ function Kpi({
       <p
         className={cn(
           "mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl",
-          !strong && "text-night-900",
+          !strong && "text-coal-900",
         )}
       >
         {value}
@@ -331,13 +331,13 @@ function BookingRow({ b }: { b: AdminBooking }) {
             className="size-16 shrink-0 rounded-xl bg-paper object-cover sm:size-20"
           />
         ) : (
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-paper font-display text-xl font-bold text-night-700 sm:size-20">
+          <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-paper font-display text-xl font-bold text-coal-700 sm:size-20">
             {b.businessName.slice(0, 2).toUpperCase()}
           </div>
         )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="font-display text-lg leading-tight font-bold text-night-900">
+            <p className="font-display text-lg leading-tight font-bold text-coal-900">
               {b.businessName}
             </p>
             <StatusChip s={b.display} />
@@ -345,36 +345,36 @@ function BookingRow({ b }: { b: AdminBooking }) {
           <p className="text-sm text-muted">
             {b.fullName} · {b.sector}
           </p>
-          <p className="mt-1 text-sm text-night-900">{b.products}</p>
+          <p className="mt-1 text-sm text-coal-900">{b.products}</p>
         </div>
       </div>
 
       <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-4">
         <div>
           <dt className="text-xs text-muted">Live</dt>
-          <dd className="font-semibold text-night-900 first-letter:uppercase">
+          <dd className="font-semibold text-coal-900 first-letter:uppercase">
             {formatDayFr(startDate)}
           </dd>
-          <dd className="text-night-900">{formatRangeFr(startDate, b.durationMinutes)}</dd>
+          <dd className="text-coal-900">{formatRangeFr(startDate, b.durationMinutes)}</dd>
         </div>
         <div>
           <dt className="text-xs text-muted">Package</dt>
-          <dd className="font-semibold text-night-900">{b.packageLabel}</dd>
-          <dd className="text-night-900">{fcfa(b.amount)}</dd>
+          <dd className="font-semibold text-coal-900">{b.packageLabel}</dd>
+          <dd className="text-coal-900">{fcfa(b.amount)}</dd>
         </div>
         <div>
           <dt className="text-xs text-muted">Mode</dt>
-          <dd className="font-semibold text-night-900">
+          <dd className="font-semibold text-coal-900">
             {b.mode === "presentiel" ? "Présentiel" : "À distance"}
           </dd>
-          <dd className="text-night-900">
+          <dd className="text-coal-900">
             {b.city}, {b.country}
           </dd>
         </div>
         <div>
           <dt className="text-xs text-muted">Paiement</dt>
-          <dd className="font-semibold text-night-900">{methodLabel(b.paymentMethod)}</dd>
-          <dd className="font-mono text-xs break-all text-night-900">
+          <dd className="font-semibold text-coal-900">{methodLabel(b.paymentMethod)}</dd>
+          <dd className="font-mono text-xs break-all text-coal-900">
             {b.paymentReference ?? "à régler sur WhatsApp"}
           </dd>
           {b.paymentPhone && <dd className="text-xs text-muted">depuis {b.paymentPhone}</dd>}
@@ -463,7 +463,7 @@ function CalendarView({ rows, now }: { rows: AdminBooking[]; now: number }) {
         >
           <ChevronLeft className="size-5" />
         </button>
-        <p className="font-display text-lg font-bold text-night-900 capitalize">
+        <p className="font-display text-lg font-bold text-coal-900 capitalize">
           {monthLabel(month)}
         </p>
         <button
@@ -497,7 +497,7 @@ function CalendarView({ rows, now }: { rows: AdminBooking[]; now: number }) {
               onClick={() => setDay(key === day ? undefined : key)}
               className={cn(
                 "flex min-h-16 flex-col items-stretch gap-1 border-b border-line p-1 text-left transition hover:bg-paper sm:min-h-24 sm:p-1.5",
-                key === day && "bg-night-800/[0.06] ring-2 ring-night-700 ring-inset",
+                key === day && "bg-coal-800/[0.06] ring-2 ring-coal-700 ring-inset",
               )}
             >
               <span
@@ -505,7 +505,7 @@ function CalendarView({ rows, now }: { rows: AdminBooking[]; now: number }) {
                   "text-xs font-semibold",
                   key === today
                     ? "w-fit rounded-full bg-live-600 px-1.5 text-white"
-                    : "text-night-900",
+                    : "text-coal-900",
                 )}
               >
                 {i + 1}
@@ -547,7 +547,7 @@ function CalendarView({ rows, now }: { rows: AdminBooking[]; now: number }) {
       </div>
       {day && (
         <div className="mt-5">
-          <p className="font-display text-lg font-bold text-night-900 first-letter:uppercase">
+          <p className="font-display text-lg font-bold text-coal-900 first-letter:uppercase">
             {formatDayFr(new Date(`${day}T12:00:00Z`))}
           </p>
           <BookingList rows={byDay[day] ?? []} />
@@ -571,12 +571,12 @@ function Bars({
 }) {
   return (
     <div className="rounded-2xl border border-line bg-white p-5">
-      <h3 className="font-display font-bold text-night-900">{title}</h3>
+      <h3 className="font-display font-bold text-coal-900">{title}</h3>
       <ul className="mt-4 space-y-3">
         {items.map((it) => (
           <li key={it.label}>
             <div className="flex justify-between gap-3 text-sm">
-              <span className="font-semibold text-night-900">{it.label}</span>
+              <span className="font-semibold text-coal-900">{it.label}</span>
               <span className="text-muted tabular-nums">
                 {it.value}
                 {it.sub ? ` · ${it.sub}` : ""}
@@ -584,7 +584,7 @@ function Bars({
             </div>
             <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-paper">
               <div
-                className="h-full rounded-full bg-night-700"
+                className="h-full rounded-full bg-coal-700"
                 style={{ width: `${total ? (it.value / total) * 100 : 0}%` }}
               />
             </div>
@@ -627,10 +627,10 @@ function Stats({ rows }: { rows: AdminBooking[] }) {
       />
       <div className="space-y-4">
         <div className="rounded-2xl border border-line bg-white p-5">
-          <h3 className="font-display font-bold text-night-900">Présentiel ou à distance</h3>
+          <h3 className="font-display font-bold text-coal-900">Présentiel ou à distance</h3>
           <div className="mt-4 flex h-4 overflow-hidden rounded-full">
             <div className="bg-live" style={{ width: `${pct}%` }} />
-            <div className="flex-1 bg-night-700" />
+            <div className="flex-1 bg-coal-700" />
           </div>
           <div className="mt-3 flex justify-between text-sm">
             <span className="flex items-center gap-2">
@@ -638,7 +638,7 @@ function Stats({ rows }: { rows: AdminBooking[] }) {
               Présentiel <strong>{presentiel}</strong> ({pct}%)
             </span>
             <span className="flex items-center gap-2">
-              <span className="size-3 rounded-full bg-night-700" />À distance{" "}
+              <span className="size-3 rounded-full bg-coal-700" />À distance{" "}
               <strong>{active.length - presentiel}</strong> ({active.length ? 100 - pct : 0}%)
             </span>
           </div>
@@ -668,7 +668,7 @@ function Emails({ rows }: { rows: EmailRow[] }) {
       <ul className="space-y-3">
         {rows.map((e) => (
           <li key={e.at + e.subject} className="rounded-2xl border border-line bg-white p-4">
-            <p className="font-semibold text-night-900">{e.subject}</p>
+            <p className="font-semibold text-coal-900">{e.subject}</p>
             <p className="text-xs text-muted">
               À : {e.to} ·{" "}
               {new Date(e.at).toLocaleString("fr-FR", {
@@ -677,7 +677,7 @@ function Emails({ rows }: { rows: EmailRow[] }) {
                 timeStyle: "short",
               })}
             </p>
-            <p className="mt-3 text-sm leading-relaxed text-night-900">{e.text}</p>
+            <p className="mt-3 text-sm leading-relaxed text-coal-900">{e.text}</p>
           </li>
         ))}
       </ul>

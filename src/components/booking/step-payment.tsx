@@ -24,7 +24,7 @@ function CopyButton({ text }: { text: string }) {
           /* presse-papiers indisponible : le numéro reste lisible */
         }
       }}
-      className="flex min-h-10 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm font-semibold text-night-900 hover:bg-paper"
+      className="flex min-h-10 items-center gap-1.5 rounded-lg border border-line bg-white px-3 text-sm font-semibold text-coal-900 hover:bg-paper"
     >
       {done ? <Check className="size-4 text-emerald-600" /> : <Copy className="size-4" />}
       {done ? "Copié" : "Copier"}
@@ -59,7 +59,7 @@ export function StepPayment({
     <div>
       <StepTitle title="Paiement" subtitle={summary} />
 
-      <div className="rounded-3xl bg-night-900 p-6 text-white">
+      <div className="rounded-3xl bg-coal-900 p-6 text-white">
         <p className="text-sm text-white/70">Montant à payer</p>
         <p className="mt-1 font-display text-4xl font-extrabold">{fcfa(amount)}</p>
         <p className="mt-4 text-sm text-white/80">
@@ -78,10 +78,10 @@ export function StepPayment({
                   aria-hidden
                 />
                 <div>
-                  <p className="font-bold text-night-900">
+                  <p className="font-bold text-coal-900">
                     {o.label} <span className="text-xs font-normal text-muted">· {o.network}</span>
                   </p>
-                  <p className="font-mono text-base tracking-wide text-night-900">{o.number}</p>
+                  <p className="font-mono text-base tracking-wide text-coal-900">{o.number}</p>
                 </div>
               </div>
               <CopyButton text={o.number} />
@@ -98,9 +98,9 @@ export function StepPayment({
         }}
         noValidate
       >
-        <p className="font-display text-lg font-bold text-night-900">Après ton paiement</p>
+        <p className="font-display text-lg font-bold text-coal-900">Après ton paiement</p>
         <fieldset>
-          <legend className="mb-1.5 text-sm font-semibold text-night-900">
+          <legend className="mb-1.5 text-sm font-semibold text-coal-900">
             Avec quel service as-tu payé ?
           </legend>
           <div className="grid grid-cols-2 gap-3">
@@ -109,9 +109,7 @@ export function StepPayment({
                 key={o.id}
                 className={cn(
                   "flex min-h-13 cursor-pointer items-center justify-center rounded-xl border-2 bg-white px-3 font-bold transition",
-                  value.method === o.id
-                    ? "border-live text-live-600"
-                    : "border-line text-night-900",
+                  value.method === o.id ? "border-live text-live-600" : "border-line text-coal-900",
                 )}
               >
                 <input
@@ -181,9 +179,7 @@ export function StepPayment({
 
       {showWhatsApp && (
         <div className="mt-10 rounded-3xl border border-line bg-white p-6">
-          <p className="font-display text-lg font-bold text-night-900">
-            Tu n&apos;es pas au Togo ?
-          </p>
+          <p className="font-display text-lg font-bold text-coal-900">Tu n&apos;es pas au Togo ?</p>
           <p className="mt-1 text-sm text-muted">
             Pas de Flooz ni de Mixx ? L&apos;équipe t&apos;aide à payer depuis ton pays, sur
             WhatsApp.

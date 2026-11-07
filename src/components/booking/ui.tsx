@@ -4,7 +4,7 @@ import { useSyncExternalStore, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 export const inputClass =
-  "border-line text-ink placeholder:text-muted/70 focus:border-night-700 focus:ring-night-700/15 block min-h-13 w-full rounded-xl border bg-white px-4 text-base outline-none transition focus:ring-4 aria-invalid:border-live aria-invalid:ring-live/10";
+  "border-line text-ink placeholder:text-muted/70 focus:border-coal-700 focus:ring-coal-700/15 block min-h-13 w-full rounded-xl border bg-white px-4 text-base outline-none transition focus:ring-4 aria-invalid:border-live aria-invalid:ring-live/10";
 
 export function Field({
   label,
@@ -25,7 +25,7 @@ export function Field({
     <div>
       <label
         htmlFor={htmlFor}
-        className="mb-1.5 flex items-baseline justify-between text-sm font-semibold text-night-900"
+        className="mb-1.5 flex items-baseline justify-between text-sm font-semibold text-coal-900"
       >
         {label}
         {optional && <span className="text-xs font-normal text-muted">facultatif</span>}
@@ -45,7 +45,7 @@ export function Field({
 export function StepTitle({ title, subtitle }: { title: string; subtitle?: ReactNode }) {
   return (
     <div className="mb-6">
-      <h1 className="font-display text-[1.75rem] leading-tight font-extrabold tracking-tight text-night-900 sm:text-3xl">
+      <h1 className="font-display text-[1.75rem] leading-tight font-extrabold tracking-tight text-coal-900 sm:text-3xl">
         {title}
       </h1>
       {subtitle && <p className="mt-2 text-muted">{subtitle}</p>}

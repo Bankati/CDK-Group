@@ -53,7 +53,7 @@ export function StepTime({
         subtitle={<>Le {dayLabel}. Seuls les créneaux où toute la durée est libre sont proposés.</>}
       />
 
-      <div className="mb-5 flex items-start gap-3 rounded-2xl bg-night-900 p-4 text-sm text-white">
+      <div className="mb-5 flex items-start gap-3 rounded-2xl bg-coal-900 p-4 text-sm text-white">
         <Globe2 className="mt-0.5 size-5 shrink-0 text-white/70" aria-hidden />
         <p>
           Heures de <strong>Lomé (GMT)</strong>.
@@ -68,7 +68,7 @@ export function StepTime({
 
       {starts && starts.length === 0 && (
         <div className="rounded-2xl border border-line bg-white p-6 text-center">
-          <p className="font-semibold text-night-900">
+          <p className="font-semibold text-coal-900">
             Plus aucun créneau libre pour ce package ce jour-là.
           </p>
           <button
@@ -98,7 +98,7 @@ export function StepTime({
                 "flex min-h-[4.5rem] flex-col items-center justify-center rounded-2xl border px-2 py-2 transition active:scale-[0.98]",
                 isSel
                   ? "border-live bg-live text-white shadow-lg"
-                  : "border-line bg-white text-night-900 hover:border-night-700",
+                  : "border-line bg-white text-coal-900 hover:border-coal-700",
               )}
             >
               <span className="font-display text-xl font-bold">{formatHourFr(start)}</span>
@@ -109,7 +109,7 @@ export function StepTime({
                 <span
                   className={cn(
                     "mt-1 text-xs font-semibold",
-                    isSel ? "text-white" : "text-night-700",
+                    isSel ? "text-white" : "text-coal-700",
                   )}
                 >
                   {formatHourInZone(start, tz)} chez toi{localDayShift ? " (+1 j)" : ""}

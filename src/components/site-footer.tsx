@@ -12,7 +12,7 @@ const socials = [
 
 export function SiteFooter() {
   return (
-    <footer className="bg-night-950 text-white/70">
+    <footer className="bg-coal-950 text-white/70">
       <div className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8">
         <div className="flex flex-col gap-8 md:flex-row md:items-start md:justify-between">
           <div>

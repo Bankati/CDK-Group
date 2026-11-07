@@ -32,7 +32,7 @@ function SectionTitle({
       <h2
         className={cn(
           "mt-3 font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl",
-          light ? "text-white" : "text-night-900",
+          light ? "text-white" : "text-coal-900",
         )}
       >
         {title}
@@ -69,7 +69,7 @@ export function HowItWorks() {
             <span className="font-display text-6xl leading-none font-extrabold text-live">
               {i + 1}
             </span>
-            <h3 className="mt-5 font-display text-xl font-bold text-night-900">{s.title}</h3>
+            <h3 className="mt-5 font-display text-xl font-bold text-coal-900">{s.title}</h3>
             <p className="mt-2 leading-relaxed text-muted">{s.text}</p>
           </li>
         ))}
@@ -89,8 +89,8 @@ export function Packages() {
       className={cn(
         "flex min-h-12 items-center justify-center rounded-xl font-bold transition active:scale-[0.98]",
         dark
-          ? "bg-white text-night-950 hover:bg-white/90"
-          : "bg-night-900 text-white hover:bg-night-800",
+          ? "bg-white text-coal-950 hover:bg-white/90"
+          : "bg-coal-900 text-white hover:bg-coal-800",
       )}
     >
       Choisir
@@ -98,7 +98,7 @@ export function Packages() {
   );
 
   return (
-    <section id="packages" className="scroll-mt-6 bg-night-900 text-white">
+    <section id="packages" className="scroll-mt-6 bg-coal-900 text-white">
       <div className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
         <SectionTitle kicker="Packages" title="Choisis la durée de ton live" light />
         <p className="mt-4 max-w-xl text-white/70">Même prix en présentiel et à distance.</p>
@@ -188,7 +188,7 @@ export function Faq() {
             key={f.q}
             className="group rounded-2xl border border-line bg-white open:shadow-sm"
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-semibold text-night-900 [&::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-semibold text-coal-900 [&::-webkit-details-marker]:hidden">
               {f.q}
               <ChevronDown
                 className="size-5 shrink-0 text-live transition group-open:rotate-180"
@@ -219,7 +219,7 @@ export function Contact() {
             Écrire sur WhatsApp
           </a>
         </div>
-        <ul className="space-y-4 text-night-900">
+        <ul className="space-y-4 text-coal-900">
           <li className="flex items-start gap-3">
             <Phone className="mt-0.5 size-5 shrink-0 text-live" aria-hidden />
             <span>

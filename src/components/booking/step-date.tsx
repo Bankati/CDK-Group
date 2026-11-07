@@ -48,10 +48,7 @@ export function StepDate({
           >
             <ChevronLeft className="size-5" />
           </button>
-          <p
-            className="font-display text-lg font-bold text-night-900 capitalize"
-            aria-live="polite"
-          >
+          <p className="font-display text-lg font-bold text-coal-900 capitalize" aria-live="polite">
             {monthLabel(monthKey)}
           </p>
           <button
@@ -92,7 +89,7 @@ export function StepDate({
                 className={cn(
                   "relative flex aspect-square flex-col items-center justify-center rounded-xl text-base font-semibold transition",
                   !days && "animate-pulse bg-paper text-transparent",
-                  open && !isSel && "bg-night-800/[0.06] text-night-900 hover:bg-night-800/15",
+                  open && !isSel && "bg-coal-800/[0.06] text-coal-900 hover:bg-coal-800/15",
                   isSel && "bg-live-600 text-white shadow-lg",
                   state === "unavailable" && "text-muted/35",
                   state === "full" && "text-muted/50 line-through",
@@ -111,7 +108,7 @@ export function StepDate({
 
         <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted">
           <span className="flex items-center gap-1.5">
-            <span className="size-3 rounded bg-night-800/10" /> Disponible
+            <span className="size-3 rounded bg-coal-800/10" /> Disponible
           </span>
           <span className="flex items-center gap-1.5">
             <span className="size-3 rounded bg-live" /> Ton choix
