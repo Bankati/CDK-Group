@@ -14,7 +14,7 @@ export function Confetti({ id }: { id: string }) {
       if (sessionStorage.getItem(key)) return;
       sessionStorage.setItem(key, "1");
     } catch {}
-    const colors = ["#ee6b07", "#ffffff", "#d9ad4f", "#f7c08a"];
+    const colors = ["#e3141b", "#ffffff", "#d9ad4f", "#1d3c9a"];
     const fire = (x: number, angle: number) =>
       confetti({
         particleCount: 70,
@@ -93,7 +93,7 @@ export function Countdown({ to }: { to: string }) {
   );
 }
 
-/** Tant que le paiement n'est pas validé, la page se met à jour toute seule. */
+/** Tant que la réservation n'est pas confirmée, la page se met à jour toute seule. */
 export function AutoRefresh({ seconds = 15 }: { seconds?: number }) {
   const router = useRouter();
   useEffect(() => {

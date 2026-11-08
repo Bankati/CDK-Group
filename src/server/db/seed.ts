@@ -1,3 +1,4 @@
+import { booking } from "@/config/site";
 import { getPackage } from "@/lib/packages";
 import type { Booking } from "@/lib/types";
 
@@ -21,9 +22,6 @@ const rows: SeedRow[] = [
     country: "Côte d'Ivoire",
     city: "Abidjan",
     clientTimezone: "Africa/Abidjan",
-    paymentMethod: "mixx",
-    paymentReference: "MX2611184523",
-    paymentPhone: "+228 91 23 45 67",
     status: "confirmed",
     photoUrl: "/demo/afi.svg",
     createdDaysAgo: 6,
@@ -41,9 +39,6 @@ const rows: SeedRow[] = [
     tiktok: "@agrodelices",
     country: "Togo",
     city: "Lomé",
-    paymentMethod: "flooz",
-    paymentReference: "FZ7731029944",
-    paymentPhone: "+228 98 76 54 32",
     status: "confirmed",
     photoUrl: "/demo/agro.svg",
     createdDaysAgo: 5,
@@ -62,7 +57,6 @@ const rows: SeedRow[] = [
     country: "Sénégal",
     city: "Dakar",
     clientTimezone: "Africa/Dakar",
-    paymentMethod: "whatsapp",
     status: "confirmed",
     createdDaysAgo: 4,
   },
@@ -79,9 +73,6 @@ const rows: SeedRow[] = [
     country: "Cameroun",
     city: "Douala",
     clientTimezone: "Africa/Douala",
-    paymentMethod: "mixx",
-    paymentReference: "MX2611190077",
-    paymentPhone: "+228 92 00 11 44",
     status: "pending",
     createdDaysAgo: 0,
   },
@@ -99,7 +90,6 @@ const rows: SeedRow[] = [
     country: "France",
     city: "Paris",
     clientTimezone: "Europe/Paris",
-    paymentMethod: "whatsapp",
     status: "confirmed",
     photoUrl: "/demo/karite.svg",
     createdDaysAgo: 3,
@@ -116,9 +106,6 @@ const rows: SeedRow[] = [
     products: "Meubles en teck, tabourets sculptés",
     country: "Togo",
     city: "Lomé",
-    paymentMethod: "flooz",
-    paymentReference: "FZ7731544120",
-    paymentPhone: "+228 99 45 67 12",
     status: "confirmed",
     createdDaysAgo: 3,
   },
@@ -136,9 +123,6 @@ const rows: SeedRow[] = [
     country: "Bénin",
     city: "Cotonou",
     clientTimezone: "Africa/Porto-Novo",
-    paymentMethod: "mixx",
-    paymentReference: "MX2611202288",
-    paymentPhone: "+228 93 12 12 12",
     status: "confirmed",
     createdDaysAgo: 2,
   },
@@ -155,9 +139,6 @@ const rows: SeedRow[] = [
     tiktok: "@lawsonbijoux",
     country: "Togo",
     city: "Lomé",
-    paymentMethod: "flooz",
-    paymentReference: "FZ7732001456",
-    paymentPhone: "+228 70 88 12 34",
     status: "pending",
     createdDaysAgo: 0,
   },
@@ -176,8 +157,8 @@ export function seedBookings(now = Date.now()): Booking[] {
       createdAt: new Date(created).toISOString(),
       durationMinutes: pkg.durationMinutes,
       amount: pkg.price,
-      // Les réservations « en attente » de la démo restent bloquées 30 min après le démarrage.
-      holdExpiresAt: new Date(created + 30 * 60_000 + (8 + i) * 60_000).toISOString(),
+      // Les réservations « en attente » de la démo restent bloquées le temps prévu (config).
+      holdExpiresAt: new Date(created + booking.holdHours * 3_600_000).toISOString(),
       validatedAt:
         r.status === "confirmed" ? new Date(created + 3_600_000).toISOString() : undefined,
     };

@@ -57,7 +57,6 @@ Fais une réservation test, puis vérifie dans Supabase → **Table Editor → b
 
 Tout se modifie dans [`src/config/site.ts`](../src/config/site.ts) :
 
-- Numéros **Flooz** et **Mixx by Yas** qui reçoivent les paiements (provisoirement : les numéros de contact)
 - Numéro **WhatsApp** de l'équipe
 - Lien du compte **TikTok** de House of Challenge
 - Réponses de la **FAQ** (ex. délai de 48 h pour changer de date) : `src/components/home/sections.tsx`

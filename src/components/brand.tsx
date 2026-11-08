@@ -40,7 +40,7 @@ export function OcdLiveLogo({
         <span
           aria-hidden
           className={cn(
-            "block pr-[3cqw] font-display text-[24cqw] leading-[0.95] font-bold tracking-[-0.01em]",
+            "block pr-[3cqw] font-logo text-[24cqw] leading-[0.95] font-bold tracking-[-0.01em]",
             ink,
           )}
           style={{ marginTop: "1.5cqw" }}
@@ -58,7 +58,7 @@ export function OcdLiveLogo({
       className={cn("inline-flex items-center gap-[0.35em] text-2xl leading-none", className)}
     >
       <OcdSymbol className="block h-[1.05em] w-auto" />
-      <span aria-hidden className={cn("font-display text-[0.92em] font-bold", ink)}>
+      <span aria-hidden className={cn("font-logo text-[0.92em] font-bold", ink)}>
         Live
       </span>
     </span>

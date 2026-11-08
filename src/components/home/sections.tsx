@@ -1,7 +1,7 @@
 import { ChevronDown, Mail, MapPin, Phone } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
-import { packages, payment, schedule, site } from "@/config/site";
+import { booking, packages, schedule, site } from "@/config/site";
 import { WhatsAppIcon } from "@/components/icons";
 import { PackageCard } from "@/components/package-card";
 import { fcfa } from "@/lib/format";
@@ -32,7 +32,7 @@ function SectionTitle({
       <h2
         className={cn(
           "mt-3 font-display text-3xl font-extrabold tracking-tight text-balance sm:text-4xl",
-          light ? "text-white" : "text-coal-900",
+          light ? "text-white" : "text-night-900",
         )}
       >
         {title}
@@ -47,8 +47,8 @@ const steps = [
     text: "En présentiel à Lomé ou à distance, puis ta date, ton package et ton heure.",
   },
   {
-    title: "Paie par Mobile Money",
-    text: `Flooz ou Mixx by Yas depuis ton téléphone. Ton créneau est bloqué pendant la vérification.`,
+    title: "On te confirme sur WhatsApp",
+    text: "Ton créneau t'est réservé. L'équipe Bovann Group te contacte pour finaliser et confirmer ton live.",
   },
   {
     title: "Passe en live",
@@ -69,7 +69,7 @@ export function HowItWorks() {
             <span className="font-display text-6xl leading-none font-extrabold text-live">
               {i + 1}
             </span>
-            <h3 className="mt-5 font-display text-xl font-bold text-coal-900">{s.title}</h3>
+            <h3 className="mt-5 font-display text-xl font-bold text-night-900">{s.title}</h3>
             <p className="mt-2 leading-relaxed text-muted">{s.text}</p>
           </li>
         ))}
@@ -89,8 +89,8 @@ export function Packages() {
       className={cn(
         "flex min-h-12 items-center justify-center rounded-xl font-bold transition active:scale-[0.98]",
         dark
-          ? "bg-white text-coal-950 hover:bg-white/90"
-          : "bg-coal-900 text-white hover:bg-coal-800",
+          ? "bg-white text-night-950 hover:bg-white/90"
+          : "bg-night-900 text-white hover:bg-night-800",
       )}
     >
       Choisir
@@ -98,7 +98,7 @@ export function Packages() {
   );
 
   return (
-    <section id="packages" className="scroll-mt-6 bg-coal-900 text-white">
+    <section id="packages" className="scroll-mt-6 bg-night-900 text-white">
       <div className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
         <SectionTitle kicker="Packages" title="Choisis la durée de ton live" light />
         <p className="mt-4 max-w-xl text-white/70">Même prix en présentiel et à distance.</p>
@@ -118,7 +118,7 @@ export function Packages() {
         </div>
 
         {monthlyPackage && (
-          <div className="mt-10 overflow-hidden rounded-3xl bg-gradient-to-br from-live-600 to-live-800 p-6 sm:p-8">
+          <div className="mt-10 overflow-hidden rounded-3xl bg-gradient-to-br from-live to-live-600 p-6 sm:p-8">
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-bold tracking-[0.2em] text-white/80 uppercase">
@@ -161,16 +161,16 @@ const faq = [
     a: "Tu rejoins le live de House of Challenge depuis ton téléphone grâce à l'invitation TikTok (multi-invités). Notre équipe te contacte sur WhatsApp avant le live pour faire un test de connexion.",
   },
   {
-    q: "Que se passe-t-il après mon paiement ?",
-    a: `Ton créneau est bloqué ${payment.holdMinutes} minutes pendant que Bovann Group vérifie ton paiement. Dès la validation, tu reçois ta confirmation par email avec ton billet.`,
+    q: "Que se passe-t-il après ma réservation ?",
+    a: `Ton créneau t'est réservé pendant ${booking.holdHours} h. L'équipe Bovann Group te contacte sur WhatsApp pour finaliser, puis confirme ton live : tu reçois alors ta confirmation par email avec ton billet.`,
   },
   {
     q: "Que dois-je préparer pour mon live ?",
     a: "Tes produits, quelques phrases pour présenter ton business, tes prix et un moyen de te contacter (WhatsApp, page TikTok). Une bonne lumière et une connexion stable si tu es à distance.",
   },
   {
-    q: "Je n'ai pas Flooz ni Mixx, comment payer ?",
-    a: "Si tu es hors du Togo, choisis « Payer avec l'équipe sur WhatsApp » à l'étape du paiement : on te propose une solution adaptée à ton pays.",
+    q: "Comment se passe le règlement ?",
+    a: "Rien à payer sur le site. Après ta réservation, l'équipe Bovann Group t'indique sur WhatsApp comment régler, que tu sois au Togo ou à l'étranger.",
   },
   {
     q: "Puis-je changer la date de mon live ?",
@@ -188,7 +188,7 @@ export function Faq() {
             key={f.q}
             className="group rounded-2xl border border-line bg-white open:shadow-sm"
           >
-            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-semibold text-coal-900 [&::-webkit-details-marker]:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-semibold text-night-900 [&::-webkit-details-marker]:hidden">
               {f.q}
               <ChevronDown
                 className="size-5 shrink-0 text-live transition group-open:rotate-180"
@@ -219,7 +219,7 @@ export function Contact() {
             Écrire sur WhatsApp
           </a>
         </div>
-        <ul className="space-y-4 text-coal-900">
+        <ul className="space-y-4 text-night-900">
           <li className="flex items-start gap-3">
             <Phone className="mt-0.5 size-5 shrink-0 text-live" aria-hidden />
             <span>

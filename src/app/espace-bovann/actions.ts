@@ -20,7 +20,7 @@ export async function logout() {
   refresh();
 }
 
-export async function validatePayment(id: string) {
+export async function confirmReservation(id: string) {
   if (!(await isAdmin())) return { ok: false, message: "Session expirée, reconnecte-toi." };
   const res = await confirmBooking(id);
   refresh();

@@ -1,8 +1,5 @@
-import type { OperatorId } from "@/config/site";
-
 export type BookingMode = "presentiel" | "distance";
 export type BookingStatus = "pending" | "confirmed" | "cancelled";
-export type PaymentMethod = OperatorId | "whatsapp";
 
 export type Booking = {
   id: string;
@@ -29,12 +26,8 @@ export type Booking = {
   /** Fuseau horaire du client (pour lui afficher son heure locale). */
   clientTimezone?: string;
 
-  paymentMethod: PaymentMethod;
-  paymentReference?: string;
-  paymentPhone?: string;
-
   status: BookingStatus;
-  /** Le créneau reste bloqué jusqu'à cette date tant que le paiement n'est pas validé. */
+  /** Le créneau reste bloqué jusqu'à cette date tant que l'équipe ne l'a pas confirmée. */
   holdExpiresAt: string;
   validatedAt?: string;
 };
@@ -48,7 +41,7 @@ export function displayStatus(b: Pick<Booking, "status" | "holdExpiresAt">, now 
 }
 
 export const statusLabels: Record<DisplayStatus, string> = {
-  pending: "En attente de validation",
+  pending: "En attente de confirmation",
   confirmed: "Confirmée",
   cancelled: "Annulée",
   expired: "Délai dépassé",

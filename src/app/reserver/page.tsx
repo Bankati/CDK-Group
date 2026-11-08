@@ -14,7 +14,7 @@ async function Wizard({ searchParams }: PageProps<"/reserver">) {
 
 export default function ReserverPage(props: PageProps<"/reserver">) {
   return (
-    <Suspense fallback={<div className="h-17 bg-coal-900" />}>
+    <Suspense fallback={<div className="h-17 bg-night-900" />}>
       <Wizard {...props} />
     </Suspense>
   );

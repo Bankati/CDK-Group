@@ -1,7 +1,6 @@
 import { z } from "zod";
-import { packages, payment } from "@/config/site";
+import { packages } from "@/config/site";
 
-const operatorIds = payment.operators.map((o) => o.id) as [string, ...string[]];
 const packageIds = packages.map((p) => p.id) as [string, ...string[]];
 
 const phone = z
@@ -28,27 +27,8 @@ export const bookingInputSchema = z
     city: z.string().trim().min(2, "Indique ta ville").max(60),
     photo: z.string().startsWith("data:image/").max(1_400_000, "Photo trop lourde").optional(),
     clientTimezone: z.string().max(60).optional(),
-
-    paymentMethod: z.enum([...operatorIds, "whatsapp"]),
-    paymentReference: z.string().trim().max(60).optional(),
-    paymentPhone: z.string().trim().max(25).optional(),
   })
-  .superRefine((v, ctx) => {
-    if (v.paymentMethod !== "whatsapp") {
-      if (!v.paymentReference || v.paymentReference.length < 4)
-        ctx.addIssue({
-          code: "custom",
-          path: ["paymentReference"],
-          message: "Saisis la référence reçue par SMS",
-        });
-      if (!v.paymentPhone || !/^\+?[0-9 ]{8,20}$/.test(v.paymentPhone))
-        ctx.addIssue({
-          code: "custom",
-          path: ["paymentPhone"],
-          message: "Saisis le numéro qui a payé",
-        });
-    }
-  });
+  .strict();
 
 export type BookingInput = z.infer<typeof bookingInputSchema>;
 

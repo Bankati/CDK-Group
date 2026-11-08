@@ -31,12 +31,16 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
   const end = addMinutes(start, b.durationMinutes);
   const name = pkg ? packageName(pkg, b.startsAt.slice(0, 7)) : b.packageId;
   const isNew = sp.nouveau === "1";
-  const waMessage = `Bonjour Bovann Group ! Je viens de réserver un live OCD Live (code ${b.code}) : ${name}, le ${formatDayFr(start)} ${formatRangeFr(start, b.durationMinutes)} (heure de Lomé). Montant : ${fcfa(b.amount)}. Je souhaite payer avec vous depuis ${b.country}.`;
+  const waMessage = `Bonjour Bovann Group ! Je viens de réserver un live OCD Live (code ${b.code}) : ${name}, le ${formatDayFr(start)} ${formatRangeFr(start, b.durationMinutes)} (heure de Lomé). Montant : ${fcfa(b.amount)}. Je suis disponible pour finaliser.`;
 
   return (
-    <main className="relative flex-1 overflow-hidden bg-coal-950 text-white">
+    <main className="relative flex-1 overflow-hidden bg-night-950 text-white">
       {isNew && status !== "cancelled" && <Confetti id={b.id} />}
       {status === "pending" && <AutoRefresh />}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 left-1/2 size-[36rem] -translate-x-1/2 rounded-full bg-live/25 blur-3xl"
+      />
 
       <div className="relative mx-auto w-full max-w-xl px-4 pt-6 pb-16">
         <Link href="/" aria-label="OCD Live, accueil">
@@ -48,9 +52,11 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
             <h1 className="font-display text-4xl font-extrabold">Réservation annulée</h1>
           ) : status === "expired" ? (
             <>
-              <h1 className="font-display text-4xl font-extrabold">Délai de validation dépassé</h1>
+              <h1 className="font-display text-4xl font-extrabold">
+                Délai de confirmation dépassé
+              </h1>
               <p className="mt-3 text-white/75">
-                Ton créneau n&apos;a pas pu être validé à temps. Écris-nous sur WhatsApp avec ton
+                Ton créneau n&apos;a pas pu être confirmé à temps. Écris-nous sur WhatsApp avec ton
                 code, on règle ça ensemble.
               </p>
             </>
@@ -61,10 +67,8 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
               </h1>
               <p className="mt-3 text-white/75">
                 {status === "confirmed"
-                  ? "Paiement validé. On a hâte de te voir en live."
-                  : b.paymentMethod === "whatsapp"
-                    ? "Dernière étape : écris à l'équipe sur WhatsApp pour régler ton paiement."
-                    : "Bovann Group vérifie ton paiement. Tu reçois la confirmation par email dès la validation."}
+                  ? "Ton live est confirmé. On a hâte de te voir en direct."
+                  : "L'équipe Bovann Group te contacte très vite sur WhatsApp pour finaliser et confirmer ton live."}
               </p>
             </>
           )}
@@ -72,12 +76,12 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
             className={cn(
               "mt-5 inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-sm font-bold",
               status === "confirmed" && "bg-emerald-500 text-white",
-              status === "pending" && "bg-amber-300 text-coal-950",
+              status === "pending" && "bg-amber-300 text-night-950",
               (status === "expired" || status === "cancelled") && "bg-white/15 text-white",
             )}
           >
             {status === "pending" && (
-              <span className="size-2 animate-pulse rounded-full bg-coal-950" />
+              <span className="size-2 animate-pulse rounded-full bg-night-950" />
             )}
             {statusLabels[status]}
           </span>
@@ -86,7 +90,7 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
         {/* Billet */}
         <div className="mt-8 animate-rise" style={{ animationDelay: "120ms" }}>
           <div className="relative overflow-hidden rounded-3xl bg-white text-ink">
-            <div className="flex items-center justify-between bg-coal-900 px-6 py-4 text-white">
+            <div className="flex items-center justify-between bg-night-900 px-6 py-4 text-white">
               <OcdLiveLogo className="text-lg" />
               <LiveBadge label="BILLET" />
             </div>
@@ -94,23 +98,25 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
               <p className="text-xs font-semibold tracking-widest text-muted uppercase">
                 Entrepreneur
               </p>
-              <p className="font-display text-2xl font-extrabold text-coal-900">{b.businessName}</p>
+              <p className="font-display text-2xl font-extrabold text-night-900">
+                {b.businessName}
+              </p>
               <p className="text-muted">{b.fullName}</p>
             </div>
             <div className="relative px-6">
               <div className="border-t-2 border-dashed border-line" />
-              <span className="absolute top-1/2 -left-3 size-6 -translate-y-1/2 rounded-full bg-coal-950" />
-              <span className="absolute top-1/2 -right-3 size-6 -translate-y-1/2 rounded-full bg-coal-950" />
+              <span className="absolute top-1/2 -left-3 size-6 -translate-y-1/2 rounded-full bg-night-950" />
+              <span className="absolute top-1/2 -right-3 size-6 -translate-y-1/2 rounded-full bg-night-950" />
             </div>
             <dl className="grid gap-4 px-6 py-5 text-sm">
               <div className="flex gap-3">
                 <Clock className="mt-0.5 size-5 shrink-0 text-live" aria-hidden />
                 <div>
                   <dt className="sr-only">Date et heure</dt>
-                  <dd className="font-bold text-coal-900 first-letter:uppercase">
+                  <dd className="font-bold text-night-900 first-letter:uppercase">
                     {formatDayFr(start, { year: true })}
                   </dd>
-                  <dd className="font-bold text-coal-900">
+                  <dd className="font-bold text-night-900">
                     {formatRangeFr(start, b.durationMinutes)}{" "}
                     <span className="font-normal text-muted">heure de Lomé</span>
                   </dd>
@@ -120,7 +126,7 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
                 <Package className="mt-0.5 size-5 shrink-0 text-live" aria-hidden />
                 <div>
                   <dt className="sr-only">Package</dt>
-                  <dd className="font-bold text-coal-900">{name}</dd>
+                  <dd className="font-bold text-night-900">{name}</dd>
                   <dd className="text-muted">{fcfa(b.amount)}</dd>
                 </div>
               </div>
@@ -128,7 +134,7 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
                 <MapPin className="mt-0.5 size-5 shrink-0 text-live" aria-hidden />
                 <div>
                   <dt className="sr-only">Mode</dt>
-                  <dd className="font-bold text-coal-900">
+                  <dd className="font-bold text-night-900">
                     {b.mode === "presentiel"
                       ? "En présentiel à Lomé"
                       : `À distance · ${b.city}, ${b.country}`}
@@ -139,7 +145,7 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
                 <Ticket className="mt-0.5 size-5 shrink-0 text-live" aria-hidden />
                 <div>
                   <dt className="sr-only">Code</dt>
-                  <dd className="font-mono text-lg font-bold tracking-widest text-coal-900">
+                  <dd className="font-mono text-lg font-bold tracking-widest text-night-900">
                     {b.code}
                   </dd>
                 </div>
@@ -181,7 +187,7 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
           </div>
         </div>
 
-        {b.paymentMethod === "whatsapp" && status === "pending" && (
+        {status === "pending" && (
           <a
             href={teamWaLink(waMessage)}
             target="_blank"
@@ -189,7 +195,7 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
             className="mt-6 flex min-h-14 items-center justify-center gap-3 rounded-2xl bg-[#1fa855] px-5 text-lg font-bold transition hover:bg-[#178a45]"
           >
             <WhatsAppIcon className="size-6" />
-            Payer avec l&apos;équipe sur WhatsApp
+            Écrire à l&apos;équipe sur WhatsApp
           </a>
         )}
 
@@ -248,7 +254,7 @@ async function Confirmation({ params, searchParams }: PageProps<"/reservation/[i
 
 export default function ReservationPage(props: PageProps<"/reservation/[id]">) {
   return (
-    <Suspense fallback={<main className="flex-1 bg-coal-950" />}>
+    <Suspense fallback={<main className="flex-1 bg-night-950" />}>
       <Confirmation {...props} />
     </Suspense>
   );

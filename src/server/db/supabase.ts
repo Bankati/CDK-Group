@@ -36,9 +36,6 @@ type Row = {
   city: string;
   photo_url: string | null;
   client_timezone: string | null;
-  payment_method: Booking["paymentMethod"];
-  payment_reference: string | null;
-  payment_phone: string | null;
   status: Booking["status"];
   hold_expires_at: string;
   validated_at: string | null;
@@ -64,9 +61,6 @@ const toBooking = (r: Row): Booking => ({
   city: r.city,
   photoUrl: r.photo_url ?? undefined,
   clientTimezone: r.client_timezone ?? undefined,
-  paymentMethod: r.payment_method,
-  paymentReference: r.payment_reference ?? undefined,
-  paymentPhone: r.payment_phone ?? undefined,
   status: r.status,
   holdExpiresAt: new Date(r.hold_expires_at).toISOString(),
   validatedAt: r.validated_at ? new Date(r.validated_at).toISOString() : undefined,
@@ -93,9 +87,6 @@ const toRow = (b: Partial<Booking>): Partial<Row> => {
     city: "city",
     photoUrl: "photo_url",
     clientTimezone: "client_timezone",
-    paymentMethod: "payment_method",
-    paymentReference: "payment_reference",
-    paymentPhone: "payment_phone",
     status: "status",
     holdExpiresAt: "hold_expires_at",
     validatedAt: "validated_at",

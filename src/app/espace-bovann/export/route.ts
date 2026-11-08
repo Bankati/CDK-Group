@@ -1,5 +1,4 @@
 import { connection } from "next/server";
-import { payment } from "@/config/site";
 import { statusLabels } from "@/lib/types";
 import { isAdmin } from "@/server/auth";
 import { db } from "@/server/db";
@@ -40,9 +39,6 @@ export async function GET(req: Request) {
     "Secteur",
     "Produits",
     "TikTok",
-    "Paiement",
-    "Référence",
-    "Numéro payeur",
     "Créée le",
   ];
   const cell = (v: unknown) => {
@@ -70,11 +66,6 @@ export async function GET(req: Request) {
       b.sector,
       b.products,
       b.tiktok,
-      b.paymentMethod === "whatsapp"
-        ? "WhatsApp"
-        : payment.operators.find((o) => o.id === b.paymentMethod)?.label,
-      b.paymentReference,
-      b.paymentPhone,
       b.createdAt.slice(0, 16).replace("T", " "),
     ]
       .map(cell)

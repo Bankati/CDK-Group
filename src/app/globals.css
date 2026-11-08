@@ -1,27 +1,26 @@
 @import "tailwindcss";
 
 /*
- * Palette OCD Live
- * - Orange OCD : couleur officielle du logo (#EE6B07), pour les actions et le badge EN DIRECT.
- *   Texte blanc sur cet orange : uniquement en gros caractères gras (contraste 3:1).
- *   live-600 (#C2560A) : petits textes et petites pastilles (contraste 4,5:1 sur blanc).
- * - Anthracite (coal) : le noir du mot « Live » du logo (#232326), fonds sombres
- * - Crème (paper) : le blanc chaud du visuel officiel « Afrique »
- * - Or : réservé au VIP · Rouge « danger » : uniquement pour les erreurs
+ * Palette OCD Live (identité Bovann Group)
+ * - Bleu nuit : fond principal (#001b61)
+ * - Rouge LIVE : extrait du logo Bovann Group (#e01010), pour les actions et le badge EN DIRECT
+ * - Or : réservé au VIP
+ * Le logo OCD Live garde toujours ses couleurs officielles (orange #EE6B07).
  */
 @theme {
-  --color-coal-950: #0e0e0f;
-  --color-coal-900: #18181a;
-  --color-coal-800: #232326;
-  --color-coal-700: #34343a;
-  --color-coal-600: #4a4a52;
+  --color-night-950: #010922;
+  --color-night-900: #020f3a;
+  --color-night-800: #001b61;
+  --color-night-700: #0b2a80;
+  --color-night-600: #1d3c9a;
 
-  --color-live: #ee6b07;
-  --color-live-600: #c2560a;
-  --color-live-700: #a8480a;
-  --color-live-800: #8a3a08;
-  --color-live-50: #fdf0e6;
+  --color-live: #e3141b;
+  --color-live-600: #c80f15;
+  --color-live-700: #a80c11;
+  --color-live-800: #8a090d;
+  --color-live-50: #fdecec;
 
+  /* Noir du mot « Live » dans le logo officiel (version sur fond clair) */
   --color-logo-ink: #232326;
 
   --color-danger: #c81e1e;
@@ -31,13 +30,15 @@
   --color-gold-300: #f0d48c;
   --color-gold-700: #8c6a1f;
 
-  --color-ink: #1c1b1a;
-  --color-muted: #6b655c;
-  --color-line: #e9e3d9;
-  --color-paper: #f7f4ef;
+  --color-ink: #0b1533;
+  --color-muted: #545e7e;
+  --color-line: #e3e7f1;
+  --color-paper: #f5f7fc;
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-poppins), var(--font-geist-sans), ui-sans-serif, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-geist-sans), ui-sans-serif, sans-serif;
+  /* Poppins : uniquement pour le mot « Live » du logo, comme sur le logo officiel */
+  --font-logo: var(--font-poppins), var(--font-geist-sans), ui-sans-serif, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --animate-live-pulse: live-pulse 1.6s ease-out infinite;
@@ -48,13 +49,13 @@
 
   @keyframes live-pulse {
     0% {
-      box-shadow: 0 0 0 0 rgb(238 107 7 / 0.75);
+      box-shadow: 0 0 0 0 rgb(227 20 27 / 0.75);
     }
     70% {
-      box-shadow: 0 0 0 10px rgb(238 107 7 / 0);
+      box-shadow: 0 0 0 10px rgb(227 20 27 / 0);
     }
     100% {
-      box-shadow: 0 0 0 0 rgb(238 107 7 / 0);
+      box-shadow: 0 0 0 0 rgb(227 20 27 / 0);
     }
   }
   @keyframes kenburns {

@@ -243,7 +243,7 @@ export function StepDetails({
                 unoptimized
                 className="size-16 rounded-lg object-cover"
               />
-              <p className="flex-1 text-sm font-semibold text-coal-900">Photo ajoutée</p>
+              <p className="flex-1 text-sm font-semibold text-night-900">Photo ajoutée</p>
               <button
                 type="button"
                 onClick={() => {
@@ -260,10 +260,10 @@ export function StepDetails({
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className="flex min-h-20 w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-line bg-white text-muted transition hover:border-coal-700 hover:text-coal-900"
+              className="flex min-h-20 w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-line bg-white text-muted transition hover:border-night-700 hover:text-night-900"
             >
               {photoBusy ? (
-                <span className="size-5 animate-spin rounded-full border-2 border-line border-t-coal-700" />
+                <span className="size-5 animate-spin rounded-full border-2 border-line border-t-night-700" />
               ) : (
                 <Camera className="size-5" />
               )}

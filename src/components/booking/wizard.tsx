@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { fetchDay, fetchMonth, submitBooking } from "@/app/reserver/actions";
 import { OcdLiveLogo } from "@/components/brand";
-import { payment } from "@/config/site";
+import { booking } from "@/config/site";
 import type { DayState } from "@/lib/availability";
 import { detailsSchema } from "@/lib/booking-schema";
 import { duration, fcfa } from "@/lib/format";
@@ -17,24 +17,21 @@ import { cn } from "@/lib/utils";
 import { emptyDetails, StepDetails, type Details } from "./step-details";
 import { FIRST_MONTH, StepDate } from "./step-date";
 import { StepPackage } from "./step-package";
-import { StepPayment, type PaymentForm } from "./step-payment";
 import { StepTime } from "./step-time";
 import { PrimaryButton, StepTitle, useTimeZone } from "./ui";
 
-const STEPS = ["Mode", "Date", "Package", "Heure", "Infos", "Paiement"] as const;
+const STEPS = ["Mode", "Date", "Package", "Heure", "Infos"] as const;
+const LAST = STEPS.length - 1;
 const STORAGE_KEY = "ocd-live-reservation";
 
 type State = {
-  step: number; // 0..5
+  step: number; // 0..4
   mode?: BookingMode;
   date?: string;
   packageId?: string;
   time?: string;
   details: Details;
-  pay: PaymentForm;
 };
-
-const initialPay: PaymentForm = { method: payment.operators[0].id, reference: "", phone: "" };
 
 function load(): Partial<State> | null {
   try {
@@ -60,7 +57,6 @@ export function BookingWizard({
     step: initialMode ? 1 : 0,
     mode: initialMode,
     details: emptyDetails,
-    pay: initialPay,
   });
   const [monthKey, setMonthKey] = useState(FIRST_MONTH);
   const [months, setMonths] = useState<Record<string, Record<string, DayState>>>({});
@@ -70,9 +66,8 @@ export function BookingWizard({
     packRemaining: number | null;
   }>();
   const [detailErrors, setDetailErrors] = useState<Partial<Record<keyof Details, string>>>({});
-  const [payErrors, setPayErrors] = useState<Partial<Record<"reference" | "phone", string>>>({});
   const [notice, setNotice] = useState<string>();
-  const [submitting, setSubmitting] = useState<"manual" | "whatsapp" | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string>();
 
   // Reprend une réservation commencée (si la page est rechargée), sans écraser le mode choisi depuis l'accueil.
@@ -85,8 +80,8 @@ export function BookingWizard({
       return {
         ...cur,
         ...saved,
+        step: Math.min(saved.step ?? cur.step, LAST),
         details: { ...emptyDetails, ...saved.details },
-        pay: { ...initialPay, ...saved.pay },
       };
     });
     if (saved.date) setMonthKey(saved.date.slice(0, 7));
@@ -161,17 +156,11 @@ export function BookingWizard({
     return false;
   }
 
-  async function submit(method: "manual" | "whatsapp") {
+  async function submit() {
     setFormError(undefined);
-    if (method === "manual") {
-      const errs: typeof payErrors = {};
-      if (!/^\+?[0-9 ]{8,20}$/.test(s.pay.phone.trim())) errs.phone = "Saisis le numéro qui a payé";
-      if (s.pay.reference.trim().length < 4) errs.reference = "Saisis la référence reçue par SMS";
-      setPayErrors(errs);
-      if (Object.keys(errs).length) return;
-    }
+    if (!validateDetails()) return;
     if (!s.mode || !s.date || !s.time || !pkg) return;
-    setSubmitting(method);
+    setSubmitting(true);
     const d = s.details;
     try {
       const res = await submitBooking({
@@ -190,9 +179,6 @@ export function BookingWizard({
         city: s.mode === "presentiel" ? "Lomé" : d.city,
         photo: d.photo,
         clientTimezone: tz,
-        paymentMethod: method === "whatsapp" ? "whatsapp" : s.pay.method,
-        paymentReference: method === "manual" ? s.pay.reference.trim() : undefined,
-        paymentPhone: method === "manual" ? s.pay.phone.trim() : undefined,
       });
       if (res.ok) {
         try {
@@ -220,14 +206,14 @@ export function BookingWizard({
     } catch {
       setFormError("Connexion impossible. Vérifie ton réseau et réessaie.");
     }
-    setSubmitting(null);
+    setSubmitting(false);
   }
 
   const step = s.step;
 
   return (
     <div className="flex min-h-svh flex-col bg-paper">
-      <header className="sticky top-0 z-20 bg-coal-900 text-white shadow-lg">
+      <header className="sticky top-0 z-20 bg-night-900 text-white shadow-lg">
         <div className="mx-auto flex h-16 w-full max-w-2xl items-center gap-3 px-4">
           {step > 0 ? (
             <button
@@ -275,7 +261,7 @@ export function BookingWizard({
             {summary.map((t) => (
               <span
                 key={t}
-                className="rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold text-coal-900"
+                className="rounded-full border border-line bg-white px-3 py-1 text-xs font-semibold text-night-900"
               >
                 {t}
               </span>
@@ -336,7 +322,7 @@ export function BookingWizard({
                       {icon}
                     </span>
                     <span>
-                      <span className="block font-display text-xl font-bold text-coal-900">
+                      <span className="block font-display text-xl font-bold text-night-900">
                         {title}
                       </span>
                       <span className="mt-1 block text-muted">{text}</span>
@@ -400,40 +386,56 @@ export function BookingWizard({
               noValidate
               onSubmit={(e) => {
                 e.preventDefault();
-                if (validateDetails()) goTo(5);
+                void submit();
               }}
             >
               <StepDetails
                 mode={s.mode ?? "presentiel"}
                 value={s.details}
                 errors={detailErrors}
-                onChange={(patch) =>
-                  setS((cur) => ({ ...cur, details: { ...cur.details, ...patch } }))
-                }
+                onChange={(patch) => {
+                  setS((cur) => ({ ...cur, details: { ...cur.details, ...patch } }));
+                  // L'erreur d'un champ disparaît dès qu'on le corrige.
+                  setDetailErrors((errs) => {
+                    const next = { ...errs };
+                    for (const k of Object.keys(patch) as (keyof Details)[]) delete next[k];
+                    if ("dial" in patch) delete next.phone;
+                    return next;
+                  });
+                }}
               />
-              <PrimaryButton type="submit" className="mt-8">
-                Continuer vers le paiement
+              {pkg && s.date && s.time && (
+                <div className="mt-8 rounded-2xl bg-night-900 p-5 text-white">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <p className="text-sm text-white/75">
+                      {packageName(pkg, s.date.slice(0, 7))} · {dayLabel},{" "}
+                      {formatRangeFr(toDate(s.date, s.time), pkg.durationMinutes)}
+                    </p>
+                    <p className="shrink-0 font-display text-xl font-bold">{fcfa(pkg.price)}</p>
+                  </div>
+                  <p className="mt-3 border-t border-white/10 pt-3 text-sm text-white/75">
+                    Rien à payer maintenant. L&apos;équipe Bovann Group te contacte sur WhatsApp
+                    pour finaliser et confirmer ton live. Ton créneau t&apos;est réservé pendant{" "}
+                    {booking.holdHours}&nbsp;h.
+                  </p>
+                </div>
+              )}
+              {formError && (
+                <p
+                  role="alert"
+                  className="mt-4 rounded-xl bg-danger-50 p-4 text-sm font-semibold text-danger"
+                >
+                  {formError}
+                </p>
+              )}
+              <PrimaryButton type="submit" loading={submitting} className="mt-5">
+                Réserver mon live
               </PrimaryButton>
             </form>
           )}
 
-          {step === 5 && pkg && s.date && s.time && (
-            <StepPayment
-              amount={pkg.price}
-              summary={`${packageName(pkg, s.date.slice(0, 7))} · ${dayLabel}, ${formatRangeFr(toDate(s.date, s.time), pkg.durationMinutes)} (heure de Lomé)`}
-              value={s.pay}
-              errors={payErrors}
-              onChange={(p) => setS((cur) => ({ ...cur, pay: { ...cur.pay, ...p } }))}
-              onSubmit={() => submit("manual")}
-              onWhatsApp={() => submit("whatsapp")}
-              showWhatsApp={s.mode === "distance" && s.details.country !== "Togo"}
-              submitting={submitting}
-              formError={formError}
-            />
-          )}
-
           {/* Étape incohérente (ex. données effacées) : retour au début du parcours */}
-          {((step >= 2 && !s.date) || (step >= 3 && !pkg) || (step >= 5 && !s.time)) && (
+          {((step >= 2 && !s.date) || (step >= 3 && !pkg) || (step >= 4 && !s.time)) && (
             <div className="text-center">
               <p className="text-muted">Il manque une information.</p>
               <button
@@ -446,12 +448,6 @@ export function BookingWizard({
             </div>
           )}
         </div>
-
-        {step === 5 && pkg && (
-          <p className="mt-6 text-center text-xs text-muted">
-            Total : {fcfa(pkg.price)} · aucun frais caché
-          </p>
-        )}
       </div>
     </div>
   );

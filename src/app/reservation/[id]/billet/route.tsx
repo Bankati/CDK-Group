@@ -9,7 +9,7 @@ import { formatDayFr, formatRangeFr } from "@/lib/time";
 import { displayStatus, statusLabels } from "@/lib/types";
 import { db } from "@/server/db";
 
-const NIGHT = "#18181a";
+const NIGHT = "#020f3a";
 
 // Logo officiel (version claire) lu sur le disque : le serveur ne peut pas se télécharger lui-même.
 const logoSrc = readFile(join(process.cwd(), "src/assets/ocd-live-blanc.png"), "base64").then(
@@ -72,7 +72,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/reservation/[id]/bi
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", padding: "48px 56px 36px" }}>
-          <div style={{ display: "flex", fontSize: 26, color: "#6b655c", letterSpacing: 4 }}>
+          <div style={{ display: "flex", fontSize: 26, color: "#545e7e", letterSpacing: 4 }}>
             TA PLACE EST RÉSERVÉE
           </div>
           <div
@@ -86,15 +86,15 @@ export async function GET(_req: Request, ctx: RouteContext<"/reservation/[id]/bi
           >
             {b.businessName}
           </div>
-          <div style={{ display: "flex", fontSize: 34, color: "#6b655c", marginTop: 8 }}>
+          <div style={{ display: "flex", fontSize: 34, color: "#545e7e", marginTop: 8 }}>
             {b.fullName}
           </div>
         </div>
-        <div style={{ display: "flex", borderTop: "4px dashed #e9e3d9", margin: "0 56px" }} />
+        <div style={{ display: "flex", borderTop: "4px dashed #e3e7f1", margin: "0 56px" }} />
         <div style={{ display: "flex", flexDirection: "column", padding: "28px 56px" }}>
           {rows.map(([k, v]) => (
             <div key={k} style={{ display: "flex", flexDirection: "column", marginTop: 18 }}>
-              <div style={{ display: "flex", fontSize: 22, color: "#6b655c", letterSpacing: 3 }}>
+              <div style={{ display: "flex", fontSize: 22, color: "#545e7e", letterSpacing: 3 }}>
                 {k}
               </div>
               <div style={{ display: "flex", fontSize: 40, fontWeight: 700, marginTop: 2 }}>
@@ -109,12 +109,12 @@ export async function GET(_req: Request, ctx: RouteContext<"/reservation/[id]/bi
             marginTop: "auto",
             alignItems: "center",
             justifyContent: "space-between",
-            background: "#f7f4ef",
+            background: "#f5f7fc",
             padding: "32px 56px",
           }}
         >
           <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ display: "flex", fontSize: 22, color: "#6b655c", letterSpacing: 3 }}>
+            <div style={{ display: "flex", fontSize: 22, color: "#545e7e", letterSpacing: 3 }}>
               CODE
             </div>
             <div style={{ display: "flex", fontSize: 48, fontWeight: 800, letterSpacing: 6 }}>
@@ -129,7 +129,7 @@ export async function GET(_req: Request, ctx: RouteContext<"/reservation/[id]/bi
               padding: "12px 24px",
               borderRadius: 999,
               background:
-                status === "confirmed" ? "#10b981" : status === "pending" ? "#fcd34d" : "#e9e3d9",
+                status === "confirmed" ? "#10b981" : status === "pending" ? "#fcd34d" : "#e3e7f1",
               color: status === "confirmed" ? "white" : NIGHT,
             }}
           >

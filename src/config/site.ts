@@ -32,32 +32,14 @@ export const site = {
   },
 } as const;
 
-/** Paiement Mobile Money manuel (avant l'arrivée d'un agrégateur). */
-export const payment = {
-  currency: "FCFA",
-  operators: [
-    {
-      id: "flooz",
-      label: "Flooz",
-      network: "Moov Africa",
-      /** À CONFIRMER */
-      number: "+228 79 79 02 29",
-      color: "#0073c2",
-    },
-    {
-      id: "mixx",
-      label: "Mixx by Yas",
-      network: "Yas Togo",
-      /** À CONFIRMER */
-      number: "+228 70 25 65 65",
-      color: "#f7c600",
-    },
-  ],
-  /** Durée pendant laquelle un créneau reste bloqué en attente de validation. */
-  holdMinutes: 30,
+/**
+ * Réservations. Pas de paiement en ligne pour l'instant : l'équipe contacte le client
+ * sur WhatsApp pour le règlement, puis confirme la réservation dans l'Espace Bovann.
+ */
+export const booking = {
+  /** Durée pendant laquelle une réservation non confirmée bloque le créneau (en heures). */
+  holdHours: 24,
 } as const;
-
-export type OperatorId = (typeof payment.operators)[number]["id"];
 
 /** Planning des lives. Toutes les heures sont celles de Lomé (GMT, pas d'heure d'été). */
 export const schedule = {

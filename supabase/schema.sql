@@ -23,9 +23,6 @@ create table if not exists public.bookings (
   city              text not null,
   photo_url         text,
   client_timezone   text,
-  payment_method    text not null,
-  payment_reference text,
-  payment_phone     text,
   status            text not null default 'pending'
                     check (status in ('pending', 'confirmed', 'cancelled')),
   hold_expires_at   timestamptz not null,

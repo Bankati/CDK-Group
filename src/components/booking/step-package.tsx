@@ -73,7 +73,7 @@ export function StepPackage({
                       className={cn(
                         "border border-line md:my-0! md:py-5!",
                         p.tier === "live" && !p.badge && "ring-0",
-                        suggested === p.id && !isSel && !disabled && "ring-2 ring-coal-700/40",
+                        suggested === p.id && !isSel && !disabled && "ring-2 ring-night-700/40",
                       )}
                       note={
                         soldOut ? (

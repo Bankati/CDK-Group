@@ -2,7 +2,7 @@ import "server-only";
 import { randomInt, randomUUID } from "node:crypto";
 import { headers } from "next/headers";
 import { after } from "next/server";
-import { payment } from "@/config/site";
+import { booking as bookingRules } from "@/config/site";
 import {
   availableStarts,
   busyIntervals,
@@ -24,7 +24,6 @@ import {
   clientConfirmedEmail,
   clientPendingEmail,
 } from "@/server/notifications/templates";
-import { getProvider } from "@/server/payments";
 
 const monthRange = (monthKey: string) => ({
   from: `${monthKey}-01T00:00:00.000Z`,
@@ -109,7 +108,6 @@ export async function createBooking(raw: unknown): Promise<CreateResult> {
   }
 
   const id = randomUUID();
-  const provider = getProvider();
   const booking: Booking = {
     id,
     code: newCode(),
@@ -129,9 +127,8 @@ export async function createBooking(raw: unknown): Promise<CreateResult> {
     country: input.mode === "presentiel" ? "Togo" : input.country,
     city: input.mode === "presentiel" ? "Lomé" : input.city,
     clientTimezone: input.clientTimezone,
-    ...provider.fields(input),
     status: "pending",
-    holdExpiresAt: new Date(now + payment.holdMinutes * 60_000).toISOString(),
+    holdExpiresAt: new Date(now + bookingRules.holdHours * 3_600_000).toISOString(),
   };
 
   try {
@@ -174,7 +171,6 @@ export async function createBooking(raw: unknown): Promise<CreateResult> {
     ]);
   });
 
-  await provider.start(booking);
   return { ok: true, id };
 }
 

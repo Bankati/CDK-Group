@@ -1,17 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Poppins } from "next/font/google";
+import { Bricolage_Grotesque, Geist, Geist_Mono, Poppins } from "next/font/google";
 import { site } from "@/config/site";
 import { env } from "@/lib/env";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-/** Poppins : la police du mot « Live » dans le logo officiel, utilisée pour tous les titres. */
-const display = Poppins({
-  variable: "--font-poppins",
+/** Titres du site. */
+const display = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
   weight: ["600", "700", "800"],
 });
+/** Poppins Bold : uniquement le mot « Live » du logo officiel. */
+const logo = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: "700" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),
@@ -41,7 +43,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#18181a",
+  themeColor: "#020f3a",
   width: "device-width",
   initialScale: 1,
 };
@@ -50,7 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="fr"
-      className={`${geistSans.variable} ${geistMono.variable} ${display.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${display.variable} ${logo.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
