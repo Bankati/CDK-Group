@@ -62,9 +62,9 @@ Les navigateurs n'autorisent la caméra que sur un site **sécurisé (https)** o
 
 **[`src/config/site.ts`](src/config/site.ts)** : prix des packages, WhatsApp, lien TikTok, horaires (10h–22h), premier jour (1er décembre), nom du Pack du mois, durée de réservation d'un créneau non confirmé (24 h).
 
-Les images de l'accueil sont dans `public/hero/` : `live-entrepreneure.jpg`, `live-couturier.jpg`, `live-commercante.jpg` (les 3 photos du hero ; textes et cadrage dans `src/components/home/hero.tsx`, tableau `slides`), `affiche-lancement.jpg` (section « Lancement »), `ocd-live-studio.jpg` (fond de la fenêtre « Rejoins le live »).
+Les images de l'accueil sont dans `public/hero/` : `ocd-live-studio.jpg`, `live-entrepreneure.jpg`, `live-couturier.jpg`, `live-commercante.jpg` (les 4 photos du hero ; textes et cadrage dans `src/components/home/hero.tsx`, tableau `slides`), `affiche-lancement.jpg` (section « Lancement »).
 
-**Crédits photos du hero** (licence Unsplash : usage commercial gratuit, sans obligation de crédit) : [Ahmed Nasiru](https://unsplash.com/@ahmed_nasiru) (photo 1), [Ali Mkumbwa](https://unsplash.com/@mkumbwajr) (photos 2 et 3).
+**Crédits photos du hero** (licence Unsplash : usage commercial gratuit, sans obligation de crédit) : [Ahmed Nasiru](https://unsplash.com/@ahmed_nasiru) (photo 2), [Ali Mkumbwa](https://unsplash.com/@mkumbwajr) (photos 3 et 4) ; la photo 1 est le visuel officiel OCD Live.
 
 ---
 

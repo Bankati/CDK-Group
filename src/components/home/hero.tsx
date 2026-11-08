@@ -25,8 +25,8 @@ import { cn } from "@/lib/utils";
 import { LiveModal } from "./live-modal";
 
 /**
- * Les 3 photos du hero (dossier public/hero) et leurs textes.
- * Photos Unsplash (licence libre, usage commercial autorisé) : Ahmed Nasiru, Ali Mkumbwa.
+ * Les 4 photos du hero (dossier public/hero) et leurs textes.
+ * La 1re est le visuel officiel OCD Live ; les 3 autres sont des photos Unsplash (licence libre, usage commercial autorisé) : Ahmed Nasiru, Ali Mkumbwa.
  * `position` : cadrage du sujet ; `flip` : photo retournée en miroir ; `accent` s'affiche en bleu clair, `title` en blanc.
  */
 const slides: {
@@ -37,6 +37,13 @@ const slides: {
   accent: string;
   title: string;
 }[] = [
+  {
+    image: "/hero/ocd-live-studio.jpg",
+    position: "78% 50%",
+    kicker: "OCD Live",
+    accent: "Le live qui vend,",
+    title: "devant toute l'Afrique.",
+  },
   {
     image: "/hero/live-entrepreneure.jpg",
     position: "50% 30%",
@@ -190,15 +197,15 @@ export function Hero() {
             preserveAspectRatio="none"
             className="absolute inset-y-0 left-0 h-full w-[34%] md:w-[64%]"
           >
-            <path d="M0 0 H66 C95 16 99 72 70 100 H0 Z" className="fill-night-600/35" />
-            <path d="M0 0 H60 C88 18 92 72 63 100 H0 Z" className="fill-night-700/55" />
-            <path d="M0 0 H53 C80 20 83 74 55 100 H0 Z" className="fill-night-800" />
+            <path d="M0 0 H64 C100 6 100 86 68 100 H0 Z" className="fill-night-600/35" />
+            <path d="M0 0 H57 C96 7 98 85 61 100 H0 Z" className="fill-night-700/55" />
+            <path d="M0 0 H50 C88 8 92 84 54 100 H0 Z" className="fill-night-800" />
           </svg>
         </div>
 
         {/* Texte : dans la forme sur ordinateur, dans un bloc sous la photo sur téléphone */}
         <div className="relative bg-night-800 md:absolute md:inset-y-0 md:left-0 md:flex md:w-[50%] md:items-center md:bg-transparent lg:w-[47%]">
-          <div className="w-full px-5 py-9 sm:px-8 md:py-0 md:pr-4 lg:pl-[max(2rem,calc((100vw-72rem)/2+2rem))]">
+          <div className="w-full px-5 py-9 sm:px-8 md:box-content md:max-w-[30rem] md:py-0 md:pr-4 lg:pl-[max(2rem,calc((100vw-72rem)/2+2rem))]">
             <div key={active}>
               <div className="flex animate-rise items-center gap-3">
                 <LiveBadge />
@@ -207,7 +214,7 @@ export function Hero() {
                 </span>
               </div>
               <h1
-                className="mt-5 animate-rise font-display text-[2.15rem] leading-[1.08] font-extrabold tracking-tight text-balance italic md:text-[2.5rem] lg:text-[3.1rem]"
+                className="mt-5 animate-rise font-display text-[2.15rem] leading-[1.08] font-extrabold tracking-tight text-balance italic md:text-[2.3rem] lg:text-[2.75rem]"
                 style={{ animationDelay: "80ms" }}
               >
                 <span className="text-[#9fc2e3]">{slide.accent}</span> {slide.title}
