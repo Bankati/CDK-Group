@@ -119,6 +119,7 @@ export function WeekPicker({
           role="dialog"
           aria-label="Choisir une semaine"
           className="absolute top-full right-0 z-30 mt-2 w-[19.5rem] rounded-2xl border border-line bg-white p-4 shadow-2xl"
+          style={{ animation: "pop-in 0.18s ease-out both", transformOrigin: "top right" }}
         >
           <div className="flex items-center justify-between">
             <button
@@ -159,7 +160,7 @@ export function WeekPicker({
                   key={w}
                   onPointerEnter={() => setHoverWeek(w)}
                   className={cn(
-                    "grid grid-cols-7 rounded-xl transition",
+                    "grid grid-cols-7 rounded-xl transition-colors duration-200",
                     selected && "bg-night-900 text-white",
                     hovered && "bg-paper",
                   )}

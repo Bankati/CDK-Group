@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowUpRight, CalendarClock, Clock, TrendingUp, Wallet } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { goals, packages, schedule } from "@/config/site";
 import { fcfa, number } from "@/lib/format";
 import { formatDayFr, formatRangeFr } from "@/lib/time";
@@ -124,9 +124,42 @@ function StatCard({
   );
 }
 
+/** Nombre qui « compte » jusqu'à sa nouvelle valeur (0,7 s, ralenti à la fin). */
+function useCountUp(target: number, ms = 700) {
+  const [value, setValue] = useState(0);
+  const from = useRef(0);
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const start = from.current;
+    if (reduce || start === target) {
+      from.current = target;
+      const id = requestAnimationFrame(() => setValue(target));
+      return () => cancelAnimationFrame(id);
+    }
+    let raf = 0;
+    const t0 = performance.now();
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - t0) / ms);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const v = Math.round(start + (target - start) * eased);
+      from.current = v;
+      setValue(v);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, ms]);
+  return value;
+}
+
 /** Colonnes groupées : réservations reçues chaque jour d'une semaine (confirmé / en attente). */
 function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
-  const [monday, setMonday] = useState(() => mondayOf(now));
+  const [monday, setMondayState] = useState(() => mondayOf(now));
+  const [dir, setDir] = useState<"next" | "prev" | null>(null);
+  const setMonday = (m: number) => {
+    setDir(m > monday ? "next" : m < monday ? "prev" : null);
+    setMondayState(m);
+  };
   const [hover, setHover] = useState<number | null>(null);
   const todayKey = dayKey(now);
   const WEEK = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
@@ -157,6 +190,9 @@ function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
     { confirmed: 0, pending: 0, count: 0 },
   );
 
+  const confirmedShown = useCountUp(totals.confirmed);
+  const pendingShown = useCountUp(totals.pending);
+
   const max = Math.max(1, ...data.flatMap((x) => [x.confirmed, x.pending]));
   const step = max <= 40_000 ? 10_000 : max <= 100_000 ? 25_000 : max <= 200_000 ? 50_000 : 100_000;
   const top = Math.ceil(max / step) * step;
@@ -175,7 +211,7 @@ function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
               <span className="size-2.5 rounded-full" style={{ background: CONFIRMED }} /> Confirmé
             </span>
             <span className="font-display text-lg font-extrabold text-night-900 tabular-nums">
-              {fcfa(totals.confirmed)}
+              {fcfa(confirmedShown)}
             </span>
           </p>
           <p className="leading-tight">
@@ -183,7 +219,7 @@ function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
               <span className="size-2.5 rounded-full" style={{ background: PENDING }} /> En attente
             </span>
             <span className="font-display text-lg font-extrabold text-night-900 tabular-nums">
-              {fcfa(totals.pending)}
+              {fcfa(pendingShown)}
             </span>
           </p>
         </div>
@@ -219,7 +255,17 @@ function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
               />
             ))}
           </div>
-          <div className="relative flex h-60 items-stretch">
+          <div
+            key={monday}
+            className="relative flex h-60 items-stretch"
+            style={
+              dir
+                ? {
+                    animation: `${dir === "next" ? "slide-from-right" : "slide-from-left"} 0.45s cubic-bezier(0.2,0.7,0.2,1) both`,
+                  }
+                : undefined
+            }
+          >
             {data.map((x, i) => {
               const isToday = x.key === todayKey;
               const future = x.d > now;
@@ -238,7 +284,10 @@ function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
                     )}
                   >
                     {hover === i && (x.confirmed > 0 || x.pending > 0) && (
-                      <div className="absolute bottom-[calc(100%+6px)] left-1/2 z-10 -translate-x-1/2 rounded-lg border border-line bg-white px-2.5 py-1.5 text-[11px] whitespace-nowrap text-night-900 shadow-lg">
+                      <div
+                        style={{ animation: "tip-in 0.18s ease-out both" }}
+                        className="absolute bottom-[calc(100%+6px)] left-1/2 z-10 -translate-x-1/2 rounded-lg border border-line bg-white px-2.5 py-1.5 text-[11px] whitespace-nowrap text-night-900 shadow-lg"
+                      >
                         <p className="font-semibold first-letter:uppercase">
                           {new Intl.DateTimeFormat("fr-FR", {
                             weekday: "long",
@@ -268,13 +317,14 @@ function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
                       <span
                         key={k}
                         className={cn(
-                          "block w-full max-w-6 rounded-t transition-[height,opacity] duration-500",
+                          "block w-full max-w-6 origin-bottom rounded-t transition-[height,opacity] duration-500",
                           hover !== null && hover !== i && "opacity-40",
                         )}
                         style={{
                           height: `${((v as number) / top) * 100}%`,
                           background: c as string,
                           minHeight: (v as number) > 0 ? 3 : 0,
+                          animation: `bar-grow 0.7s cubic-bezier(0.2,0.8,0.2,1) ${0.12 + i * 0.07 + k * 0.04}s both`,
                         }}
                       />
                     ))}
@@ -292,7 +342,9 @@ function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
                     <span
                       className={cn(
                         "mt-0.5 flex size-5 items-center justify-center rounded-full text-[11px] tabular-nums",
-                        isToday ? "bg-live-600 font-bold text-white" : "text-muted",
+                        isToday
+                          ? "animate-live-pulse bg-live-600 font-bold text-white"
+                          : "text-muted",
                       )}
                     >
                       {new Date(x.d).getUTCDate()}
