@@ -68,19 +68,26 @@ export function PeriodBanner({
 }) {
   return (
     <section className="relative isolate overflow-hidden rounded-3xl bg-night-950 text-white">
-      {/* Photo provisoire (8e édition de House of Challenge) : à remplacer par une photo officielle */}
-      <Image
-        src="/brand/house-of-challenge-equipe.jpg"
-        alt=""
-        fill
-        sizes="(min-width: 1024px) 75vw, 100vw"
-        className="-z-20 object-cover"
-        style={{ objectPosition: "50% 30%" }}
-      />
+      {/* Photo (8e édition de House of Challenge, 720 px) : affichée à droite, sans être étirée,
+          pour rester nette. Fondu vers le bleu nuit Bovann. À remplacer par une photo officielle. */}
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-r from-night-950/95 via-night-950/75 to-night-950/35"
+        className="absolute inset-y-0 right-0 -z-20 w-full [mask-image:linear-gradient(to_right,transparent,black_45%)] sm:w-[62%] sm:[mask-image:linear-gradient(to_right,transparent,black_35%)]"
+      >
+        <Image
+          src="/brand/house-of-challenge-equipe.jpg"
+          alt=""
+          fill
+          sizes="(min-width: 640px) 720px, 100vw"
+          className="object-cover"
+          style={{ objectPosition: "60% 30%" }}
+        />
+      </div>
+      <div
+        aria-hidden
+        className="absolute inset-0 -z-10 bg-gradient-to-t from-night-950/95 via-night-950/75 to-night-950/55 sm:bg-gradient-to-r sm:from-night-950/40 sm:via-transparent sm:to-transparent"
       />
+      <span aria-hidden className="absolute inset-y-0 left-0 w-1.5 bg-live" />
 
       <div className="flex min-h-72 flex-col justify-end gap-8 p-6 sm:min-h-80 sm:flex-row sm:items-end sm:justify-between sm:p-10">
         <div>

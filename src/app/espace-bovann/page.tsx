@@ -5,7 +5,6 @@ import { isAdmin } from "@/server/auth";
 import { audienceMap } from "@/server/audience-map";
 import { db } from "@/server/db";
 import { emailsEnabled, isDemo, usingDefaultPassword } from "@/server/env";
-import { recentEmails } from "@/server/notifications";
 import { getNotificationEmails } from "@/server/settings";
 import { Dashboard } from "./dashboard";
 import { kpis, toAdmin } from "./data";
@@ -18,21 +17,10 @@ async function loadDashboard() {
   const rows = (await db.list())
     .map((b) => toAdmin(b, now))
     .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
-  const emails = emailsEnabled
-    ? []
-    : recentEmails().map((e) => ({
-        to: [e.to].flat().join(", "),
-        subject: e.subject,
-        text: e.text,
-        at: e.at,
-        delivered: e.delivered,
-        error: e.error,
-      }));
   const all = await db.list();
   return {
     now,
     rows,
-    emails,
     notificationEmails: await getNotificationEmails(),
     map: audienceMap(all),
   };
@@ -41,14 +29,13 @@ async function loadDashboard() {
 async function Gate() {
   await connection();
   if (!(await isAdmin())) return <LoginForm demo={usingDefaultPassword} />;
-  const { now, rows, emails, notificationEmails, map } = await loadDashboard();
+  const { now, rows, notificationEmails, map } = await loadDashboard();
   return (
     <Dashboard
       bookings={rows}
       kpis={kpis(rows, now)}
       now={now}
       demo={isDemo}
-      emails={emails}
       emailsEnabled={emailsEnabled}
       notificationEmails={notificationEmails}
       map={map}

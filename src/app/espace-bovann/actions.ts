@@ -75,7 +75,7 @@ export async function sendTestNotification() {
     ok: true,
     message: emailsEnabled
       ? `Email de test envoyé à ${to.join(", ")}.`
-      : `Mode démo : l'email de test est visible dans l'onglet « Emails » (envoi réel une fois Resend configuré).`,
+      : `Mode démo : l'email de test n'est pas envoyé (aucune clé Resend). Il partira dès que Resend sera configuré.`,
   };
 }
 

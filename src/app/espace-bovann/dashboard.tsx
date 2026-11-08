@@ -14,7 +14,6 @@ import {
   Download,
   List,
   LogOut,
-  Mail,
   Send,
   Settings,
   X,
@@ -43,15 +42,7 @@ import { Overview, type GoTo } from "./overview";
 import { applyFilters, type AdminBooking, type Filters, type kpis as kpisFn } from "./data";
 
 type Kpis = ReturnType<typeof kpisFn>;
-type EmailRow = {
-  to: string;
-  subject: string;
-  text: string;
-  at: string;
-  delivered: boolean;
-  error?: string;
-};
-type Tab = "apercu" | "liste" | "calendrier" | "stats" | "emails" | "reglages";
+type Tab = "apercu" | "liste" | "calendrier" | "stats" | "reglages";
 
 const statusStyle: Record<DisplayStatus, string> = {
   pending: "bg-amber-50 text-amber-900",
@@ -68,7 +59,6 @@ export function Dashboard({
   kpis,
   now,
   demo,
-  emails,
   emailsEnabled,
   notificationEmails,
   map,
@@ -77,7 +67,6 @@ export function Dashboard({
   kpis: Kpis;
   now: number;
   demo: boolean;
-  emails: EmailRow[];
   emailsEnabled: boolean;
   /** Adresses qui reçoivent les nouvelles réservations. */
   notificationEmails: string[];
@@ -99,7 +88,6 @@ export function Dashboard({
     { id: "liste", label: "Réservations", Icon: List },
     { id: "calendrier", label: "Calendrier", Icon: CalendarDays },
     { id: "stats", label: "Statistiques", Icon: BarChart3 },
-    ...(!emailsEnabled ? [{ id: "emails" as const, label: "Emails", Icon: Mail }] : []),
     { id: "reglages", label: "Réglages", Icon: Settings },
   ];
 
@@ -132,7 +120,6 @@ export function Dashboard({
     liste: "Réservations",
     calendrier: "Calendrier des lives",
     stats: "Statistiques",
-    emails: "Emails envoyés",
     reglages: "Réglages",
   };
 
@@ -168,16 +155,6 @@ export function Dashboard({
                   )}
                 >
                   {kpis.pending}
-                </span>
-              )}
-              {id === "emails" && emails.length > 0 && (
-                <span
-                  className={cn(
-                    "ml-auto rounded-full px-2 py-0.5 text-[11px] font-bold",
-                    tab === id ? "bg-white/15 text-white" : "bg-paper text-muted",
-                  )}
-                >
-                  {emails.length}
                 </span>
               )}
             </button>
@@ -393,7 +370,6 @@ export function Dashboard({
             )}
             {tab === "calendrier" && <CalendarView rows={visible} now={now} />}
             {tab === "stats" && <Stats rows={bookings} />}
-            {tab === "emails" && <Emails rows={emails} />}
             {tab === "reglages" && (
               <SettingsPanel emails={notificationEmails} emailsEnabled={emailsEnabled} />
             )}
@@ -973,91 +949,6 @@ function Stats({ rows }: { rows: AdminBooking[] }) {
   );
 }
 
-function Emails({ rows }: { rows: EmailRow[] }) {
-  const [open, setOpen] = useState<Set<string>>(new Set());
-  const toggle = (id: string) =>
-    setOpen((o) => {
-      const n = new Set(o);
-      if (n.has(id)) n.delete(id);
-      else n.add(id);
-      return n;
-    });
-  return (
-    <div className="space-y-4">
-      <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
-        <Mail className="mt-0.5 size-5 shrink-0" aria-hidden />
-        <p>
-          <strong>Mode démo :</strong> aucune clé Resend n&apos;est configurée, les emails ne
-          partent pas. Voici exactement ce qui serait envoyé à Bovann Group et aux clients.
-        </p>
-      </div>
-      {!rows.length ? (
-        <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-16 text-center">
-          <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-paper">
-            <Mail className="size-6 text-muted" aria-hidden />
-          </span>
-          <p className="mt-4 font-display text-lg font-bold text-night-900">
-            Aucun email pour l&apos;instant
-          </p>
-          <p className="mt-1 text-sm text-muted">
-            Ils apparaîtront ici à chaque nouvelle réservation ou confirmation.
-          </p>
-        </div>
-      ) : (
-        <ul className="overflow-hidden rounded-2xl border border-line bg-white">
-          {rows.map((e) => {
-            const id = e.at + e.subject;
-            const admin = e.subject.startsWith("🔔");
-            return (
-              <li key={id} className="border-b border-line last:border-0">
-                <button
-                  type="button"
-                  onClick={() => toggle(id)}
-                  aria-expanded={open.has(id)}
-                  className="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-paper/60"
-                >
-                  <span
-                    className={cn(
-                      "flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold",
-                      admin ? "bg-night-900 text-white" : "bg-[#2a78d6]/12 text-[#1d5fae]",
-                    )}
-                  >
-                    {admin ? "BG" : e.to.slice(0, 1).toUpperCase()}
-                  </span>
-                  <span className="min-w-0 flex-1 leading-tight">
-                    <span className="block truncate font-semibold text-night-900">{e.subject}</span>
-                    <span className="block truncate text-xs text-muted">À : {e.to}</span>
-                  </span>
-                  <span className="shrink-0 text-xs text-muted">
-                    {new Date(e.at).toLocaleString("fr-FR", {
-                      timeZone: "Africa/Lome",
-                      day: "numeric",
-                      month: "short",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                  <ChevronDown
-                    className={cn(
-                      "size-4 shrink-0 text-muted transition",
-                      open.has(id) && "rotate-180",
-                    )}
-                  />
-                </button>
-                {open.has(id) && (
-                  <p className="border-t border-dashed border-line bg-paper/60 px-5 py-4 text-sm leading-relaxed whitespace-pre-line text-night-900">
-                    {e.text}
-                  </p>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 /** Onglet « Réglages » : adresse(s) qui reçoivent chaque nouvelle réservation. */
 function SettingsPanel({ emails, emailsEnabled }: { emails: string[]; emailsEnabled: boolean }) {
   const [state, save, saving] = useActionState(saveNotificationEmails, undefined);
@@ -1133,9 +1024,8 @@ function SettingsPanel({ emails, emailsEnabled }: { emails: string[]; emailsEnab
       </form>
       {!emailsEnabled && (
         <p className="mt-4 rounded-2xl bg-amber-100 p-4 text-sm text-amber-950">
-          Mode démo : les emails ne partent pas encore (aucune clé Resend). Ils s&apos;affichent
-          dans l&apos;onglet « Emails ». Une fois Resend branché (étape 2), ils arriveront
-          réellement à ces adresses.
+          Mode démo : les emails ne partent pas encore (aucune clé Resend). Une fois
+          Resend branché (étape 2), ils arriveront réellement à ces adresses.
         </p>
       )}
     </div>

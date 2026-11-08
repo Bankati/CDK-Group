@@ -17,7 +17,7 @@ pnpm dev         # lance le site
 
 Ouvre **http://localhost:3000**.
 
-Le site démarre en **mode démo** : 8 réservations fictives sont déjà là (dont le 5 décembre complet), les emails ne partent pas mais s'affichent dans l'Espace Bovann (onglet « Emails »).
+Le site démarre en **mode démo** : 8 réservations fictives sont déjà là (dont le 5 décembre complet), les emails ne partent pas (ils sont seulement notés dans la console du serveur) tant que Resend n'est pas branché.
 Redémarrer le serveur remet les données de départ.
 
 ### Espace Bovann (tableau de bord)
