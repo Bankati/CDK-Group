@@ -4,7 +4,7 @@ import { Camera } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
-import { LiveBadge, OcdLiveLogo } from "@/components/brand";
+import { OcdLiveLogo } from "@/components/brand";
 import { cn } from "@/lib/utils";
 import { LiveModal } from "./live-modal";
 
@@ -170,85 +170,91 @@ export function Hero() {
             <path d="M0 0 H57 C96 7 98 85 61 100 H0 Z" className="fill-night-700/55" />
             <path d="M0 0 H50 C88 8 92 84 54 100 H0 Z" className="fill-night-800" />
           </svg>
+
+          {/* Points du slider : en bas à droite de la photo, loin du texte */}
+          <div
+            className="absolute right-5 bottom-5 z-10 flex items-center gap-2 rounded-full bg-black/35 px-3 py-1 backdrop-blur-sm md:right-8 md:bottom-6"
+            role="tablist"
+            aria-label="Photos"
+          >
+            {slides.map((s, i) => (
+              <button
+                key={s.image}
+                type="button"
+                role="tab"
+                aria-selected={i === active}
+                aria-label={`Photo ${i + 1} : ${s.kicker}`}
+                onClick={() => go(i)}
+                className="group flex h-7 items-center"
+              >
+                <span
+                  className={cn(
+                    "block h-1.5 rounded-full transition-all duration-500",
+                    i === active ? "w-8 bg-white" : "w-3 bg-white/45 group-hover:bg-white/80",
+                  )}
+                />
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Texte : dans la forme sur ordinateur, dans un bloc sous la photo sur téléphone */}
-        <div className="relative bg-night-800 md:absolute md:inset-y-0 md:left-0 md:flex md:w-[50%] md:items-center md:bg-transparent lg:w-[47%]">
-          <div className="w-full px-5 py-9 sm:px-8 md:box-content md:max-w-[30rem] md:py-0 md:pr-4 lg:pl-[max(2rem,calc((100vw-72rem)/2+2rem))]">
-            <div key={active}>
-              <div className="flex animate-rise items-center gap-3">
-                <LiveBadge />
-                <span className="text-xs font-semibold tracking-[0.2em] text-white/80 uppercase">
+        <div className="relative bg-night-800 md:absolute md:inset-y-0 md:left-0 md:flex md:w-[48%] md:items-center md:bg-transparent lg:w-[46%]">
+          <div className="w-full px-6 py-10 sm:px-10 md:py-0 md:pr-10 md:pl-[max(2.75rem,calc((100vw-72rem)/2+2rem))]">
+            <div className="max-w-[28rem]">
+              <div key={active}>
+                <p className="flex animate-rise items-center gap-2.5 text-xs font-bold tracking-[0.22em] text-[#9fc2e3] uppercase">
+                  <span className="relative flex size-2">
+                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-live opacity-75" />
+                    <span className="relative inline-flex size-2 rounded-full bg-live" />
+                  </span>
+                  En direct
+                  <span aria-hidden className="h-3 w-px bg-white/25" />
                   {slide.kicker}
-                </span>
+                </p>
+                <h1
+                  className="mt-4 animate-rise font-display text-[2.35rem] leading-[1.04] font-extrabold tracking-tight text-balance md:text-[2.45rem] lg:text-[3.1rem]"
+                  style={{ animationDelay: "80ms" }}
+                >
+                  <span className="block text-[#9fc2e3]">{slide.accent}</span>
+                  <span className="block">{slide.title}</span>
+                </h1>
               </div>
-              <h1
-                className="mt-5 animate-rise font-display text-[2.15rem] leading-[1.08] font-extrabold tracking-tight text-balance italic md:text-[2.3rem] lg:text-[2.75rem]"
-                style={{ animationDelay: "80ms" }}
-              >
-                <span className="text-[#9fc2e3]">{slide.accent}</span> {slide.title}
-              </h1>
-            </div>
 
-            <p className="mt-5 max-w-md leading-relaxed text-white/75">
-              Réserve ton passage en live sur le TikTok de House of Challenge, en présentiel à Lomé
-              ou à distance.
-            </p>
+              <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-white/70">
+                Passe en live sur le TikTok de House of Challenge, à Lomé ou depuis chez toi.
+              </p>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link
-                href="/reserver?mode=presentiel"
-                className="group relative flex min-h-14 items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-live px-5 text-[1.05rem] font-bold whitespace-nowrap shadow-xl shadow-live/30 transition hover:bg-live-700 active:scale-[0.98]"
-              >
-                <span aria-hidden className="text-xl">
-                  🎥
-                </span>
-                En présentiel au Togo
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute inset-y-0 left-0 w-1/3 animate-shine bg-gradient-to-r from-transparent via-white/25 to-transparent"
-                />
-              </Link>
-              <Link
-                href="/reserver?mode=distance"
-                className="flex min-h-14 items-center justify-center gap-2.5 rounded-2xl border border-white/25 bg-white/10 px-5 text-[1.05rem] font-bold whitespace-nowrap transition hover:bg-white/20 active:scale-[0.98]"
-              >
-                <span aria-hidden className="text-xl">
-                  🌍
-                </span>
-                À distance
-              </Link>
-            </div>
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                <Link
+                  href="/reserver?mode=presentiel"
+                  className="group relative flex min-h-14 items-center justify-center gap-2 overflow-hidden rounded-xl bg-live px-4 font-bold whitespace-nowrap shadow-lg shadow-live/25 transition hover:bg-live-700 active:scale-[0.98]"
+                >
+                  <span aria-hidden>🎥</span>
+                  En présentiel au Togo
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-y-0 left-0 w-1/3 animate-shine bg-gradient-to-r from-transparent via-white/25 to-transparent"
+                  />
+                </Link>
+                <Link
+                  href="/reserver?mode=distance"
+                  className="flex min-h-14 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.06] px-4 font-bold whitespace-nowrap transition hover:bg-white/15 active:scale-[0.98]"
+                >
+                  <span aria-hidden>🌍</span>À distance
+                </Link>
+              </div>
 
-            <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
               <button
                 type="button"
                 onClick={() => setLiveOpen(true)}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-white decoration-live decoration-2 underline-offset-4 hover:underline"
+                className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] py-2 pr-4 pl-2 text-sm font-semibold text-white/90 transition hover:bg-white/15"
               >
-                <Camera className="size-4 text-live" aria-hidden />
+                <span className="flex size-7 items-center justify-center rounded-full bg-live">
+                  <Camera className="size-4 text-white" aria-hidden />
+                </span>
                 Essaie&nbsp;: rejoins le live avec ta caméra
               </button>
-              <div className="flex items-center gap-2" role="tablist" aria-label="Photos">
-                {slides.map((s, i) => (
-                  <button
-                    key={s.image}
-                    type="button"
-                    role="tab"
-                    aria-selected={i === active}
-                    aria-label={`Photo ${i + 1} : ${s.kicker}`}
-                    onClick={() => go(i)}
-                    className="group flex h-8 items-center"
-                  >
-                    <span
-                      className={cn(
-                        "block h-1.5 rounded-full transition-all duration-500",
-                        i === active ? "w-10 bg-white" : "w-4 bg-white/35 group-hover:bg-white/70",
-                      )}
-                    />
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         </div>
