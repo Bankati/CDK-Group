@@ -1,10 +1,11 @@
 "use client";
 
-import { Camera } from "lucide-react";
+import { CalendarClock, Camera } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { OcdLiveLogo } from "@/components/brand";
+import { schedule } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { LiveModal } from "./live-modal";
 
@@ -95,9 +96,19 @@ function useLiveRunning(ref: React.RefObject<HTMLElement | null>) {
   return inView && pageVisible && !reduced;
 }
 
+/** Jours restants avant le lancement (calculé dans le navigateur uniquement). */
+function useDaysToLaunch() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => Math.ceil((Date.parse(`${schedule.firstDay}T10:00:00Z`) - Date.now()) / 86_400_000),
+    () => null,
+  );
+}
+
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const running = useLiveRunning(sectionRef);
+  const days = useDaysToLaunch();
   const [{ active, prev }, setState] = useState<{ active: number; prev: number | null }>({
     active: 0,
     prev: null,
@@ -146,8 +157,8 @@ export function Hero() {
 
       <div className="relative isolate">
         {/* Photos : fondu enchaîné + zoom lent. Sur ordinateur, elles commencent sous la forme. */}
-        <div className="relative h-[48svh] min-h-[300px] overflow-hidden bg-night-950 sm:h-[440px] lg:h-[600px] xl:h-[640px]">
-          <div className="absolute inset-0 lg:left-[32%]">
+        <div className="relative h-[48svh] min-h-[300px] overflow-hidden bg-night-950 md:h-[600px] lg:h-[660px]">
+          <div className="absolute inset-0 md:left-[32%]">
             {slides.map((s, i) => (
               <div
                 key={s.image}
@@ -162,7 +173,7 @@ export function Hero() {
                   src={s.image}
                   alt=""
                   fill
-                  sizes="(min-width: 1024px) 70vw, 100vw"
+                  sizes="(min-width: 768px) 72vw, 100vw"
                   preload={i === 0}
                   style={{ objectPosition: s.position }}
                   className={cn("object-cover", (i === active || i === prev) && "animate-kenburns")}
@@ -176,7 +187,7 @@ export function Hero() {
             aria-hidden
             viewBox="0 0 100 100"
             preserveAspectRatio="none"
-            className="absolute inset-y-0 left-0 h-full w-[30%] sm:w-[20%] lg:w-[62%]"
+            className="absolute inset-y-0 left-0 h-full w-[34%] md:w-[64%]"
           >
             <path d="M0 0 H64 C100 6 100 86 68 100 H0 Z" className="fill-night-600/35" />
             <path d="M0 0 H57 C96 7 98 85 61 100 H0 Z" className="fill-night-700/55" />
@@ -211,9 +222,9 @@ export function Hero() {
         </div>
 
         {/* Texte : dans la forme sur ordinateur, dans un bloc sous la photo sur téléphone */}
-        <div className="relative bg-night-800 lg:absolute lg:inset-y-0 lg:left-0 lg:flex lg:w-[50%] lg:items-center lg:bg-transparent xl:w-[46%]">
-          <div className="mx-auto w-full max-w-2xl px-6 py-10 sm:px-10 sm:py-14 lg:mx-0 lg:max-w-none lg:py-0 lg:pr-12 lg:pl-[max(3rem,calc((100vw-72rem)/2+2rem))]">
-            <div className="max-w-[30rem]">
+        <div className="relative bg-night-800 md:absolute md:inset-y-0 md:left-0 md:flex md:w-[50%] md:items-center md:bg-transparent lg:w-[46%]">
+          <div className="w-full px-6 py-10 sm:px-10 md:py-0 md:pr-8 md:pl-[max(2.75rem,calc((100vw-72rem)/2+2rem))]">
+            <div className="max-w-[27rem] lg:max-w-[30rem]">
               <div key={active}>
                 {/* Signal « en direct » : égaliseur animé */}
                 <p className="flex animate-rise items-center gap-3 text-[11px] font-bold tracking-[0.24em] text-white/70 uppercase">
@@ -239,7 +250,7 @@ export function Hero() {
                     {slide.accent}
                   </span>
                   <span
-                    className="mt-1 block animate-rise text-[clamp(2.4rem,3.5vw,3.25rem)] leading-[1.04] font-extrabold"
+                    className="mt-1 block animate-rise text-[clamp(2.4rem,3.6vw,3.25rem)] leading-[1.04] font-extrabold"
                     style={{ animationDelay: "140ms" }}
                   >
                     {slide.before}
@@ -279,7 +290,7 @@ export function Hero() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/reserver?mode=presentiel"
-                  className="group relative flex min-h-14 flex-[1_1_auto] items-center justify-center gap-2 overflow-hidden rounded-xl bg-live px-6 font-bold whitespace-nowrap shadow-lg shadow-live/25 transition hover:bg-live-700 active:scale-[0.98]"
+                  className="group relative flex min-h-14 flex-[1_1_auto] items-center justify-center gap-2 overflow-hidden rounded-xl bg-live px-4 text-[15px] font-bold whitespace-nowrap shadow-lg shadow-live/25 transition hover:bg-live-700 active:scale-[0.98] lg:px-5 lg:text-base"
                 >
                   <span aria-hidden>🎥</span>
                   En présentiel au Togo
@@ -290,27 +301,34 @@ export function Hero() {
                 </Link>
                 <Link
                   href="/reserver?mode=distance"
-                  className="flex min-h-14 flex-[1_1_auto] items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.06] px-6 font-bold whitespace-nowrap transition hover:bg-white/15 active:scale-[0.98]"
+                  className="flex min-h-14 flex-[1_1_auto] items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/[0.06] px-4 text-[15px] font-bold whitespace-nowrap transition hover:bg-white/15 active:scale-[0.98] lg:px-5 lg:text-base"
                 >
                   <span aria-hidden>🌍</span>À distance
                 </Link>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setLiveOpen(true)}
-                className="group mt-6 inline-flex items-center gap-2.5 text-sm font-semibold text-white/85 transition hover:text-white"
-              >
-                <span className="flex size-8 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/15 transition group-hover:bg-live group-hover:ring-live">
-                  <Camera className="size-4" aria-hidden />
-                </span>
-                <span>
-                  Essaie maintenant&nbsp;:{" "}
-                  <span className="underline decoration-live decoration-2 underline-offset-4">
-                    passe en live avec ta caméra
+              {/* Ligne finale : caméra · compte à rebours */}
+              <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-white/10 pt-5 text-sm">
+                <button
+                  type="button"
+                  onClick={() => setLiveOpen(true)}
+                  className="group inline-flex items-center gap-2 font-semibold text-white/90 transition hover:text-white"
+                >
+                  <span className="flex size-7 items-center justify-center rounded-full bg-white/10 transition group-hover:bg-live">
+                    <Camera className="size-3.5" aria-hidden />
                   </span>
-                </span>
-              </button>
+                  Essaie avec ta caméra
+                </button>
+                {days !== null && days > 0 && (
+                  <span className="inline-flex items-center gap-2 text-white/60">
+                    <CalendarClock className="size-4 text-live" aria-hidden />
+                    Lancement le 1er déc.
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-bold text-white">
+                      J-{days}
+                    </span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
