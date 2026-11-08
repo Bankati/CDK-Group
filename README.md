@@ -37,6 +37,16 @@ Redémarrer le serveur remet les données de départ.
 4. Sur le téléphone, ouvre **http://192.168.1.64:3000** (avec ton adresse).
 5. Si ça ne charge pas : Windows demande parfois d'autoriser « Node.js » dans le pare-feu → accepter pour les **réseaux privés**.
 
+### L'effet « Rejoins le live » (caméra)
+
+Dans le téléphone du hero, le bouton **Rejoins le live** ouvre la caméra du visiteur : il se voit en direct dans le live de Bovann, puis peut garder une **photo de live** au format story (partage WhatsApp sur téléphone, téléchargement sur ordinateur). Tout reste sur l'appareil : rien n'est envoyé ni enregistré.
+
+Les navigateurs n'autorisent la caméra que sur un site **sécurisé (https)** ou sur `localhost` :
+
+- sur l'ordinateur : `pnpm dev` puis http://localhost:3000, ça marche directement ;
+- sur le téléphone avant la mise en ligne : `pnpm dev:https`, puis ouvrir **https**://ADRESSE-DU-PC:3000 et accepter l'avertissement de certificat (« Paramètres avancés » → « Continuer ») ;
+- une fois en ligne sur Vercel (https), ça marche partout sans rien faire.
+
 ### Scénario de présentation (5 minutes)
 
 1. **Accueil** : le slider, les 2 boutons, les packages (« Le plus choisi », VIP doré, compteur du Pack du mois).

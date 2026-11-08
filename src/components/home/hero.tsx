@@ -16,15 +16,16 @@ import {
   SN,
   TG,
 } from "country-flag-icons/react/3x2";
-import { CalendarClock, ShoppingBag, Sparkles, Zap } from "lucide-react";
+import { CalendarClock, Camera, Crown, Download, ShoppingBag, X, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { OcdLiveLogo } from "@/components/brand";
-import { packages, schedule } from "@/config/site";
+import { packages, schedule, site } from "@/config/site";
 import { number } from "@/lib/format";
+import { makeLiveSnapshot } from "@/lib/live-snapshot";
 import { cn } from "@/lib/utils";
-import { LivePhone, type LiveProduct } from "./live-phone";
+import { GUEST_COMMENTS, LivePhone, type LiveProduct } from "./live-phone";
 
 /** Visuel du live affiché dans le téléphone (dossier public/hero) et son cadrage. */
 const LIVE_IMAGE = { src: "/hero/ocd-live-studio.jpg", position: "62% 50%" };
@@ -95,8 +96,59 @@ function useDaysToLaunch() {
   );
 }
 
-/** Notification flottante « Nouvelle commande ». */
-function OrderToast({ running, brand }: { running: boolean; brand: string }) {
+type CamState =
+  { status: "off" | "asking" | "denied" | "unavailable" } | { status: "on"; stream: MediaStream };
+
+/**
+ * « Rejoins le live » : la caméra frontale du visiteur s'affiche dans le téléphone.
+ * Le flux reste sur l'appareil : rien n'est envoyé ni enregistré.
+ */
+function useGuestCamera() {
+  const [cam, setCam] = useState<CamState>({ status: "off" });
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const stop = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+    setCam({ status: "off" });
+  };
+
+  const start = async () => {
+    if (!navigator.mediaDevices?.getUserMedia || !window.isSecureContext) {
+      setCam({ status: "unavailable" });
+      return;
+    }
+    setCam({ status: "asking" });
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { ideal: 720 }, height: { ideal: 1280 } },
+        audio: false,
+      });
+      streamRef.current = stream;
+      setCam({ status: "on", stream });
+    } catch (e) {
+      const denied = e instanceof DOMException && e.name === "NotAllowedError";
+      setCam({ status: denied ? "denied" : "unavailable" });
+    }
+  };
+
+  // La caméra s'éteint si on quitte la page ou si l'onglet passe en arrière-plan.
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === "hidden" && streamRef.current) stop();
+    };
+    document.addEventListener("visibilitychange", onHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onHide);
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+
+  return { cam, start, stop };
+}
+
+/** Notification flottante : commandes, ou Bovann qui rejoint le live du visiteur. */
+function Toast({ running, guest }: { running: boolean; guest: boolean }) {
   const [i, setI] = useState(0);
   useEffect(() => {
     if (!running) return;
@@ -105,21 +157,28 @@ function OrderToast({ running, brand }: { running: boolean; brand: string }) {
   }, [running]);
   return (
     <div
-      key={i}
+      key={`${guest}-${i}`}
       className={cn(
         "flex items-center gap-3 rounded-2xl bg-white p-3 pr-4 text-night-900 shadow-2xl shadow-black/40",
         running && "animate-toast",
       )}
     >
-      <span className="flex size-9 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700">
-        <ShoppingBag className="size-4.5" />
+      <span
+        className={cn(
+          "flex size-9 items-center justify-center rounded-xl",
+          guest ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700",
+        )}
+      >
+        {guest ? <Crown className="size-4.5" /> : <ShoppingBag className="size-4.5" />}
       </span>
       <span className="leading-tight">
-        <span className="block max-w-56 truncate text-[13px] font-bold">
-          {brand ? `Nouvelle commande pour ${brand}` : "Nouvelle commande"}
+        <span className="block text-[13px] font-bold whitespace-nowrap">
+          {guest ? `${site.liveAccount.handle} a rejoint ton live` : "Nouvelle commande"}
         </span>
         <span className="block text-xs whitespace-nowrap text-muted">
-          depuis {ORDERS[i % ORDERS.length]} · à l&apos;instant
+          {guest
+            ? "8M followers te découvrent"
+            : `depuis ${ORDERS[i % ORDERS.length]} · à l'instant`}
         </span>
       </span>
     </div>
@@ -128,36 +187,82 @@ function OrderToast({ running, brand }: { running: boolean; brand: string }) {
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const running = useLiveRunning(sectionRef);
   const days = useDaysToLaunch();
+  const { cam, start, stop } = useGuestCamera();
+  const guest = cam.status === "on";
   const [active, setActive] = useState(0);
-  // Le visiteur écrit le nom de son business : il passe « en live » dans le hero.
-  const [brand, setBrand] = useState("");
-  const [liveBrand, setLiveBrand] = useState("");
-  const typed = brand.trim();
+  const [saving, setSaving] = useState(false);
 
-  // Produit suivant toutes les 6,5 s (en pause quand le visiteur a écrit son business).
+  // Produit suivant toutes les 6,5 s (en pause pendant que le visiteur est en live).
   useEffect(() => {
-    if (!running || typed) return;
+    if (!running || guest) return;
     const id = setInterval(() => setActive((a) => (a + 1) % slides.length), INTERVAL);
     return () => clearInterval(id);
-  }, [active, running, typed]);
+  }, [active, running, guest]);
 
-  // Le live réagit (cœurs, spectateurs, commentaires) quand le visiteur s'arrête de taper.
+  // Branche la caméra du visiteur sur la vidéo du téléphone.
+  const stream = cam.status === "on" ? cam.stream : null;
   useEffect(() => {
-    const t = setTimeout(() => setLiveBrand(typed), 450);
-    return () => clearTimeout(t);
-  }, [typed]);
+    const v = videoRef.current;
+    if (!v) return;
+    v.srcObject = stream;
+    if (stream) void v.play().catch(() => {});
+  }, [stream]);
 
   const slide = slides[active]!;
-  const headline = typed || slide.word;
-  const headlineSize =
-    headline.length <= 14
-      ? "text-[2.7rem] sm:text-6xl lg:text-7xl"
-      : headline.length <= 24
-        ? "text-[2.1rem] sm:text-5xl lg:text-6xl"
-        : "text-[1.7rem] sm:text-4xl lg:text-5xl";
-  const business = typed ? `&business=${encodeURIComponent(typed)}` : "";
+
+  async function joinLive() {
+    await start();
+    // Sur téléphone, le live est sous le texte : on y descend.
+    document.getElementById("ton-live")?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  /** Photo de live au format story, partagée sur WhatsApp (mobile) ou téléchargée. */
+  async function savePhoto() {
+    const video = videoRef.current;
+    if (!video) return;
+    setSaving(true);
+    try {
+      const blob = await makeLiveSnapshot(video, {
+        viewers: document.getElementById("live-viewers")?.textContent ?? "10 000",
+        comments: GUEST_COMMENTS.slice(0, 3).map((c) => ({
+          who: `${c.name} · ${c.city}`,
+          text: c.text,
+        })),
+        site: window.location.host,
+      });
+      const file = new File([blob], "moi-en-live-ocd.jpg", { type: "image/jpeg" });
+      // Sur téléphone : feuille de partage (WhatsApp, statut…). Sur ordinateur : téléchargement.
+      const touch = window.matchMedia("(pointer: coarse)").matches;
+      if (touch && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: "Moi, en live sur OCD Live",
+          text: `Moi, en live devant toute l'Afrique 🔥 Réserve ton live : ${window.location.origin}`,
+        });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.name;
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+      }
+    } catch {
+      /* partage annulé par le visiteur : rien à faire */
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const camMessage =
+    cam.status === "denied"
+      ? "Caméra refusée. Pas de souci : réserve ton vrai live 😉"
+      : cam.status === "unavailable"
+        ? "La caméra n'est pas disponible ici (elle s'active sur le site en ligne, en https)."
+        : null;
 
   return (
     <section ref={sectionRef} className="relative isolate overflow-hidden bg-night-950 text-white">
@@ -219,10 +324,10 @@ export function Hero() {
 
           <h1 className="mt-6 font-display font-extrabold tracking-tight">
             <span
-              key={typed ? "brand" : slide.word}
-              className={cn("block animate-rise leading-[1.05] break-words", headlineSize)}
+              key={guest ? "toi" : slide.word}
+              className="block animate-rise text-[2.7rem] leading-none sm:text-6xl lg:text-7xl"
             >
-              {headline}
+              {guest ? "C'est toi" : slide.word}
             </span>
             <span className="mt-3 inline-block -skew-x-[10deg] bg-live px-4 pt-1 pb-2 shadow-2xl shadow-live/30 sm:px-6">
               <span className="inline-block skew-x-[10deg] text-[3.7rem] leading-none italic sm:text-8xl lg:text-[8rem]">
@@ -231,55 +336,14 @@ export function Hero() {
             </span>
           </h1>
 
-          {/* L'effet « waouh » : le visiteur voit son propre business passer en live */}
-          <div className="mt-7 max-w-md">
-            <label htmlFor="hero-business" className="text-sm font-semibold text-white/80">
-              Essaie&nbsp;: écris le nom de ton business
-            </label>
-            <div className="relative mt-2">
-              <Sparkles
-                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-gold"
-                aria-hidden
-              />
-              <input
-                id="hero-business"
-                value={brand}
-                onChange={(e) => setBrand(e.target.value.slice(0, 40))}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.currentTarget.blur();
-                    document
-                      .getElementById("ton-live")
-                      ?.scrollIntoView({ behavior: "smooth", block: "center" });
-                  }
-                }}
-                placeholder="Ex. Afi Cosmétiques"
-                autoComplete="organization"
-                enterKeyHint="go"
-                className="min-h-14 w-full rounded-2xl border border-white/20 bg-white/10 pr-4 pl-12 text-lg font-semibold text-white backdrop-blur-sm transition outline-none placeholder:font-normal placeholder:text-white/45 focus:border-live focus:bg-white/15 focus:ring-4 focus:ring-live/25"
-              />
-            </div>
-            <p className="mt-2 min-h-5 text-sm text-white/65" aria-live="polite">
-              {liveBrand ? (
-                <>
-                  <strong className="text-white">{liveBrand}</strong> est en direct devant toute
-                  l&apos;Afrique.{" "}
-                  <a
-                    href="#ton-live"
-                    className="font-semibold text-white underline underline-offset-4 lg:hidden"
-                  >
-                    Regarde ton live ↓
-                  </a>
-                </>
-              ) : (
-                <>Devant toute l&apos;Afrique, sur le TikTok de House of Challenge.</>
-              )}
-            </p>
-          </div>
+          <p className="mt-6 max-w-lg text-lg leading-relaxed text-white/75">
+            <strong className="font-semibold text-white">Devant toute l&apos;Afrique</strong>, sur
+            le TikTok de House of Challenge. En présentiel à Lomé ou depuis chez toi.
+          </p>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link
-              href={`/reserver?mode=presentiel${business}`}
+              href="/reserver?mode=presentiel"
               className="group relative flex min-h-15 items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-live px-6 text-[1.05rem] font-bold whitespace-nowrap shadow-xl shadow-live/30 transition hover:bg-live-700 active:scale-[0.98]"
             >
               <span aria-hidden className="text-xl">
@@ -292,7 +356,7 @@ export function Hero() {
               />
             </Link>
             <Link
-              href={`/reserver?mode=distance${business}`}
+              href="/reserver?mode=distance"
               className="flex min-h-15 items-center justify-center gap-2.5 rounded-2xl border border-white/25 bg-white/10 px-6 text-[1.05rem] font-bold whitespace-nowrap backdrop-blur-sm transition hover:bg-white/20 active:scale-[0.98]"
             >
               <span aria-hidden className="text-xl">
@@ -310,6 +374,17 @@ export function Hero() {
             <span>Dès {number(minPrice)} FCFA</span>
             <span>Présentiel ou à distance</span>
           </p>
+
+          {!guest && (
+            <button
+              type="button"
+              onClick={joinLive}
+              className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white decoration-live decoration-2 underline-offset-4 hover:underline"
+            >
+              <Camera className="size-4 text-live" aria-hidden />
+              Ou essaie maintenant&nbsp;: rejoins le live avec ta caméra
+            </button>
+          )}
         </div>
 
         {/* Téléphone en direct */}
@@ -322,20 +397,41 @@ export function Hero() {
             className="absolute top-1/2 left-1/2 -z-10 size-[130%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-live/30 blur-3xl"
           />
           <div className="lg:rotate-[4deg]">
-            <div className={cn(running && "animate-phone-float")}>
-              <LivePhone
-                image={LIVE_IMAGE.src}
-                position={LIVE_IMAGE.position}
-                product={slide.product}
-                productKey={active}
-                running={running}
-                brand={liveBrand}
-              />
+            <div className={cn(running && !guest && "animate-phone-float")}>
+              <div className="relative">
+                <LivePhone
+                  image={LIVE_IMAGE.src}
+                  position={LIVE_IMAGE.position}
+                  product={slide.product}
+                  productKey={active}
+                  running={running}
+                  stream={guest ? cam.stream : null}
+                  videoRef={videoRef}
+                />
+                {/* Le bouton qui surprend : rejoindre le live avec sa propre caméra */}
+                {!guest && (
+                  <div className="absolute inset-x-0 top-[44%] flex justify-center">
+                    <button
+                      type="button"
+                      onClick={joinLive}
+                      disabled={cam.status === "asking"}
+                      className="group relative flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-extrabold text-night-900 shadow-2xl shadow-black/50 transition hover:scale-105 active:scale-95 disabled:opacity-80"
+                    >
+                      <span
+                        aria-hidden
+                        className="absolute inset-0 -z-10 animate-ping rounded-full bg-white/50"
+                      />
+                      <Camera className="size-5 text-live" aria-hidden />
+                      {cam.status === "asking" ? "Ouverture…" : "Rejoins le live"}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           <div aria-hidden className="absolute top-[22%] -left-[62%] hidden sm:block">
-            <OrderToast running={running} brand={liveBrand} />
+            <Toast running={running} guest={guest} />
           </div>
           <div
             aria-hidden
@@ -345,33 +441,62 @@ export function Hero() {
             <p className="mt-1 text-xs text-white/70">abonnés gagnés</p>
           </div>
 
-          <div
-            className={cn(
-              "mt-8 flex justify-center gap-2 transition-opacity",
-              typed && "invisible opacity-0",
-            )}
-            role="tablist"
-            aria-label="Produits présentés dans le live"
-          >
-            {slides.map((s, i) => (
+          {/* Sous le téléphone : choix des produits, ou actions du mode « en live » */}
+          {guest ? (
+            <div className="mt-6 flex animate-rise flex-col items-center gap-2">
               <button
-                key={s.word}
                 type="button"
-                role="tab"
-                aria-selected={i === active}
-                aria-label={`Produit ${i + 1} : ${s.product.name}`}
-                onClick={() => setActive(i)}
-                className="group flex h-8 items-center"
+                onClick={savePhoto}
+                disabled={saving}
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 font-bold whitespace-nowrap text-night-900 shadow-xl transition hover:bg-white/90 active:scale-[0.98] disabled:opacity-70"
               >
-                <span
-                  className={cn(
-                    "block h-1.5 rounded-full transition-all duration-500",
-                    i === active ? "w-10 bg-white" : "w-4 bg-white/35 group-hover:bg-white/70",
-                  )}
-                />
+                <Download className="size-5 text-live" aria-hidden />
+                {saving ? "Préparation…" : "Ma photo de live"}
               </button>
-            ))}
-          </div>
+              <button
+                type="button"
+                onClick={stop}
+                className="flex items-center gap-1.5 text-sm text-white/70 hover:text-white"
+              >
+                <X className="size-4" aria-hidden /> Quitter le live
+              </button>
+              <p className="text-center text-[11px] text-white/45">
+                Ta caméra reste sur ton appareil : rien n&apos;est enregistré ni envoyé.
+              </p>
+            </div>
+          ) : (
+            <>
+              {camMessage && (
+                <p role="status" className="mt-5 text-center text-sm text-white/75">
+                  {camMessage}
+                </p>
+              )}
+              <div
+                className="mt-6 flex justify-center gap-2"
+                role="tablist"
+                aria-label="Produits présentés dans le live"
+              >
+                {slides.map((s, i) => (
+                  <button
+                    key={s.word}
+                    type="button"
+                    role="tab"
+                    aria-selected={i === active}
+                    aria-label={`Produit ${i + 1} : ${s.product.name}`}
+                    onClick={() => setActive(i)}
+                    className="group flex h-8 items-center"
+                  >
+                    <span
+                      className={cn(
+                        "block h-1.5 rounded-full transition-all duration-500",
+                        i === active ? "w-10 bg-white" : "w-4 bg-white/35 group-hover:bg-white/70",
+                      )}
+                    />
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
