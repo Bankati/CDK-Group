@@ -52,7 +52,7 @@ Redémarrer le serveur remet les données de départ.
 
 **[`src/config/site.ts`](src/config/site.ts)** : prix des packages, WhatsApp, lien TikTok, horaires (10h–22h), premier jour (1er décembre), nom du Pack du mois, durée de réservation d'un créneau non confirmé (24 h).
 
-Les photos du slider sont dans `public/hero/` (remplacer les fichiers en gardant les mêmes noms).
+Les images de l'accueil sont dans `public/hero/` : `ocd-live-studio.jpg` (1re photo du hero), `affiche-lancement.jpg` (section « Lancement »). Les 2e et 3e photos du hero (`working-2.jpg`, `hero-bg.jpg`) sont temporaires. Le cadrage de chaque photo se règle dans `src/components/home/hero.tsx` (`position`).
 
 ---
 
