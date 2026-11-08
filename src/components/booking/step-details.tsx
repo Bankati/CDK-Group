@@ -6,6 +6,7 @@ import { useRef, useState } from "react";
 import { countries, countryByName, sectors } from "@/lib/countries";
 import type { BookingMode } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { CountrySelect } from "./country-select";
 import { Field, inputClass, StepTitle } from "./ui";
 
 export type Details = {
@@ -196,25 +197,15 @@ export function StepDetails({
         {mode === "distance" && (
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label="Pays" htmlFor="country" error={errors.country}>
-              <select
+              <CountrySelect
                 id="country"
                 value={value.country}
-                aria-invalid={errors.country ? true : undefined}
-                onChange={(e) => {
-                  const c = countryByName(e.target.value);
-                  onChange({ country: e.target.value, ...(c ? { dial: c.dial } : {}) });
+                invalid={Boolean(errors.country)}
+                onChange={(name) => {
+                  const c = countryByName(name);
+                  onChange({ country: name, ...(c ? { dial: c.dial } : {}) });
                 }}
-                className={inputClass}
-              >
-                <option value="" disabled>
-                  Choisis ton pays
-                </option>
-                {countries.map((c) => (
-                  <option key={c.code} value={c.name}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              />
             </Field>
             <Field label="Ville" htmlFor="city" error={errors.city}>
               <input
