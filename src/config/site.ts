@@ -15,6 +15,13 @@ export const site = {
   tiktokUrl: "https://www.tiktok.com/@houseofchallenge",
   tiktokHandle: "@houseofchallenge",
 
+  /** Compte affiché dans le téléphone animé du hero (profil TikTok de Bovann). */
+  liveAccount: {
+    handle: "bovann",
+    followers: "8M",
+    avatar: "/brand/bovann-avatar.jpg",
+  },
+
   company: {
     name: "Bovann Group SAS",
     slogan: "EXPERTISE. INNOVATION. RÉSULTATS.",

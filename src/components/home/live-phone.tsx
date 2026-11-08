@@ -1,18 +1,13 @@
 "use client";
 
-import { Eye, Heart, Plus, ShoppingBag } from "lucide-react";
+import { Check, Eye, Heart, Plus, ShoppingBag } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { OcdSymbol } from "@/components/brand";
+import { site } from "@/config/site";
 import { number } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export type LiveSlide = {
-  image: string;
-  /** Cadrage de la photo dans l'écran vertical du téléphone. */
-  position: string;
-  product: { name: string; price: string };
-};
+export type LiveProduct = { name: string; price: string };
 
 /** Commentaires fictifs : des spectateurs de toute l'Afrique et de la diaspora. */
 const COMMENTS = [
@@ -115,43 +110,43 @@ function Hearts({ running }: { running: boolean }) {
 
 /** Téléphone qui diffuse un live : photos en fondu dans l'écran + interface du direct. */
 export function LivePhone({
-  slides,
-  active,
-  prev,
+  image,
+  position,
+  product,
+  productKey,
   running,
 }: {
-  slides: LiveSlide[];
-  active: number;
-  prev: number | null;
+  /** Visuel du live (une seule image : c'est un seul direct). */
+  image: string;
+  /** Cadrage de la photo dans l'écran vertical du téléphone. */
+  position: string;
+  /** Produit présenté en ce moment (change pendant le live). */
+  product: LiveProduct;
+  productKey: number;
   running: boolean;
 }) {
-  const product = slides[active]!.product;
+  const account = site.liveAccount;
   return (
     <div
       aria-hidden
       className="relative aspect-[9/19] w-full rounded-[2.6rem] bg-black p-[9px] shadow-2xl ring-1 shadow-black/60 ring-white/15"
     >
       <div className="relative h-full w-full overflow-hidden rounded-[2.1rem] bg-night-950">
-        {slides.map((s, i) => (
-          <div
-            key={s.image}
-            className={cn(
-              "absolute inset-0 transition-opacity duration-[1200ms]",
-              i === active ? "opacity-100" : "opacity-0",
-            )}
-          >
-            <Image
-              src={s.image}
-              alt=""
-              fill
-              // Photo paysage dans un écran vertical : elle est agrandie ~3,5×, il faut donc une image plus large que le téléphone.
-              sizes="(min-width: 1024px) 1080px, 750px"
-              preload={i === 0}
-              style={{ objectPosition: s.position }}
-              className={cn("object-cover", (i === active || i === prev) && "animate-kenburns")}
-            />
-          </div>
-        ))}
+        <Image
+          src={image}
+          alt=""
+          fill
+          // Photo paysage dans un écran vertical : elle est agrandie ~3,5×, il faut donc une image plus large que le téléphone.
+          sizes="(min-width: 1024px) 1080px, 750px"
+          preload
+          style={{
+            objectPosition: position,
+            // Zoom lent et continu, comme une caméra qui respire ; en pause si le hero n'est pas visible.
+            animation: "kenburns 14s ease-in-out infinite alternate",
+            animationPlayState: running ? "running" : "paused",
+          }}
+          className="object-cover"
+        />
         {/* Dégradés pour la lisibilité de l'interface */}
         <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-black/55 to-transparent" />
         <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
@@ -162,14 +157,26 @@ export function LivePhone({
         {/* Haut : compte + LIVE + spectateurs */}
         <div className="absolute inset-x-3 top-10 flex items-center justify-between gap-2 text-white">
           <div className="flex min-w-0 items-center gap-1.5 rounded-full bg-black/35 py-1 pr-1 pl-1 backdrop-blur-sm">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-night-900 ring-1 ring-white/30">
-              <OcdSymbol className="w-5" />
-            </span>
+            <Image
+              src={account.avatar}
+              alt=""
+              width={28}
+              height={28}
+              className="size-7 shrink-0 rounded-full object-cover ring-1 ring-white/40"
+            />
             <span className="min-w-0 leading-tight">
-              <span className="block truncate text-[10px] font-bold">houseofchallenge</span>
-              <span className="block text-[9px] text-white/75">OCD Live</span>
+              <span className="flex items-center gap-1 text-[10px] font-bold">
+                <span className="truncate">{account.handle}</span>
+                {/* Badge « compte certifié » */}
+                <span className="flex size-3 shrink-0 items-center justify-center rounded-full bg-[#20d5ec]">
+                  <Check className="size-2 text-white" strokeWidth={4} />
+                </span>
+              </span>
+              <span className="block text-[9px] whitespace-nowrap text-white/75">
+                {account.followers} followers
+              </span>
             </span>
-            <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-live">
+            <span className="hidden size-5 shrink-0 items-center justify-center rounded-full bg-live sm:flex">
               <Plus className="size-3" strokeWidth={3} />
             </span>
           </div>
@@ -190,7 +197,7 @@ export function LivePhone({
             <Comments running={running} />
           </div>
           <div
-            key={active}
+            key={productKey}
             className="mt-2.5 flex animate-rise items-center gap-2 rounded-xl bg-white p-1.5 pr-2 text-night-900 shadow-lg"
           >
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-live/10 text-live">

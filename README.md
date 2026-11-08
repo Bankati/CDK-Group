@@ -52,7 +52,7 @@ Redémarrer le serveur remet les données de départ.
 
 **[`src/config/site.ts`](src/config/site.ts)** : prix des packages, WhatsApp, lien TikTok, horaires (10h–22h), premier jour (1er décembre), nom du Pack du mois, durée de réservation d'un créneau non confirmé (24 h).
 
-Les images de l'accueil sont dans `public/hero/` : `ocd-live-studio.jpg` (1er live dans le téléphone du hero), `affiche-lancement.jpg` (section « Lancement »). Les 2e et 3e lives (`hero-bg.jpg`, `working-2.jpg`) sont temporaires. Mots du titre, produits affichés et cadrage se règlent dans `src/components/home/hero.tsx` (tableau `slides`) ; commentaires du live dans `src/components/home/live-phone.tsx`.
+Les images de l'accueil sont dans `public/hero/` : `ocd-live-studio.jpg` (le live dans le téléphone du hero), `affiche-lancement.jpg` (section « Lancement »). Le compte affiché dans le live (photo, nom, abonnés) se règle dans `src/config/site.ts` (`liveAccount`) ; les produits et mots du titre dans `src/components/home/hero.tsx` (tableau `slides`) ; les commentaires dans `src/components/home/live-phone.tsx`.
 
 ---
 

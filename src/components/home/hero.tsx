@@ -24,31 +24,16 @@ import { OcdLiveLogo } from "@/components/brand";
 import { packages, schedule } from "@/config/site";
 import { number } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { LivePhone, type LiveSlide } from "./live-phone";
+import { LivePhone, type LiveProduct } from "./live-phone";
 
-/**
- * Les 3 « lives » qui défilent dans le téléphone (dossier public/hero).
- * Les 2e et 3e photos sont temporaires : à remplacer par des visuels OCD Live.
- */
-const slides: (LiveSlide & { word: string })[] = [
-  {
-    word: "Ton business",
-    image: "/hero/ocd-live-studio.jpg",
-    position: "84% 50%",
-    product: { name: "Sérum éclat", price: "8 500 FCFA" },
-  },
-  {
-    word: "Tes produits",
-    image: "/hero/hero-bg.jpg",
-    position: "66% 30%",
-    product: { name: "Coffret karité", price: "12 000 FCFA" },
-  },
-  {
-    word: "Ta marque",
-    image: "/hero/working-2.jpg",
-    position: "50% 35%",
-    product: { name: "Pagne wax premium", price: "15 000 FCFA" },
-  },
+/** Visuel du live affiché dans le téléphone (dossier public/hero) et son cadrage. */
+const LIVE_IMAGE = { src: "/hero/ocd-live-studio.jpg", position: "62% 50%" };
+
+/** Pendant le live, les produits présentés défilent, et le mot du titre change avec eux. */
+const slides: { word: string; product: LiveProduct }[] = [
+  { word: "Ton business", product: { name: "Sérum éclat", price: "8 500 FCFA" } },
+  { word: "Tes produits", product: { name: "Crème au karité", price: "6 000 FCFA" } },
+  { word: "Ta marque", product: { name: "Coffret soin visage", price: "15 000 FCFA" } },
 ];
 
 /** Villes du bandeau et leur drapeau (SVG : les drapeaux emoji ne s'affichent pas sur Windows). */
@@ -143,20 +128,12 @@ export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const running = useLiveRunning(sectionRef);
   const days = useDaysToLaunch();
-  const [{ active, prev }, setState] = useState<{ active: number; prev: number | null }>({
-    active: 0,
-    prev: null,
-  });
+  const [active, setActive] = useState(0);
 
-  const go = (i: number) => setState((s) => (s.active === i ? s : { active: i, prev: s.active }));
-
-  // Changement de « live » toutes les 6,5 s (redémarre après un clic sur un point).
+  // Produit suivant toutes les 6,5 s (redémarre après un clic sur un point).
   useEffect(() => {
     if (!running) return;
-    const id = setInterval(
-      () => setState((s) => ({ active: (s.active + 1) % slides.length, prev: s.active })),
-      INTERVAL,
-    );
+    const id = setInterval(() => setActive((a) => (a + 1) % slides.length), INTERVAL);
     return () => clearInterval(id);
   }, [active, running]);
 
@@ -282,7 +259,13 @@ export function Hero() {
           />
           <div className="lg:rotate-[4deg]">
             <div className={cn(running && "animate-phone-float")}>
-              <LivePhone slides={slides} active={active} prev={prev} running={running} />
+              <LivePhone
+                image={LIVE_IMAGE.src}
+                position={LIVE_IMAGE.position}
+                product={slide.product}
+                productKey={active}
+                running={running}
+              />
             </div>
           </div>
 
@@ -300,16 +283,16 @@ export function Hero() {
           <div
             className="mt-8 flex justify-center gap-2"
             role="tablist"
-            aria-label="Lives en démonstration"
+            aria-label="Produits présentés dans le live"
           >
             {slides.map((s, i) => (
               <button
-                key={s.image}
+                key={s.word}
                 type="button"
                 role="tab"
                 aria-selected={i === active}
-                aria-label={`Live ${i + 1} : ${s.word}`}
-                onClick={() => go(i)}
+                aria-label={`Produit ${i + 1} : ${s.product.name}`}
+                onClick={() => setActive(i)}
                 className="group flex h-8 items-center"
               >
                 <span
