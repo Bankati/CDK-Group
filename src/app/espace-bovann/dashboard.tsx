@@ -8,6 +8,7 @@ import {
   Search,
   CalendarDays,
   Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Download,
@@ -21,8 +22,10 @@ import {
 import Link from "next/link";
 import { useActionState, useMemo, useState, useTransition } from "react";
 import { OcdLiveLogo } from "@/components/brand";
+import { Flag } from "@/components/booking/country-select";
 import { WhatsAppIcon } from "@/components/icons";
 import { packages } from "@/config/site";
+import { countryByName } from "@/lib/countries";
 import { fcfa } from "@/lib/format";
 import { addMonths, daysInMonth, formatDayFr, formatRangeFr, monthLabel } from "@/lib/time";
 import { statusLabels, type DisplayStatus } from "@/lib/types";
@@ -50,10 +53,10 @@ type EmailRow = {
 type Tab = "apercu" | "liste" | "calendrier" | "stats" | "emails" | "reglages";
 
 const statusStyle: Record<DisplayStatus, string> = {
-  pending: "bg-amber-100 text-amber-900",
-  confirmed: "bg-emerald-100 text-emerald-800",
-  cancelled: "bg-zinc-200 text-zinc-700",
-  expired: "bg-red-100 text-red-800",
+  pending: "bg-amber-50 text-amber-900",
+  confirmed: "bg-emerald-50 text-emerald-800",
+  cancelled: "bg-zinc-100 text-zinc-700",
+  expired: "bg-red-50 text-red-800",
 };
 
 const selectClass =
@@ -295,7 +298,7 @@ export function Dashboard({
             {tab === "apercu" && <Overview rows={bookings} now={now} go={go} />}
 
             {(tab === "liste" || tab === "calendrier") && (
-              <div className="grid grid-cols-2 gap-2 rounded-2xl border border-line bg-white p-3 sm:grid-cols-5">
+              <div className="grid grid-cols-2 gap-2 rounded-2xl border border-line bg-white p-3 sm:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
                 <input
                   type="date"
                   aria-label="Filtrer par date"
@@ -318,21 +321,23 @@ export function Dashboard({
                     </option>
                   ))}
                 </select>
-                <select
-                  aria-label="Filtrer par statut"
-                  value={filters.status ?? ""}
-                  onChange={(e) =>
-                    setFilters((f) => ({ ...f, status: e.target.value || undefined }))
-                  }
-                  className={selectClass}
-                >
-                  <option value="">Tous les statuts</option>
-                  {(Object.keys(statusLabels) as DisplayStatus[]).map((st) => (
-                    <option key={st} value={st}>
-                      {statusLabels[st]}
-                    </option>
-                  ))}
-                </select>
+                {tab === "calendrier" && (
+                  <select
+                    aria-label="Filtrer par statut"
+                    value={filters.status ?? ""}
+                    onChange={(e) =>
+                      setFilters((f) => ({ ...f, status: e.target.value || undefined }))
+                    }
+                    className={selectClass}
+                  >
+                    <option value="">Tous les statuts</option>
+                    {(Object.keys(statusLabels) as DisplayStatus[]).map((st) => (
+                      <option key={st} value={st}>
+                        {statusLabels[st]}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <select
                   aria-label="Filtrer par pays"
                   value={filters.country ?? ""}
@@ -370,7 +375,18 @@ export function Dashboard({
               </div>
             )}
 
-            {tab === "liste" && <BookingList rows={visible} />}
+            {tab === "liste" && (
+              <>
+                <div className="mt-4">
+                  <StatusTabs
+                    rows={bookings}
+                    value={filters.status}
+                    onChange={(st) => setFilters((f) => ({ ...f, status: st }))}
+                  />
+                </div>
+                <BookingList rows={visible} />
+              </>
+            )}
             {tab === "calendrier" && <CalendarView rows={visible} now={now} />}
             {tab === "stats" && <Stats rows={bookings} />}
             {tab === "emails" && <Emails rows={emails} />}
@@ -384,149 +400,278 @@ export function Dashboard({
   );
 }
 
+const shortStatus: Record<DisplayStatus, string> = {
+  pending: "À confirmer",
+  confirmed: "Confirmée",
+  cancelled: "Annulée",
+  expired: "Délai dépassé",
+};
+
 function StatusChip({ s }: { s: DisplayStatus }) {
   return (
     <span
-      className={cn("inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold", statusStyle[s])}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap",
+        statusStyle[s],
+      )}
     >
-      {statusLabels[s]}
+      <span className="size-1.5 rounded-full bg-current" aria-hidden />
+      {shortStatus[s]}
     </span>
+  );
+}
+
+const shortDay = (d: Date) =>
+  new Intl.DateTimeFormat("fr-FR", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  })
+    .format(d)
+    .replace(/^\w/, (c) => c.toUpperCase());
+
+/** Onglets de statut avec compteurs, au-dessus de la liste. */
+function StatusTabs({
+  rows,
+  value,
+  onChange,
+}: {
+  rows: AdminBooking[];
+  value?: string;
+  onChange: (s?: DisplayStatus) => void;
+}) {
+  const items: { id?: DisplayStatus; label: string }[] = [
+    { label: "Toutes" },
+    { id: "pending", label: "À confirmer" },
+    { id: "confirmed", label: "Confirmées" },
+    { id: "expired", label: "Délai dépassé" },
+    { id: "cancelled", label: "Annulées" },
+  ];
+  return (
+    <div
+      className="flex gap-1 overflow-x-auto rounded-full border border-line bg-white p-1"
+      role="tablist"
+      aria-label="Statut"
+    >
+      {items.map((it) => {
+        const count = it.id ? rows.filter((b) => b.display === it.id).length : rows.length;
+        const active = (value ?? undefined) === it.id;
+        return (
+          <button
+            key={it.label}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(it.id)}
+            className={cn(
+              "flex min-h-9 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-semibold transition",
+              active ? "bg-night-900 text-white" : "text-muted hover:text-night-900",
+            )}
+          >
+            {it.label}
+            <span
+              className={cn(
+                "rounded-full px-1.5 text-[11px] font-bold tabular-nums",
+                active ? "bg-white/15" : "bg-paper",
+              )}
+            >
+              {count}
+            </span>
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
 function BookingList({ rows }: { rows: AdminBooking[] }) {
   if (!rows.length)
-    return <p className="mt-10 text-center text-muted">Aucune réservation pour ces filtres.</p>;
+    return (
+      <div className="mt-5 rounded-2xl border border-dashed border-line bg-white px-6 py-14 text-center">
+        <p className="font-display text-lg font-bold text-night-900">Aucune réservation</p>
+        <p className="mt-1 text-sm text-muted">Change les filtres ou la recherche pour en voir.</p>
+      </div>
+    );
   return (
-    <ul className="mt-5 space-y-3">
-      {rows.map((b) => (
-        <BookingRow key={b.id} b={b} />
-      ))}
-    </ul>
+    <div className="mt-5 overflow-hidden rounded-2xl border border-line bg-white">
+      <div className="hidden grid-cols-[minmax(0,2.3fr)_1.2fr_1.3fr_1.3fr_8.5rem_7.5rem] gap-4 bg-paper px-5 py-2.5 text-[11px] font-semibold tracking-wide text-muted uppercase lg:grid">
+        <span>Business</span>
+        <span>Live</span>
+        <span>Package</span>
+        <span>Contact</span>
+        <span>Statut</span>
+        <span className="text-right">Actions</span>
+      </div>
+      <ul>
+        {rows.map((b) => (
+          <BookingRow key={b.id} b={b} />
+        ))}
+      </ul>
+    </div>
   );
 }
 
 function BookingRow({ b }: { b: AdminBooking }) {
   const [pending, start] = useTransition();
   const [error, setError] = useState<string>();
+  const [open, setOpen] = useState(false);
   const startDate = new Date(b.startsAt);
   const canValidate = b.display === "pending" || b.display === "expired";
   const wa = waLink(
     b.whatsapp,
     `Bonjour ${b.fullName.split(" ")[0]}, ici l'équipe OCD Live (Bovann Group) au sujet de ta réservation ${b.code} du ${formatDayFr(startDate)} à ${formatRangeFr(startDate, b.durationMinutes)}.`,
   );
+  const iconBtn =
+    "flex size-9 shrink-0 items-center justify-center rounded-full border transition disabled:opacity-50";
 
   return (
-    <li className="rounded-2xl border border-line bg-white p-4 sm:p-5">
-      <div className="flex gap-4">
-        {b.photoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element -- photos de clients (URL externe ou démo)
-          <img
-            src={b.photoUrl}
-            alt={`Produit de ${b.businessName}`}
-            loading="lazy"
-            className="size-16 shrink-0 rounded-xl bg-paper object-cover sm:size-20"
-          />
-        ) : (
-          <div className="flex size-16 shrink-0 items-center justify-center rounded-xl bg-paper font-display text-xl font-bold text-night-700 sm:size-20">
-            {b.businessName.slice(0, 2).toUpperCase()}
-          </div>
-        )}
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-display text-lg leading-tight font-bold text-night-900">
-              {b.businessName}
-            </p>
-            <StatusChip s={b.display} />
-          </div>
-          <p className="text-sm text-muted">
-            {b.fullName} · {b.sector}
-          </p>
-          <p className="mt-1 text-sm text-night-900">{b.products}</p>
+    <li className="border-b border-line last:border-0">
+      <div className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-3 px-5 py-4 lg:grid-cols-[minmax(0,2.3fr)_1.2fr_1.3fr_1.3fr_8.5rem_7.5rem]">
+        {/* Business */}
+        <div className="flex min-w-0 items-center gap-3">
+          {b.photoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- photos de clients (URL externe ou démo)
+            <img
+              src={b.photoUrl}
+              alt={`Produit de ${b.businessName}`}
+              loading="lazy"
+              className="size-11 shrink-0 rounded-xl bg-paper object-cover"
+            />
+          ) : (
+            <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-night-900 text-xs font-bold text-white">
+              {b.businessName.slice(0, 2).toUpperCase()}
+            </span>
+          )}
+          <span className="min-w-0 leading-tight">
+            <span className="block truncate font-semibold text-night-900">{b.businessName}</span>
+            <span className="block truncate text-xs text-muted">
+              {b.fullName} · {b.city}, {b.country}
+            </span>
+          </span>
         </div>
-      </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm sm:grid-cols-4">
-        <div>
-          <dt className="text-xs text-muted">Live</dt>
-          <dd className="font-semibold text-night-900 first-letter:uppercase">
-            {formatDayFr(startDate)}
-          </dd>
-          <dd className="text-night-900">{formatRangeFr(startDate, b.durationMinutes)}</dd>
+        {/* Statut (mobile : à droite du nom) */}
+        <div className="lg:hidden">
+          <StatusChip s={b.display} />
         </div>
-        <div>
-          <dt className="text-xs text-muted">Package</dt>
-          <dd className="font-semibold text-night-900">{b.packageLabel}</dd>
-          <dd className="text-night-900">{fcfa(b.amount)}</dd>
-        </div>
-        <div>
-          <dt className="text-xs text-muted">Mode</dt>
-          <dd className="font-semibold text-night-900">
-            {b.mode === "presentiel" ? "Présentiel" : "À distance"}
-          </dd>
-          <dd className="text-night-900">
-            {b.city}, {b.country}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-xs text-muted">Contact</dt>
-          <dd className="font-semibold text-night-900">{b.whatsapp}</dd>
-          <dd className="text-xs break-all text-night-900">{b.email}</dd>
-          {b.tiktok && <dd className="text-xs text-muted">{b.tiktok}</dd>}
-        </div>
-      </dl>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2">
-        {canValidate && (
-          <button
-            type="button"
-            disabled={pending}
-            onClick={() =>
-              start(async () => {
-                setError(undefined);
-                const res = await confirmReservation(b.id);
-                if (!res.ok) setError(res.message);
-              })
-            }
-            className="flex min-h-11 items-center gap-2 rounded-xl bg-emerald-600 px-4 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
-          >
-            {pending ? (
-              <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-            ) : (
-              <Check className="size-4" />
+        <div className="col-span-2 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-3 lg:col-span-3 lg:grid-cols-3 lg:gap-4">
+          <div className="leading-tight">
+            <span className="block font-semibold text-night-900">{shortDay(startDate)}</span>
+            <span className="block text-xs text-muted">
+              {formatRangeFr(startDate, b.durationMinutes)}
+            </span>
+          </div>
+          <div className="leading-tight">
+            <span className="block text-night-900">{b.packageLabel}</span>
+            <span className="block text-xs font-semibold text-night-900 tabular-nums">
+              {fcfa(b.amount)}
+            </span>
+          </div>
+          <div className="col-span-2 leading-tight sm:col-span-1">
+            <span className="block text-night-900 tabular-nums">{b.whatsapp}</span>
+            <span className="block truncate text-xs text-muted">{b.email}</span>
+          </div>
+        </div>
+
+        <div className="hidden lg:block">
+          <StatusChip s={b.display} />
+        </div>
+
+        {/* Actions */}
+        <div className="col-span-2 flex items-center justify-end gap-2 lg:col-span-1">
+          {canValidate && (
+            <button
+              type="button"
+              disabled={pending}
+              aria-label="Confirmer la réservation"
+              title="Confirmer la réservation"
+              onClick={() =>
+                start(async () => {
+                  setError(undefined);
+                  const res = await confirmReservation(b.id);
+                  if (!res.ok) setError(res.message);
+                })
+              }
+              className={cn(
+                iconBtn,
+                "border-emerald-600 bg-emerald-600 text-white hover:bg-emerald-700",
+              )}
+            >
+              {pending ? (
+                <span className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
+              ) : (
+                <Check className="size-4" />
+              )}
+            </button>
+          )}
+          <a
+            href={wa}
+            target="_blank"
+            rel="noopener"
+            aria-label="Contacter sur WhatsApp"
+            title="Contacter sur WhatsApp"
+            className={cn(
+              iconBtn,
+              "border-line text-[#1fa855] hover:border-[#1fa855] hover:bg-[#1fa855] hover:text-white",
             )}
-            Confirmer la réservation
-          </button>
-        )}
-        <a
-          href={wa}
-          target="_blank"
-          rel="noopener"
-          className="flex min-h-11 items-center gap-2 rounded-xl bg-[#1fa855] px-4 text-sm font-bold text-white transition hover:bg-[#178a45]"
-        >
-          <WhatsAppIcon className="size-4" />
-          Contacter sur WhatsApp
-        </a>
-        {b.display !== "cancelled" && (
+          >
+            <WhatsAppIcon className="size-4" />
+          </a>
           <button
             type="button"
-            disabled={pending}
-            onClick={() => {
-              if (!confirm(`Annuler la réservation de ${b.businessName} ?`)) return;
-              start(async () => {
-                const res = await cancelReservation(b.id);
-                if (!res.ok) setError(res.message);
-              });
-            }}
-            className="ml-auto flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-semibold text-muted hover:text-danger"
+            onClick={() => setOpen((o) => !o)}
+            aria-expanded={open}
+            aria-label="Voir le détail"
+            title="Voir le détail"
+            className={cn(iconBtn, "border-line text-night-900 hover:bg-paper")}
           >
-            <X className="size-4" />
-            Annuler
+            <ChevronDown className={cn("size-4 transition", open && "rotate-180")} />
           </button>
-        )}
-        <span className="w-full font-mono text-xs text-muted sm:w-auto">{b.code}</span>
+        </div>
       </div>
-      {error && <p className="mt-2 text-sm font-semibold text-danger">{error}</p>}
+
+      {open && (
+        <div className="grid gap-4 border-t border-dashed border-line bg-paper/60 px-5 py-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+          <div className="sm:col-span-2">
+            <p className="text-xs text-muted">Produit(s) à présenter</p>
+            <p className="mt-0.5 text-night-900">{b.products}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted">Secteur · mode</p>
+            <p className="mt-0.5 text-night-900">
+              {b.sector} · {b.mode === "presentiel" ? "Présentiel" : "À distance"}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted">TikTok · code</p>
+            <p className="mt-0.5 text-night-900">
+              {b.tiktok ?? "—"} · <span className="font-mono">{b.code}</span>
+            </p>
+          </div>
+          {b.display !== "cancelled" && (
+            <div className="sm:col-span-2 lg:col-span-4">
+              <button
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  if (!confirm(`Annuler la réservation de ${b.businessName} ?`)) return;
+                  start(async () => {
+                    const res = await cancelReservation(b.id);
+                    if (!res.ok) setError(res.message);
+                  });
+                }}
+                className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-line bg-white px-3.5 text-sm font-semibold text-muted transition hover:border-danger hover:text-danger"
+              >
+                <X className="size-4" />
+                Annuler la réservation
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+      {error && <p className="px-5 pb-3 text-sm font-semibold text-danger">{error}</p>}
     </li>
   );
 }
@@ -655,127 +800,256 @@ function CalendarView({ rows, now }: { rows: AdminBooking[]; now: number }) {
   );
 }
 
+/** Barres horizontales classées (une seule teinte), valeur au bout. */
 function Bars({
   title,
+  subtitle,
   items,
-  total,
 }: {
   title: string;
-  items: { label: string; value: number; sub?: string }[];
-  total: number;
+  subtitle?: string;
+  items: { label: React.ReactNode; key: string; value: number; sub?: string }[];
 }) {
+  const max = Math.max(1, ...items.map((i) => i.value));
   return (
-    <div className="rounded-2xl border border-line bg-white p-5">
-      <h3 className="font-display font-bold text-night-900">{title}</h3>
-      <ul className="mt-4 space-y-3">
+    <section className="rounded-2xl border border-line bg-white p-5">
+      <h3 className="font-display text-base font-bold text-night-900">{title}</h3>
+      {subtitle && <p className="mt-0.5 text-xs text-muted">{subtitle}</p>}
+      <ul className="mt-5 space-y-4">
         {items.map((it) => (
-          <li key={it.label}>
-            <div className="flex justify-between gap-3 text-sm">
-              <span className="font-semibold text-night-900">{it.label}</span>
-              <span className="text-muted tabular-nums">
-                {it.value}
+          <li key={it.key}>
+            <div className="flex items-baseline justify-between gap-3 text-sm">
+              <span className="flex min-w-0 items-center gap-2 text-night-900">{it.label}</span>
+              <span className="shrink-0 text-xs text-muted tabular-nums">
+                <strong className="text-sm text-night-900">{it.value}</strong>
                 {it.sub ? ` · ${it.sub}` : ""}
               </span>
             </div>
-            <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-paper">
+            <div className="mt-1.5 h-2 rounded-full bg-[#2a78d6]/12">
               <div
-                className="h-full rounded-full bg-night-700"
-                style={{ width: `${total ? (it.value / total) * 100 : 0}%` }}
+                className="h-full rounded-full bg-[#2a78d6] transition-[width] duration-700"
+                style={{ width: `${(it.value / max) * 100}%`, minWidth: it.value ? 6 : 0 }}
               />
             </div>
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+function MiniStat({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="rounded-2xl border border-line bg-white p-5">
+      <p className="text-sm font-semibold text-night-900">{label}</p>
+      <p className="mt-2 font-display text-[1.6rem] leading-none font-extrabold tracking-tight text-night-900">
+        {value}
+      </p>
+      <p className="mt-2 text-xs text-muted">{hint}</p>
     </div>
   );
 }
 
 function Stats({ rows }: { rows: AdminBooking[] }) {
   const active = rows.filter((b) => b.display === "confirmed" || b.display === "pending");
+  const decided = rows.filter((b) => b.display !== "pending");
+  const confirmed = rows.filter((b) => b.display === "confirmed");
+  const revenue = active.reduce((s, b) => s + b.amount, 0);
+  const presentiel = active.filter((b) => b.mode === "presentiel").length;
+  const distance = active.length - presentiel;
+  const hours = active.reduce((s, b) => s + b.durationMinutes / 60, 0);
+
   const byPackage = packages
     .map((p) => {
       const list = active.filter((b) => b.packageId === p.id);
       return {
+        key: p.id,
         label: p.name,
         value: list.length,
         sub: fcfa(list.reduce((s, b) => s + b.amount, 0)),
       };
     })
     .sort((a, b) => b.value - a.value);
-  const presentiel = active.filter((b) => b.mode === "presentiel").length;
-  const countryCounts = Object.entries(
+
+  const countries = Object.entries(
     active.reduce<Record<string, number>>(
       (acc, b) => ((acc[b.country] = (acc[b.country] ?? 0) + 1), acc),
       {},
     ),
   )
-    .map(([label, value]) => ({ label, value }))
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, value]) => {
+      const code = countryByName(name)?.code ?? "";
+      return {
+        key: name,
+        value,
+        label: (
+          <>
+            <Flag code={code} className="h-3.5 w-5 shrink-0" />
+            <span className="truncate">{name}</span>
+          </>
+        ),
+      };
+    });
+
+  const sectors = Object.entries(
+    active.reduce<Record<string, number>>(
+      (acc, b) => ((acc[b.sector] = (acc[b.sector] ?? 0) + 1), acc),
+      {},
+    ),
+  )
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 6)
+    .map(([name, value]) => ({ key: name, label: name, value }));
+
   const pct = active.length ? Math.round((presentiel / active.length) * 100) : 0;
 
   return (
-    <div className="mt-5 grid gap-4 md:grid-cols-2">
-      <Bars
-        title="Packages les plus vendus"
-        items={byPackage}
-        total={Math.max(1, ...byPackage.map((b) => b.value))}
-      />
-      <div className="space-y-4">
-        <div className="rounded-2xl border border-line bg-white p-5">
-          <h3 className="font-display font-bold text-night-900">Présentiel ou à distance</h3>
-          <div className="mt-4 flex h-4 overflow-hidden rounded-full">
-            <div className="bg-live" style={{ width: `${pct}%` }} />
-            <div className="flex-1 bg-night-700" />
-          </div>
-          <div className="mt-3 flex justify-between text-sm">
-            <span className="flex items-center gap-2">
-              <span className="size-3 rounded-full bg-live" />
-              Présentiel <strong>{presentiel}</strong> ({pct}%)
-            </span>
-            <span className="flex items-center gap-2">
-              <span className="size-3 rounded-full bg-night-700" />À distance{" "}
-              <strong>{active.length - presentiel}</strong> ({active.length ? 100 - pct : 0}%)
-            </span>
-          </div>
-        </div>
-        <Bars
-          title="Pays d'origine"
-          items={countryCounts}
-          total={Math.max(1, ...countryCounts.map((c) => c.value))}
+    <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <MiniStat
+          label="Panier moyen"
+          value={fcfa(active.length ? Math.round(revenue / active.length) : 0)}
+          hint={`sur ${active.length} réservation${active.length > 1 ? "s" : ""} actives`}
+        />
+        <MiniStat
+          label="Taux de confirmation"
+          value={`${decided.length ? Math.round((confirmed.length / decided.length) * 100) : 0} %`}
+          hint="réservations confirmées / traitées"
+        />
+        <MiniStat
+          label="Heures de live"
+          value={`${Math.round(hours)} h`}
+          hint="réservées au total"
+        />
+        <MiniStat
+          label="Pays touchés"
+          value={String(countries.length)}
+          hint={`${distance} live${distance > 1 ? "s" : ""} à distance`}
         />
       </div>
+
+      <div className="grid gap-5 xl:grid-cols-2">
+        <Bars
+          title="Packages les plus vendus"
+          subtitle="Nombre de réservations · montant"
+          items={byPackage}
+        />
+        <div className="space-y-5">
+          <section className="rounded-2xl border border-line bg-white p-5">
+            <h3 className="font-display text-base font-bold text-night-900">
+              Présentiel ou à distance
+            </h3>
+            <div className="mt-5 flex h-3 gap-[2px] overflow-hidden rounded-full" aria-hidden>
+              <span style={{ width: `${pct}%`, background: "#2a78d6" }} />
+              <span className="flex-1" style={{ background: "#eb6834" }} />
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+              <p className="flex items-center gap-2">
+                <span className="size-2.5 rounded-full bg-[#2a78d6]" />
+                <span className="text-night-900">Présentiel</span>
+                <strong className="ml-auto text-night-900 tabular-nums">
+                  {presentiel} · {pct} %
+                </strong>
+              </p>
+              <p className="flex items-center gap-2">
+                <span className="size-2.5 rounded-full bg-[#eb6834]" />
+                <span className="text-night-900">À distance</span>
+                <strong className="ml-auto text-night-900 tabular-nums">
+                  {distance} · {active.length ? 100 - pct : 0} %
+                </strong>
+              </p>
+            </div>
+          </section>
+          <Bars title="Pays d'origine" items={countries} />
+        </div>
+      </div>
+      <Bars title="Secteurs d'activité" subtitle="Les 6 plus représentés" items={sectors} />
     </div>
   );
 }
 
 function Emails({ rows }: { rows: EmailRow[] }) {
+  const [open, setOpen] = useState<Set<string>>(new Set());
+  const toggle = (id: string) =>
+    setOpen((o) => {
+      const n = new Set(o);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
   return (
-    <div className="mt-5">
-      <p className="mb-4 rounded-2xl bg-white p-4 text-sm text-muted">
-        Mode démo : aucune clé Resend n&apos;est configurée, les emails ne partent pas. Voici
-        exactement ce qui serait envoyé à Bovann Group et aux clients.
-      </p>
-      {!rows.length && (
-        <p className="text-center text-muted">
-          Aucun email pour l&apos;instant. Faites une réservation pour en voir.
+    <div className="space-y-4">
+      <div className="flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+        <Mail className="mt-0.5 size-5 shrink-0" aria-hidden />
+        <p>
+          <strong>Mode démo :</strong> aucune clé Resend n&apos;est configurée, les emails ne
+          partent pas. Voici exactement ce qui serait envoyé à Bovann Group et aux clients.
         </p>
+      </div>
+      {!rows.length ? (
+        <div className="rounded-2xl border border-dashed border-line bg-white px-6 py-16 text-center">
+          <span className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-paper">
+            <Mail className="size-6 text-muted" aria-hidden />
+          </span>
+          <p className="mt-4 font-display text-lg font-bold text-night-900">
+            Aucun email pour l&apos;instant
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            Ils apparaîtront ici à chaque nouvelle réservation ou confirmation.
+          </p>
+        </div>
+      ) : (
+        <ul className="overflow-hidden rounded-2xl border border-line bg-white">
+          {rows.map((e) => {
+            const id = e.at + e.subject;
+            const admin = e.subject.startsWith("🔔");
+            return (
+              <li key={id} className="border-b border-line last:border-0">
+                <button
+                  type="button"
+                  onClick={() => toggle(id)}
+                  aria-expanded={open.has(id)}
+                  className="flex w-full items-center gap-4 px-5 py-4 text-left transition hover:bg-paper/60"
+                >
+                  <span
+                    className={cn(
+                      "flex size-10 shrink-0 items-center justify-center rounded-full text-sm font-bold",
+                      admin ? "bg-night-900 text-white" : "bg-[#2a78d6]/12 text-[#1d5fae]",
+                    )}
+                  >
+                    {admin ? "BG" : e.to.slice(0, 1).toUpperCase()}
+                  </span>
+                  <span className="min-w-0 flex-1 leading-tight">
+                    <span className="block truncate font-semibold text-night-900">{e.subject}</span>
+                    <span className="block truncate text-xs text-muted">À : {e.to}</span>
+                  </span>
+                  <span className="shrink-0 text-xs text-muted">
+                    {new Date(e.at).toLocaleString("fr-FR", {
+                      timeZone: "Africa/Lome",
+                      day: "numeric",
+                      month: "short",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "size-4 shrink-0 text-muted transition",
+                      open.has(id) && "rotate-180",
+                    )}
+                  />
+                </button>
+                {open.has(id) && (
+                  <p className="border-t border-dashed border-line bg-paper/60 px-5 py-4 text-sm leading-relaxed whitespace-pre-line text-night-900">
+                    {e.text}
+                  </p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       )}
-      <ul className="space-y-3">
-        {rows.map((e) => (
-          <li key={e.at + e.subject} className="rounded-2xl border border-line bg-white p-4">
-            <p className="font-semibold text-night-900">{e.subject}</p>
-            <p className="text-xs text-muted">
-              À : {e.to} ·{" "}
-              {new Date(e.at).toLocaleString("fr-FR", {
-                timeZone: "Africa/Lome",
-                dateStyle: "short",
-                timeStyle: "short",
-              })}
-            </p>
-            <p className="mt-3 text-sm leading-relaxed text-night-900">{e.text}</p>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
