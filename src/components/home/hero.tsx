@@ -250,7 +250,7 @@ export function Hero() {
                     {slide.accent}
                   </span>
                   <span
-                    className="mt-1 block animate-rise text-[clamp(2.4rem,4.1vw,3.7rem)] leading-[1.04] font-extrabold text-balance"
+                    className="mt-1 block animate-rise text-[clamp(2.4rem,3.6vw,3.25rem)] leading-[1.04] font-extrabold"
                     style={{ animationDelay: "140ms" }}
                   >
                     {slide.before}
