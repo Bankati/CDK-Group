@@ -20,7 +20,7 @@ function SectionTitle({
   light?: boolean;
 }) {
   return (
-    <div className="max-w-2xl">
+    <div data-gsap="title" className="max-w-2xl">
       <p
         className={cn(
           "text-xs font-bold tracking-[0.22em] uppercase",
@@ -65,8 +65,15 @@ export function HowItWorks() {
       <SectionTitle kicker="Comment ça marche" title="3 étapes, et tu es en direct" />
       <ol className="mt-12 grid gap-5 md:grid-cols-3">
         {steps.map((s, i) => (
-          <li key={s.title} className="relative rounded-3xl border border-line bg-white p-7">
-            <span className="font-display text-6xl leading-none font-extrabold text-live">
+          <li
+            key={s.title}
+            data-gsap="step"
+            className="relative rounded-3xl border border-line bg-white p-7"
+          >
+            <span
+              data-gsap="step-num"
+              className="inline-block font-display text-6xl leading-none font-extrabold text-live"
+            >
               {i + 1}
             </span>
             <h3 className="mt-5 font-display text-xl font-bold text-night-900">{s.title}</h3>
@@ -103,7 +110,7 @@ export function Packages() {
         <SectionTitle kicker="Packages" title="Choisis la durée de ton live" light />
         <p className="mt-4 max-w-xl text-white/70">Même prix en présentiel et à distance.</p>
 
-        <div className="mt-12 grid gap-6 md:grid-cols-3 md:items-center">
+        <div data-gsap="cards" className="mt-12 grid gap-6 md:grid-cols-3 md:items-center">
           {lives.map((p) => (
             <PackageCard key={p.id} pkg={p} footer={cta(p.id, false)} />
           ))}
@@ -111,14 +118,17 @@ export function Packages() {
 
         <h3 className="mt-16 font-display text-2xl font-bold">Avec Bovann</h3>
         <p className="mt-1 text-white/70">Bovann présente lui-même ton business à sa communauté.</p>
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div data-gsap="cards" className="mt-6 grid gap-6 md:grid-cols-2">
           {bovann.map((p) => (
             <PackageCard key={p.id} pkg={p} footer={cta(p.id, true)} />
           ))}
         </div>
 
         {monthlyPackage && (
-          <div className="mt-10 overflow-hidden rounded-3xl bg-gradient-to-br from-live to-live-600 p-6 sm:p-8">
+          <div
+            data-gsap="banner"
+            className="mt-10 overflow-hidden rounded-3xl bg-gradient-to-br from-live to-live-600 p-6 sm:p-8"
+          >
             <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-bold tracking-[0.2em] text-white/80 uppercase">
@@ -186,6 +196,7 @@ export function Faq() {
         {faq.map((f) => (
           <details
             key={f.q}
+            data-gsap="faq"
             className="group rounded-2xl border border-line bg-white open:shadow-sm"
           >
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 font-semibold text-night-900 [&::-webkit-details-marker]:hidden">
@@ -219,7 +230,7 @@ export function Contact() {
             Écrire sur WhatsApp
           </a>
         </div>
-        <ul className="space-y-4 text-night-900">
+        <ul data-gsap="list" className="space-y-4 text-night-900">
           <li className="flex items-start gap-3">
             <Phone className="mt-0.5 size-5 shrink-0 text-live" aria-hidden />
             <span>

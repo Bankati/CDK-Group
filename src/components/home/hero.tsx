@@ -110,6 +110,7 @@ export function Hero() {
       {slides.map((s, i) => (
         <div
           key={s.image}
+          data-gsap="hero-bg"
           aria-hidden
           className={cn(
             "absolute inset-0 -z-20 transition-opacity duration-[1400ms] ease-out",
@@ -131,7 +132,10 @@ export function Hero() {
       <div aria-hidden className="absolute inset-0 -z-10 bg-night-950/65" />
 
       {/* Menu transparent, comme sur bovanngroup.com */}
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 pt-5 sm:px-8 sm:pt-7">
+      <header
+        data-gsap="hero-nav"
+        className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 pt-5 sm:px-8 sm:pt-7"
+      >
         <Link href="/" aria-label="OCD Live, accueil">
           <OcdLiveLogo layout="stacked" className="w-20 sm:w-24" />
         </Link>
@@ -178,13 +182,19 @@ export function Hero() {
           </h1>
         </div>
 
-        <p className="mt-5 max-w-3xl text-base leading-relaxed text-pretty text-white/85 sm:text-xl">
+        <p
+          data-gsap="hero-up"
+          className="mt-5 max-w-3xl text-base leading-relaxed text-pretty text-white/85 sm:text-xl"
+        >
           Réserve ton passage en live sur le TikTok de{" "}
           <strong className="font-bold text-white">House of Challenge</strong> et présente tes
           produits à toute l&apos;Afrique. En présentiel à Lomé ou à distance.
         </p>
 
-        <div className="mt-8 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row">
+        <div
+          data-gsap="hero-up"
+          className="mt-8 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row"
+        >
           <Link
             href="/reserver?mode=presentiel"
             className="flex min-h-12 w-full items-center justify-center rounded bg-live px-7 text-sm font-semibold tracking-wider uppercase shadow-lg shadow-black/20 transition hover:bg-live-700 sm:w-auto"
@@ -201,6 +211,7 @@ export function Hero() {
 
         <button
           type="button"
+          data-gsap="hero-up"
           onClick={() => setLiveOpen(true)}
           className="mt-6 inline-flex items-center gap-2 text-sm text-white/75 transition hover:text-white"
         >
@@ -212,7 +223,12 @@ export function Hero() {
       </div>
 
       {/* Points du slider */}
-      <div className="mx-auto mb-8 flex items-center gap-2" role="tablist" aria-label="Photos">
+      <div
+        data-gsap="hero-up"
+        className="mx-auto mb-8 flex items-center gap-2"
+        role="tablist"
+        aria-label="Photos"
+      >
         {slides.map((s, i) => (
           <button
             key={s.image}

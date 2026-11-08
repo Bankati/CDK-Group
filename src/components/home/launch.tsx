@@ -10,7 +10,7 @@ export function Launch() {
   return (
     <section className="bg-white">
       <div className="mx-auto grid w-full max-w-6xl items-center gap-10 px-5 py-16 sm:px-8 md:grid-cols-2 md:gap-14 md:py-24">
-        <div className="relative mx-auto w-full max-w-[19rem] sm:max-w-md">
+        <div data-gsap="poster" className="relative mx-auto w-full max-w-[19rem] sm:max-w-md">
           <div
             aria-hidden
             className="absolute -inset-3 -rotate-3 rounded-[2rem] bg-night-900 md:-inset-4"
@@ -25,7 +25,7 @@ export function Launch() {
           />
         </div>
 
-        <div>
+        <div data-gsap="launch-text">
           <p className="text-xs font-bold tracking-[0.22em] text-live-600 uppercase">
             Réservations ouvertes
           </p>
