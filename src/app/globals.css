@@ -47,6 +47,42 @@
   --animate-rise: rise 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   --animate-shine: shine 2.8s ease-in-out infinite;
   --animate-wiggle: wiggle 2.4s ease-in-out infinite;
+  --animate-phone-float: phone-float 7s ease-in-out infinite;
+  --animate-marquee: marquee 45s linear infinite;
+  --animate-toast: toast 3.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  @keyframes phone-float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+  @keyframes toast {
+    0% {
+      opacity: 0;
+      transform: translateY(14px) scale(0.96);
+    }
+    12%,
+    82% {
+      opacity: 1;
+      transform: none;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-10px) scale(0.98);
+    }
+  }
 
   @keyframes live-pulse {
     0% {
@@ -132,5 +168,21 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Cœurs qui s'envolent dans le live du hero (la dérive --x est fixée par le composant) */
+@keyframes heart-float {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.5);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(0, -18px) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--x, 0px), -230px) scale(0.85);
   }
 }
