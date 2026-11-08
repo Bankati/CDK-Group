@@ -72,12 +72,12 @@ export function Hero() {
         </div>
       ))}
 
-      {/* Voile bleu nuit */}
+      {/* Voile du site Bovann Group (#000910 à 70 %), renforcé en bas pour le texte */}
+      <div aria-hidden className="absolute inset-0 -z-10 bg-night-950/70" />
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-t from-night-950/95 via-night-900/80 to-night-800/55"
+        className="absolute inset-0 -z-10 bg-gradient-to-t from-night-950/80 via-transparent to-transparent"
       />
-      <div aria-hidden className="absolute inset-0 -z-10 bg-night-950/35" />
 
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 pt-5 sm:px-8 sm:pt-7">
         <Link href="/" aria-label="OCD Live, accueil">

@@ -1,23 +1,24 @@
 @import "tailwindcss";
 
 /*
- * Palette OCD Live (identité Bovann Group)
- * - Bleu nuit : fond principal (#001b61)
- * - Rouge LIVE : extrait du logo Bovann Group (#e01010), pour les actions et le badge EN DIRECT
+ * Palette OCD Live = palette du site bovanngroup.com (assets/css/main.css)
+ * - Rouge d'accent #dc0c15 : boutons, liens, badge EN DIRECT
+ * - Fond sombre #000910, en-tête #15222b, titres #273d4e (« night »)
+ * - Texte #444444, fond clair #f1f4fa, traits #e5eaee
  * - Or : réservé au VIP
  * Le logo OCD Live garde toujours ses couleurs officielles (orange #EE6B07).
  */
 @theme {
-  --color-night-950: #010922;
-  --color-night-900: #020f3a;
-  --color-night-800: #001b61;
-  --color-night-700: #0b2a80;
-  --color-night-600: #1d3c9a;
+  --color-night-950: #000910;
+  --color-night-900: #15222b;
+  --color-night-800: #273d4e;
+  --color-night-700: #34506a;
+  --color-night-600: #4a6a85;
 
-  --color-live: #e3141b;
-  --color-live-600: #c80f15;
-  --color-live-700: #a80c11;
-  --color-live-800: #8a090d;
+  --color-live: #dc0c15;
+  --color-live-600: #b80a12;
+  --color-live-700: #9a080f;
+  --color-live-800: #7d060c;
   --color-live-50: #fdecec;
 
   /* Noir du mot « Live » dans le logo officiel (version sur fond clair) */
@@ -30,10 +31,10 @@
   --color-gold-300: #f0d48c;
   --color-gold-700: #8c6a1f;
 
-  --color-ink: #0b1533;
-  --color-muted: #545e7e;
-  --color-line: #e3e7f1;
-  --color-paper: #f5f7fc;
+  --color-ink: #444444;
+  --color-muted: #5f6b76;
+  --color-line: #e5eaee;
+  --color-paper: #f1f4fa;
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-bricolage), var(--font-geist-sans), ui-sans-serif, sans-serif;
@@ -49,13 +50,13 @@
 
   @keyframes live-pulse {
     0% {
-      box-shadow: 0 0 0 0 rgb(227 20 27 / 0.75);
+      box-shadow: 0 0 0 0 rgb(220 12 21 / 0.75);
     }
     70% {
-      box-shadow: 0 0 0 10px rgb(227 20 27 / 0);
+      box-shadow: 0 0 0 10px rgb(220 12 21 / 0);
     }
     100% {
-      box-shadow: 0 0 0 0 rgb(227 20 27 / 0);
+      box-shadow: 0 0 0 0 rgb(220 12 21 / 0);
     }
   }
   @keyframes kenburns {

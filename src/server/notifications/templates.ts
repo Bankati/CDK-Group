@@ -21,12 +21,12 @@ function describe(b: Booking) {
 }
 
 function layout(title: string, body: string, appUrl: string) {
-  return `<!doctype html><html lang="fr"><body style="margin:0;background:#f5f7fc;font-family:Arial,Helvetica,sans-serif;color:#0b1533">
+  return `<!doctype html><html lang="fr"><body style="margin:0;background:#f1f4fa;font-family:Arial,Helvetica,sans-serif;color:#444444">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:24px 12px"><tr><td align="center">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border-radius:16px;overflow:hidden">
-<tr><td style="background:#020f3a;padding:18px 24px"><img src="${appUrl}/brand/ocd-live-blanc.png" width="104" height="64" alt="OCD Live" style="display:block;border:0"></td></tr>
+<tr><td style="background:#15222b;padding:18px 24px"><img src="${appUrl}/brand/ocd-live-blanc.png" width="104" height="64" alt="OCD Live" style="display:block;border:0"></td></tr>
 <tr><td style="padding:24px"><h1 style="font-size:20px;margin:0 0 16px">${title}</h1>${body}</td></tr>
-<tr><td style="padding:16px 24px;background:#f5f7fc;font-size:12px;color:#545e7e">${site.company.name} · ${site.company.address}<br>${site.company.phones.join(" / ")} · ${site.company.email}<br><a href="${appUrl}" style="color:#545e7e">${appUrl.replace(/^https?:\/\//, "")}</a></td></tr>
+<tr><td style="padding:16px 24px;background:#f1f4fa;font-size:12px;color:#5f6b76">${site.company.name} · ${site.company.address}<br>${site.company.phones.join(" / ")} · ${site.company.email}<br><a href="${appUrl}" style="color:#5f6b76">${appUrl.replace(/^https?:\/\//, "")}</a></td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -40,7 +40,7 @@ function rows(items: [string, string][]) {
   return `<table role="presentation" width="100%" style="border-collapse:collapse;font-size:14px">${items
     .map(
       ([k, v]) =>
-        `<tr><td style="padding:6px 0;color:#545e7e;width:40%">${k}</td><td style="padding:6px 0;font-weight:bold">${esc(v)}</td></tr>`,
+        `<tr><td style="padding:6px 0;color:#5f6b76;width:40%">${k}</td><td style="padding:6px 0;font-weight:bold">${esc(v)}</td></tr>`,
     )
     .join("")}</table>`;
 }
@@ -58,7 +58,7 @@ export function adminNewBookingEmail(b: Booking, to: string, appUrl: string): Em
        ["Email", b.email],
        ["Produits", b.products],
      ])}
-     <p style="margin:24px 0 0"><a href="${appUrl}/espace-bovann" style="background:#e3141b;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block">Confirmer dans l'Espace Bovann</a></p>`,
+     <p style="margin:24px 0 0"><a href="${appUrl}/espace-bovann" style="background:#dc0c15;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block">Confirmer dans l'Espace Bovann</a></p>`,
     appUrl,
   );
   return {
@@ -91,7 +91,7 @@ export function clientPendingEmail(b: Booking, appUrl: string): Email {
        ["Mode", d.where],
        ["Montant", fcfa(b.amount)],
      ])}
-     <p style="margin:24px 0 0"><a href="${link}" style="background:#020f3a;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block">Suivre ma réservation</a></p>`,
+     <p style="margin:24px 0 0"><a href="${link}" style="background:#15222b;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block">Suivre ma réservation</a></p>`,
     appUrl,
   );
   return { to: b.email, subject: `Réservation reçue · ${b.code}`, text, html };
@@ -112,7 +112,7 @@ export function clientConfirmedEmail(b: Booking, appUrl: string): Email {
        ["Package", d.pkg],
        ["Mode", d.where],
      ])}
-     <p style="margin:24px 0 0"><a href="${link}" style="background:#e3141b;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block">Voir mon billet</a></p>
+     <p style="margin:24px 0 0"><a href="${link}" style="background:#dc0c15;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block">Voir mon billet</a></p>
      <p style="font-size:14px;margin-top:20px">En attendant ton live, abonne-toi à <a href="${site.tiktokUrl}">House of Challenge sur TikTok</a>.</p>`,
     appUrl,
   );
