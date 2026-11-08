@@ -5,7 +5,12 @@ import { env } from "@/lib/env";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  // Seulement pour les codes de réservation : pas besoin de la charger en priorité.
+  preload: false,
+});
 /** Titres du site. */
 const display = Bricolage_Grotesque({
   variable: "--font-bricolage",
@@ -15,7 +20,7 @@ const display = Bricolage_Grotesque({
 /** Poppins Bold : uniquement le mot « Live » du logo officiel. */
 const logo = Poppins({ variable: "--font-poppins", subsets: ["latin"], weight: "700" });
 /** Raleway : titres du hero, comme sur le site bovanngroup.com. */
-const heading = Raleway({ variable: "--font-raleway", subsets: ["latin"], weight: ["600", "700"] });
+const heading = Raleway({ variable: "--font-raleway", subsets: ["latin"], weight: "600" });
 
 export const metadata: Metadata = {
   metadataBase: new URL(env.NEXT_PUBLIC_APP_URL),

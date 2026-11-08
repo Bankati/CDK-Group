@@ -39,7 +39,7 @@ Redémarrer le serveur remet les données de départ.
 
 ### L'effet « Rejoins le live » (caméra)
 
-Dans le hero, le lien **Essaie : rejoins le live avec ta caméra** ouvre une fenêtre où la caméra du visiteur s'affiche : il se voit en direct dans le live de Bovann, puis peut garder une **photo de live** au format story (partage WhatsApp sur téléphone, téléchargement sur ordinateur). Tout reste sur l'appareil : rien n'est envoyé ni enregistré.
+Dans le hero, le lien **Essaie : passe en live avec ta caméra** ouvre une fenêtre où la caméra du visiteur s'affiche : il se voit en direct dans le live de Bovann, puis peut garder une **photo de live** au format story (partage WhatsApp sur téléphone, téléchargement sur ordinateur). Tout reste sur l'appareil : rien n'est envoyé ni enregistré.
 
 Les navigateurs n'autorisent la caméra que sur un site **sécurisé (https)** ou sur `localhost` :
 
@@ -49,19 +49,21 @@ Les navigateurs n'autorisent la caméra que sur un site **sécurisé (https)** o
 
 ### Scénario de présentation (5 minutes)
 
-1. **Accueil** : le slider, les 2 boutons, les packages (« Le plus choisi », VIP doré, compteur du Pack du mois).
-2. **Réserver** « À distance » → le **5 décembre est grisé (complet)** → choisir le **1er décembre** → **Live Marathon** n'est proposé qu'à 18h00 (seul créneau de 4h libre) → choisir **Live Classique** → les créneaux 10h–11h30 et 14h–18h sont déjà pris, l'heure locale s'affiche.
+1. **Accueil** : les photos qui défilent, les animations au défilement, les 2 boutons, les packages (« Le plus choisi », VIP doré, compteur du Pack du mois). Tourner l'écran vers le jury et cliquer sur « Essaie : passe en live avec ta caméra ».
+2. **Réserver** « À distance » (on arrive directement sur la date) → le **5 décembre est grisé (complet)** → choisir le **1er décembre** → **Live Marathon** n'est proposé qu'à 18h00 (seul créneau de 4h libre) → choisir **Live Classique** → les créneaux 10h–11h30 et 14h–18h sont déjà pris, l'heure locale s'affiche.
 3. Remplir ses informations → **Réserver mon live** (rien à payer sur le site) → **confettis, billet, compte à rebours, bouton TikTok**.
 4. **Double réservation** : sur un 2e appareil, prendre le même créneau → refusé, « Ce créneau vient d'être pris ».
 5. **Espace Bovann** : la réservation apparaît « En attente » → **Confirmer la réservation** (une fois le client recontacté sur WhatsApp) → le total confirmé augmente, l'email de confirmation apparaît dans l'onglet Emails, et la page du client passe à « Confirmée » toute seule.
-6. Calendrier, statistiques, export Excel.
+6. **Tableau de bord** : la Régie (prochain live, compte à rebours, piste de la journée), la carte de l'audience (faisceaux vers Lomé), le graphique par semaine avec son calendrier, le fil d'activité. Puis réservations (onglets par statut), calendrier, statistiques, export Excel.
 7. **Réglages** : l'adresse email qui reçoit chaque nouvelle réservation (avec toutes les réponses du formulaire) se change ici, sans toucher au code. Bouton « Envoyer un email de test ».
 
 ---
 
 ## 2. Tout modifier au même endroit
 
-**[`src/config/site.ts`](src/config/site.ts)** : prix des packages, WhatsApp, lien TikTok, horaires (10h–22h), premier jour (1er décembre), nom du Pack du mois, durée de réservation d'un créneau non confirmé (24 h).
+**[`src/config/site.ts`](src/config/site.ts)** : prix des packages, WhatsApp, lien TikTok, compte affiché dans le live (`liveAccount`), horaires (10h–22h), premier jour (1er décembre), nom du Pack du mois, durée de réservation d'un créneau non confirmé (24 h), objectif de chiffre d'affaires mensuel (`goals`).
+
+L'adresse qui reçoit les réservations se change dans **Espace Bovann → Réglages** (sans toucher au code).
 
 Les images de l'accueil sont dans `public/hero/` : `ocd-live-studio.jpg`, `live-entrepreneure.jpg`, `live-couturier.jpg`, `live-commercante.jpg` (les 4 photos du hero ; textes et cadrage dans `src/components/home/hero.tsx`, tableau `slides`), `affiche-lancement.jpg` (section « Lancement »).
 
@@ -71,12 +73,13 @@ Les images de l'accueil sont dans `public/hero/` : `ocd-live-studio.jpg`, `live-
 
 ## 3. Commandes
 
-| Commande     | Rôle                                                   |
-| ------------ | ------------------------------------------------------ |
-| `pnpm dev`   | Site en développement (http://localhost:3000)          |
-| `pnpm demo`  | Version rapide, accessible depuis le téléphone (Wi-Fi) |
-| `pnpm build` | Construit la version de production                     |
-| `pnpm check` | Vérifie le code (lint + types + mise en forme)         |
+| Commande         | Rôle                                                   |
+| ---------------- | ------------------------------------------------------ |
+| `pnpm dev`       | Site en développement (http://localhost:3000)          |
+| `pnpm demo`      | Version rapide, accessible depuis le téléphone (Wi-Fi) |
+| `pnpm dev:https` | Comme `dev`, en https : caméra du hero sur téléphone   |
+| `pnpm build`     | Construit la version de production                     |
+| `pnpm check`     | Vérifie le code (lint + types + mise en forme)         |
 
 ---
 
@@ -87,15 +90,20 @@ src/
   config/site.ts        ← le fichier à modifier (prix, numéros, horaires…)
   app/
     page.tsx            Accueil
-    reserver/           Parcours de réservation (6 étapes)
+    reserver/           Parcours de réservation (4 étapes : date, package, heure, infos)
     reservation/[id]/   Confirmation, billet PNG, fichier agenda
-    espace-bovann/      Tableau de bord protégé, export CSV
-  components/           Interface (hero, packages, étapes…)
+    espace-bovann/      Espace Bovann protégé : tableau de bord (régie, carte,
+                        graphiques), réservations, calendrier, stats, emails,
+                        réglages (email de notification), export CSV
+  components/           Interface (hero, packages, étapes…) ;
+                        home/home-animations.tsx = animations GSAP de l'accueil
   lib/availability.ts   Calcul des créneaux libres (anti double réservation)
   server/
     bookings.ts         Règles métier (créer, confirmer, annuler)
     db/                 Données : memory.ts (démo) / supabase.ts (production)
     notifications/      Emails (Resend) — SMS / WhatsApp en phase 2
+    settings.ts         Réglages modifiables depuis l'Espace Bovann
+    audience-map.ts     Carte de l'audience (calculée côté serveur)
 supabase/schema.sql     Base de données à créer dans Supabase
 ```
 
