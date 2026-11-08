@@ -8,6 +8,7 @@ import { formatDayFr, formatRangeFr } from "@/lib/time";
 import type { DisplayStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { AdminBooking } from "./data";
+import { mondayOf, WeekPicker, weekLabel } from "./week-picker";
 
 /**
  * Couleurs des graphiques : palette catégorielle validée (daltonisme, contraste)
@@ -43,7 +44,7 @@ function Card({
 }) {
   return (
     <section className={cn("rounded-2xl border border-line bg-white p-5", className)}>
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-base font-bold text-night-900">{title}</h2>
         {action}
       </div>
@@ -123,130 +124,197 @@ function StatCard({
   );
 }
 
-/** Colonnes groupées : réservations reçues par jour (confirmé / en attente). */
+/** Colonnes groupées : réservations reçues chaque jour d'une semaine (confirmé / en attente). */
 function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
-  const [range, setRange] = useState<7 | 14 | 30>(14);
+  const [monday, setMonday] = useState(() => mondayOf(now));
   const [hover, setHover] = useState<number | null>(null);
-  const today = Date.parse(`${dayKey(now)}T00:00:00Z`);
-  const days = Array.from({ length: range }, (_, i) => today - (range - 1 - i) * DAY);
-  const data = days.map((d) => {
+  const todayKey = dayKey(now);
+  const WEEK = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+
+  const marked = useMemo(() => new Set(rows.map((b) => b.createdAt.slice(0, 10))), [rows]);
+
+  const data = Array.from({ length: 7 }, (_, i) => {
+    const d = monday + i * DAY;
     const key = dayKey(d);
     const same = rows.filter((b) => b.createdAt.startsWith(key));
+    const confirmed = same.filter((b) => b.display === "confirmed");
+    const pending = same.filter((b) => b.display === "pending");
     return {
       d,
-      confirmed: same.filter((b) => b.display === "confirmed").reduce((s, b) => s + b.amount, 0),
-      pending: same.filter((b) => b.display === "pending").reduce((s, b) => s + b.amount, 0),
+      key,
+      weekday: WEEK[i]!,
+      confirmed: confirmed.reduce((s, b) => s + b.amount, 0),
+      pending: pending.reduce((s, b) => s + b.amount, 0),
+      count: confirmed.length + pending.length,
     };
   });
+  const totals = data.reduce(
+    (t, x) => ({
+      confirmed: t.confirmed + x.confirmed,
+      pending: t.pending + x.pending,
+      count: t.count + x.count,
+    }),
+    { confirmed: 0, pending: 0, count: 0 },
+  );
+
   const max = Math.max(1, ...data.flatMap((x) => [x.confirmed, x.pending]));
-  const step = max <= 40_000 ? 10_000 : max <= 100_000 ? 25_000 : 50_000;
+  const step = max <= 40_000 ? 10_000 : max <= 100_000 ? 25_000 : max <= 200_000 ? 50_000 : 100_000;
   const top = Math.ceil(max / step) * step;
   const ticks = Array.from({ length: top / step + 1 }, (_, i) => i * step).reverse();
-  const label = (d: number) =>
-    new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", timeZone: "UTC" }).format(d);
 
   return (
     <Card
       title="Réservations reçues"
-      action={
-        <div className="flex items-center gap-4">
-          <div
-            className="hidden items-center gap-4 text-xs text-muted sm:flex"
-            aria-label="Légende"
-          >
-            <span className="flex items-center gap-1.5">
+      action={<WeekPicker value={monday} onChange={setMonday} today={now} marked={marked} />}
+    >
+      {/* Résumé de la semaine + légende */}
+      <div className="mt-4 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <p className="leading-tight">
+            <span className="flex items-center gap-1.5 text-xs text-muted">
               <span className="size-2.5 rounded-full" style={{ background: CONFIRMED }} /> Confirmé
             </span>
-            <span className="flex items-center gap-1.5">
+            <span className="font-display text-lg font-extrabold text-night-900 tabular-nums">
+              {fcfa(totals.confirmed)}
+            </span>
+          </p>
+          <p className="leading-tight">
+            <span className="flex items-center gap-1.5 text-xs text-muted">
               <span className="size-2.5 rounded-full" style={{ background: PENDING }} /> En attente
             </span>
-          </div>
-          <select
-            aria-label="Période"
-            value={range}
-            onChange={(e) => setRange(Number(e.target.value) as 7 | 14 | 30)}
-            className="h-8 rounded-full border border-line bg-white px-3 text-xs font-semibold text-night-900 outline-none"
-          >
-            <option value={7}>7 jours</option>
-            <option value={14}>14 jours</option>
-            <option value={30}>30 jours</option>
-          </select>
-        </div>
-      }
-    >
-      <div className="mt-5 flex gap-3">
-        {/* Axe Y (montants) */}
-        <div className="flex h-64 flex-col justify-between pb-7 text-right text-[11px] text-muted tabular-nums">
-          {ticks.map((t) => (
-            <span key={t} className="leading-none">
-              {compact(t)}
+            <span className="font-display text-lg font-extrabold text-night-900 tabular-nums">
+              {fcfa(totals.pending)}
             </span>
-          ))}
+          </p>
+        </div>
+        <p className="text-xs text-muted">
+          <strong className="text-night-900">{totals.count}</strong> réservation
+          {totals.count > 1 ? "s" : ""} reçue{totals.count > 1 ? "s" : ""} · semaine du{" "}
+          {weekLabel(monday)}
+        </p>
+      </div>
+
+      <div className="mt-5 flex gap-3">
+        {/* Axe Y (montants) : chaque valeur centrée sur sa ligne */}
+        <div className="relative h-60 w-9 shrink-0 text-right text-[11px] text-muted tabular-nums">
+          <div className="absolute inset-x-0 top-0 bottom-10">
+            {ticks.map((t, i) => (
+              <span
+                key={t}
+                className="absolute right-0 -translate-y-1/2 leading-none"
+                style={{ top: `${(i / (ticks.length - 1)) * 100}%` }}
+              >
+                {compact(t)}
+              </span>
+            ))}
+          </div>
         </div>
         <div className="relative flex-1">
           {/* Grille discrète */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 bottom-7 flex flex-col justify-between">
+          <div className="pointer-events-none absolute inset-x-0 top-0 bottom-10 flex flex-col justify-between">
             {ticks.map((t) => (
-              <span key={t} className="border-t border-dashed border-line" />
+              <span
+                key={t}
+                className={cn("border-t", t === 0 ? "border-line" : "border-dashed border-line/80")}
+              />
             ))}
           </div>
-          <div className="relative flex h-64 items-end justify-between gap-1 pb-7">
-            {data.map((x, i) => (
-              <div
-                key={x.d}
-                className="relative flex h-full flex-1 flex-col items-center justify-end"
-                onPointerEnter={() => setHover(i)}
-                onPointerLeave={() => setHover(null)}
-              >
-                {hover === i && (
-                  <div className="absolute bottom-[calc(100%-1rem)] z-10 rounded-lg border border-line bg-white px-2.5 py-1.5 text-[11px] whitespace-nowrap text-night-900 shadow-lg">
-                    <p className="font-semibold">{label(x.d)}</p>
-                    <p className="flex items-center gap-1.5 text-muted">
-                      <span className="size-2 rounded-full" style={{ background: CONFIRMED }} />
-                      Confirmé <strong className="text-night-900">{fcfa(x.confirmed)}</strong>
-                    </p>
-                    <p className="flex items-center gap-1.5 text-muted">
-                      <span className="size-2 rounded-full" style={{ background: PENDING }} />
-                      En attente <strong className="text-night-900">{fcfa(x.pending)}</strong>
-                    </p>
-                  </div>
-                )}
+          <div className="relative flex h-60 items-stretch">
+            {data.map((x, i) => {
+              const isToday = x.key === todayKey;
+              const future = x.d > now;
+              return (
                 <div
-                  className={cn(
-                    "flex h-full w-full items-end justify-center gap-[2px]",
-                    hover !== null && hover !== i && "opacity-40",
-                  )}
+                  key={x.key}
+                  className="relative flex flex-1 flex-col"
+                  onPointerEnter={() => setHover(i)}
+                  onPointerLeave={() => setHover(null)}
                 >
-                  {[
-                    [x.confirmed, CONFIRMED],
-                    [x.pending, PENDING],
-                  ].map(([v, c], k) => (
+                  {/* Zone des barres */}
+                  <div
+                    className={cn(
+                      "relative mx-1 flex flex-1 items-end justify-center gap-[3px] rounded-t-lg transition-colors",
+                      hover === i && "bg-paper",
+                    )}
+                  >
+                    {hover === i && (x.confirmed > 0 || x.pending > 0) && (
+                      <div className="absolute bottom-[calc(100%+6px)] left-1/2 z-10 -translate-x-1/2 rounded-lg border border-line bg-white px-2.5 py-1.5 text-[11px] whitespace-nowrap text-night-900 shadow-lg">
+                        <p className="font-semibold first-letter:uppercase">
+                          {new Intl.DateTimeFormat("fr-FR", {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long",
+                            timeZone: "UTC",
+                          }).format(x.d)}
+                        </p>
+                        <p className="flex items-center gap-1.5 text-muted">
+                          <span className="size-2 rounded-full" style={{ background: CONFIRMED }} />
+                          Confirmé{" "}
+                          <strong className="ml-auto pl-3 text-night-900">
+                            {fcfa(x.confirmed)}
+                          </strong>
+                        </p>
+                        <p className="flex items-center gap-1.5 text-muted">
+                          <span className="size-2 rounded-full" style={{ background: PENDING }} />
+                          En attente{" "}
+                          <strong className="ml-auto pl-3 text-night-900">{fcfa(x.pending)}</strong>
+                        </p>
+                      </div>
+                    )}
+                    {[
+                      [x.confirmed, CONFIRMED],
+                      [x.pending, PENDING],
+                    ].map(([v, c], k) => (
+                      <span
+                        key={k}
+                        className={cn(
+                          "block w-full max-w-6 rounded-t transition-[height,opacity] duration-500",
+                          hover !== null && hover !== i && "opacity-40",
+                        )}
+                        style={{
+                          height: `${((v as number) / top) * 100}%`,
+                          background: c as string,
+                          minHeight: (v as number) > 0 ? 3 : 0,
+                        }}
+                      />
+                    ))}
+                  </div>
+                  {/* Jour de la semaine */}
+                  <div className="flex h-10 flex-col items-center justify-center leading-tight">
                     <span
-                      key={k}
-                      className="block w-full max-w-3 rounded-t transition-[height] duration-500"
-                      style={{
-                        height: `${((v as number) / top) * 100}%`,
-                        background: c as string,
-                        minHeight: (v as number) > 0 ? 3 : 0,
-                      }}
-                    />
-                  ))}
+                      className={cn(
+                        "text-xs font-semibold",
+                        isToday ? "text-live-600" : future ? "text-muted/50" : "text-night-900",
+                      )}
+                    >
+                      {x.weekday}
+                    </span>
+                    <span
+                      className={cn(
+                        "mt-0.5 flex size-5 items-center justify-center rounded-full text-[11px] tabular-nums",
+                        isToday ? "bg-live-600 font-bold text-white" : "text-muted",
+                      )}
+                    >
+                      {new Date(x.d).getUTCDate()}
+                    </span>
+                  </div>
                 </div>
-                {(range <= 14 || i % 5 === 0) && (
-                  <span className="absolute -bottom-6 text-[10px] whitespace-nowrap text-muted">
-                    {range <= 7 || i % 2 === 0 ? label(x.d) : ""}
-                  </span>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
+      {totals.count === 0 && (
+        <p className="mt-2 text-center text-sm text-muted">
+          Aucune réservation reçue cette semaine-là.
+        </p>
+      )}
       <p className="sr-only">
         {data
           .filter((x) => x.confirmed || x.pending)
           .map(
-            (x) => `${label(x.d)} : ${fcfa(x.confirmed)} confirmés, ${fcfa(x.pending)} en attente`,
+            (x) =>
+              `${x.weekday} ${new Date(x.d).getUTCDate()} : ${fcfa(x.confirmed)} confirmés, ${fcfa(x.pending)} en attente`,
           )
           .join(". ")}
       </p>
