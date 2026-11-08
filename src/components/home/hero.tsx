@@ -1,10 +1,11 @@
 "use client";
 
-import { Camera } from "lucide-react";
+import { CalendarClock, Camera } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { OcdLiveLogo } from "@/components/brand";
+import { schedule } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { LiveModal } from "./live-modal";
 
@@ -18,15 +19,21 @@ const slides: {
   position: string;
   flip?: boolean;
   kicker: string;
+  /** Accroche (bleu clair, plus petite). */
   accent: string;
-  title: string;
+  /** Phrase forte : before + mot souligné au pinceau + after. */
+  before: string;
+  highlight: string;
+  after: string;
 }[] = [
   {
     image: "/hero/ocd-live-studio.jpg",
     position: "78% 50%",
     kicker: "OCD Live",
     accent: "Le live qui vend,",
-    title: "devant toute l'Afrique.",
+    before: "devant ",
+    highlight: "toute l'Afrique",
+    after: ".",
   },
   {
     image: "/hero/live-entrepreneure.jpg",
@@ -34,22 +41,28 @@ const slides: {
     // Photo retournée : le téléphone se retrouve du côté visible, hors de la forme bleue.
     flip: true,
     kicker: "Live TikTok",
-    accent: "Un téléphone, un live,",
-    title: "et toute l'Afrique devient ta clientèle.",
+    accent: "Un téléphone. Un live.",
+    before: "L'Afrique devient ",
+    highlight: "ta clientèle",
+    after: ".",
   },
   {
     image: "/hero/live-couturier.jpg",
     position: "55% 40%",
     kicker: "Artisans & créateurs",
     accent: "De ton atelier",
-    title: "à des millions d'écrans, en un seul live.",
+    before: "à des ",
+    highlight: "millions",
+    after: " d'écrans.",
   },
   {
     image: "/hero/live-commercante.jpg",
     position: "50% 35%",
     kicker: "Commerçants",
     accent: "Du marché d'Adawlato",
-    title: "jusqu'à Paris, Dakar et Abidjan.",
+    before: "jusqu'à ",
+    highlight: "Paris",
+    after: " et Dakar.",
   },
 ];
 
@@ -83,9 +96,19 @@ function useLiveRunning(ref: React.RefObject<HTMLElement | null>) {
   return inView && pageVisible && !reduced;
 }
 
+/** Jours restants avant le lancement (calculé dans le navigateur uniquement). */
+function useDaysToLaunch() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => Math.ceil((Date.parse(`${schedule.firstDay}T10:00:00Z`) - Date.now()) / 86_400_000),
+    () => null,
+  );
+}
+
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
   const running = useLiveRunning(sectionRef);
+  const days = useDaysToLaunch();
   const [{ active, prev }, setState] = useState<{ active: number; prev: number | null }>({
     active: 0,
     prev: null,
@@ -201,28 +224,67 @@ export function Hero() {
         {/* Texte : dans la forme sur ordinateur, dans un bloc sous la photo sur téléphone */}
         <div className="relative bg-night-800 md:absolute md:inset-y-0 md:left-0 md:flex md:w-[48%] md:items-center md:bg-transparent lg:w-[46%]">
           <div className="w-full px-6 py-10 sm:px-10 md:py-0 md:pr-10 md:pl-[max(2.75rem,calc((100vw-72rem)/2+2rem))]">
-            <div className="max-w-[28rem]">
+            <div className="max-w-[27rem] lg:max-w-[30rem]">
               <div key={active}>
-                <p className="flex animate-rise items-center gap-2.5 text-xs font-bold tracking-[0.22em] text-[#9fc2e3] uppercase">
-                  <span className="relative flex size-2">
-                    <span className="absolute inline-flex size-full animate-ping rounded-full bg-live opacity-75" />
-                    <span className="relative inline-flex size-2 rounded-full bg-live" />
+                {/* Signal « en direct » : égaliseur animé */}
+                <p className="flex animate-rise items-center gap-3 text-[11px] font-bold tracking-[0.24em] text-white/70 uppercase">
+                  <span aria-hidden className="flex h-3.5 items-end gap-[3px]">
+                    {[0, 1, 2, 3].map((b) => (
+                      <span
+                        key={b}
+                        className="h-full w-[3px] origin-bottom rounded-full bg-live"
+                        style={{ animation: `eq 0.9s ease-in-out ${b * 0.15}s infinite alternate` }}
+                      />
+                    ))}
                   </span>
-                  En direct
+                  <span className="text-white">En direct</span>
                   <span aria-hidden className="h-3 w-px bg-white/25" />
                   {slide.kicker}
                 </p>
-                <h1
-                  className="mt-4 animate-rise font-display text-[2.35rem] leading-[1.04] font-extrabold tracking-tight text-balance md:text-[2.45rem] lg:text-[3.1rem]"
-                  style={{ animationDelay: "80ms" }}
-                >
-                  <span className="block text-[#9fc2e3]">{slide.accent}</span>
-                  <span className="block">{slide.title}</span>
+
+                <h1 className="mt-5 font-display tracking-tight">
+                  <span
+                    className="block animate-rise text-[clamp(1.2rem,1.7vw,1.55rem)] leading-snug font-semibold text-[#9fc2e3]"
+                    style={{ animationDelay: "60ms" }}
+                  >
+                    {slide.accent}
+                  </span>
+                  <span
+                    className="mt-1 block animate-rise text-[clamp(2.4rem,4.1vw,3.7rem)] leading-[1.04] font-extrabold text-balance"
+                    style={{ animationDelay: "140ms" }}
+                  >
+                    {slide.before}
+                    {/* Mot clé souligné par un coup de pinceau qui se dessine */}
+                    <span className="relative inline-block whitespace-nowrap">
+                      <span className="relative z-10">{slide.highlight}</span>
+                      <svg
+                        aria-hidden
+                        viewBox="0 0 200 20"
+                        preserveAspectRatio="none"
+                        className="absolute -bottom-[0.14em] left-[-2%] h-[0.32em] w-[104%]"
+                      >
+                        <path
+                          d="M2 13 C 40 5, 90 4, 130 8 S 185 12, 198 6"
+                          pathLength={1}
+                          fill="none"
+                          stroke="#dc0c15"
+                          strokeWidth="7"
+                          strokeLinecap="round"
+                          style={{
+                            strokeDasharray: 1,
+                            strokeDashoffset: 1,
+                            animation: "draw 0.9s cubic-bezier(0.6,0,0.2,1) 0.55s forwards",
+                          }}
+                        />
+                      </svg>
+                    </span>
+                    {slide.after}
+                  </span>
                 </h1>
               </div>
 
-              <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-white/70">
-                Passe en live sur le TikTok de House of Challenge, à Lomé ou depuis chez toi.
+              <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-white/65">
+                Réserve ton passage sur le TikTok de House of Challenge, à Lomé ou depuis chez toi.
               </p>
 
               <div className="mt-8 grid gap-3 sm:grid-cols-2">
@@ -245,16 +307,28 @@ export function Hero() {
                 </Link>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setLiveOpen(true)}
-                className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.06] py-2 pr-4 pl-2 text-sm font-semibold text-white/90 transition hover:bg-white/15"
-              >
-                <span className="flex size-7 items-center justify-center rounded-full bg-live">
-                  <Camera className="size-4 text-white" aria-hidden />
-                </span>
-                Essaie&nbsp;: rejoins le live avec ta caméra
-              </button>
+              {/* Ligne finale : caméra · compte à rebours */}
+              <div className="mt-7 flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-white/10 pt-5 text-sm">
+                <button
+                  type="button"
+                  onClick={() => setLiveOpen(true)}
+                  className="group inline-flex items-center gap-2 font-semibold text-white/90 transition hover:text-white"
+                >
+                  <span className="flex size-7 items-center justify-center rounded-full bg-white/10 transition group-hover:bg-live">
+                    <Camera className="size-3.5" aria-hidden />
+                  </span>
+                  Essaie avec ta caméra
+                </button>
+                {days !== null && days > 0 && (
+                  <span className="inline-flex items-center gap-2 text-white/60">
+                    <CalendarClock className="size-4 text-live" aria-hidden />
+                    Lancement le 1er déc.
+                    <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs font-bold text-white">
+                      J-{days}
+                    </span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
