@@ -18,10 +18,10 @@ import { emptyDetails, StepDetails, type Details } from "./step-details";
 import { FIRST_MONTH, StepDate } from "./step-date";
 import { StepPackage } from "./step-package";
 import { StepTime } from "./step-time";
-import { PrimaryButton, StepTitle, useTimeZone } from "./ui";
+import { PrimaryButton, useTimeZone } from "./ui";
 
-const STEPS = ["Mode", "Date", "Package", "Heure", "Infos"] as const;
-const LAST = STEPS.length - 1;
+const STEPS = ["Date", "Package", "Heure", "Infos"] as const;
+const LAST = STEPS.length; // dernière étape interne (Infos = 4)
 const STORAGE_KEY = "ocd-live-reservation";
 
 type State = {
@@ -58,8 +58,8 @@ export function BookingWizard({
   const prefill = initialBusiness ? { businessName: initialBusiness } : {};
 
   const [s, setS] = useState<State>({
-    step: initialMode ? 1 : 0,
-    mode: initialMode,
+    step: 1,
+    mode: initialMode ?? "presentiel",
     details: { ...emptyDetails, ...prefill },
   });
   const [monthKey, setMonthKey] = useState(FIRST_MONTH);
@@ -82,12 +82,11 @@ export function BookingWizard({
     setS((cur) => {
       if (initialMode && saved.mode && saved.mode !== initialMode) return cur;
       // Le mode choisi sur l'accueil est déjà connu : on ne repasse jamais par l'étape « Mode ».
-      const minStep = initialMode || saved.mode ? 1 : 0;
       return {
         ...cur,
         ...saved,
-        mode: initialMode ?? saved.mode,
-        step: Math.max(minStep, Math.min(saved.step ?? cur.step, LAST)),
+        mode: initialMode ?? saved.mode ?? "presentiel",
+        step: Math.max(1, Math.min(saved.step ?? cur.step, LAST)),
         // Le nom tapé dans le hero est prioritaire sur une réservation commencée avant.
         details: {
           ...emptyDetails,
@@ -227,7 +226,7 @@ export function BookingWizard({
     <div className="flex min-h-svh flex-col bg-paper">
       <header className="sticky top-0 z-20 bg-night-900 text-white shadow-lg">
         <div className="mx-auto flex h-16 w-full max-w-2xl items-center gap-3 px-4">
-          {step > 0 ? (
+          {step > 1 ? (
             <button
               type="button"
               onClick={() => goTo(step - 1)}
@@ -249,7 +248,7 @@ export function BookingWizard({
             <OcdLiveLogo className="text-xl" />
           </Link>
           <p className="ml-auto text-sm text-white/75">
-            Étape <strong className="text-white">{step + 1}</strong>/{STEPS.length} · {STEPS[step]}
+            Étape <strong className="text-white">{step}</strong>/{STEPS.length} · {STEPS[step - 1]}
           </p>
         </div>
         <div
@@ -257,18 +256,18 @@ export function BookingWizard({
           role="progressbar"
           aria-valuemin={1}
           aria-valuemax={STEPS.length}
-          aria-valuenow={step + 1}
+          aria-valuenow={step}
           aria-label="Progression de la réservation"
         >
           <div
             className="h-full bg-live transition-all duration-500"
-            style={{ width: `${((step + 1) / STEPS.length) * 100}%` }}
+            style={{ width: `${(step / STEPS.length) * 100}%` }}
           />
         </div>
       </header>
 
       <div ref={topRef} className="mx-auto w-full max-w-2xl scroll-mt-20 px-4 pt-5 pb-16">
-        {summary.length > 0 && step > 0 && (
+        {summary.length > 0 && step > 1 && (
           <div className="mb-6 flex flex-wrap gap-2">
             {summary.map((t) => (
               <span
@@ -291,57 +290,35 @@ export function BookingWizard({
         )}
 
         <div key={step} className="animate-rise">
-          {step === 0 && (
-            <div>
-              <StepTitle
-                title="Comment veux-tu passer en live ?"
-                subtitle="Même prix dans les deux cas."
-              />
-              <div className="grid gap-4">
-                {(
-                  [
-                    [
-                      "presentiel",
-                      "🎥",
-                      "En présentiel au Togo",
-                      "Tu viens sur le plateau à Lomé, avec tes produits.",
-                    ],
-                    [
-                      "distance",
-                      "🌍",
-                      "À distance",
-                      "Tu rejoins le live depuis ton téléphone, où que tu sois.",
-                    ],
-                  ] as const
-                ).map(([m, icon, title, text]) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => {
-                      setS((cur) => ({ ...cur, mode: m }));
-                      goTo(1);
-                    }}
-                    aria-pressed={s.mode === m}
-                    className={cn(
-                      "flex items-center gap-5 rounded-3xl border-2 bg-white p-6 text-left transition hover:-translate-y-0.5",
-                      s.mode === m ? "border-live shadow-xl" : "border-line",
-                    )}
-                  >
-                    <span
-                      className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-paper text-3xl"
-                      aria-hidden
-                    >
-                      {icon}
-                    </span>
-                    <span>
-                      <span className="block font-display text-xl font-bold text-night-900">
-                        {title}
-                      </span>
-                      <span className="mt-1 block text-muted">{text}</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
+          {step === 1 && (
+            <div
+              role="radiogroup"
+              aria-label="Mode de passage"
+              className="mb-6 grid grid-cols-2 gap-1 rounded-2xl border border-line bg-white p-1"
+            >
+              {(
+                [
+                  ["presentiel", "🎥", "En présentiel au Togo"],
+                  ["distance", "🌍", "À distance"],
+                ] as const
+              ).map(([m, icon, label]) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="radio"
+                  aria-checked={s.mode === m}
+                  onClick={() => setS((cur) => ({ ...cur, mode: m }))}
+                  className={cn(
+                    "flex min-h-11 items-center justify-center gap-2 rounded-xl px-2 text-sm font-bold transition",
+                    s.mode === m
+                      ? "bg-night-900 text-white shadow"
+                      : "text-muted hover:text-night-900",
+                  )}
+                >
+                  <span aria-hidden>{icon}</span>
+                  {label}
+                </button>
+              ))}
             </div>
           )}
 
@@ -453,7 +430,7 @@ export function BookingWizard({
               <button
                 type="button"
                 className="mt-2 font-bold text-live-600 underline"
-                onClick={() => goTo(s.mode ? 1 : 0)}
+                onClick={() => goTo(1)}
               >
                 Reprendre la réservation
               </button>
