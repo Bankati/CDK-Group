@@ -52,7 +52,7 @@ export function inPeriod(b: { startsAt: string }, p: Period) {
 }
 
 const selectClass =
-  "h-11 cursor-pointer appearance-none rounded-xl border border-white/20 bg-white/10 bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222.5%22><path d=%22m6 9 6 6 6-6%22/></svg>')] bg-[length:12px] bg-[right_0.9rem_center] bg-no-repeat pr-9 pl-4 text-sm font-semibold text-white backdrop-blur-md transition outline-none hover:bg-white/15 focus:ring-4 focus:ring-white/20 [&>option]:text-night-900";
+  "h-12 cursor-pointer appearance-none rounded-xl border border-white/20 bg-white/10 bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222.5%22><path d=%22m6 9 6 6 6-6%22/></svg>')] bg-[length:12px] bg-[right_0.9rem_center] bg-no-repeat pr-10 pl-5 text-base font-semibold text-white backdrop-blur-md transition outline-none hover:bg-white/15 focus:ring-4 focus:ring-white/20 [&>option]:text-night-900";
 
 /** Bannière simple : logo Bovann Group + filtres Mois / Année. Tout le tableau de bord suit. */
 export function PeriodBanner({
@@ -82,22 +82,22 @@ export function PeriodBanner({
         className="absolute inset-0 -z-10 bg-gradient-to-r from-night-950/95 via-night-950/75 to-night-950/35"
       />
 
-      <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8">
+      <div className="flex min-h-72 flex-col justify-end gap-8 p-6 sm:min-h-80 sm:flex-row sm:items-end sm:justify-between sm:p-10">
         <div>
           <Image
             src="/brand/bovann-group.png"
             alt="Bovann Group"
-            width={180}
-            height={36}
-            className="h-7 w-auto sm:h-8"
+            width={240}
+            height={48}
+            className="h-10 w-auto sm:h-12"
           />
           <p
             key={periodLabel(period)}
-            className="mt-6 animate-rise font-display text-3xl font-extrabold tracking-tight sm:text-4xl"
+            className="mt-8 animate-rise font-display text-4xl font-extrabold tracking-tight sm:text-6xl"
           >
             {periodLabel(period)}
           </p>
-          <p className="mt-1 text-sm text-white/70">
+          <p className="mt-2 text-base text-white/75">
             {count} live{count > 1 ? "s" : ""} sur la période · statistiques mises à jour
           </p>
         </div>

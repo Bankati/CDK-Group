@@ -2,7 +2,7 @@
 
 import { ArrowUpRight, CalendarClock, Clock, TrendingUp, Wallet } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { goals, packages, schedule } from "@/config/site";
+import { packages } from "@/config/site";
 import { fcfa, number } from "@/lib/format";
 import { formatDayFr, formatRangeFr } from "@/lib/time";
 import type { DisplayStatus } from "@/lib/types";
@@ -514,85 +514,6 @@ function RecentBookings({ rows, onOpen }: { rows: AdminBooking[]; onOpen: () => 
   );
 }
 
-/** Objectifs : jauges (piste et remplissage de la même teinte). */
-function Goals({ rows, period }: { rows: AdminBooking[]; period: Period }) {
-  const months = period.month ? 1 : 12;
-  const monthName = period.month
-    ? new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" }).format(
-        Date.UTC(period.year, period.month - 1, 15),
-      )
-    : `l'année ${period.year}`;
-  const inMonth = rows.filter(isActive);
-  const pack = packages.find((p) => p.monthlyQuota);
-  const packSold = inMonth.filter((b) => b.packageId === pack?.id).length;
-  const daysInMonth = period.month
-    ? new Date(Date.UTC(period.year, period.month, 0)).getUTCDate()
-    : (Date.UTC(period.year + 1, 0, 1) - Date.UTC(period.year, 0, 1)) / DAY;
-  const hoursOpen = daysInMonth * (schedule.closeHour - schedule.openHour);
-  const hoursBooked = inMonth.reduce((s, b) => s + b.durationMinutes / 60, 0);
-  const revenue = inMonth.reduce((s, b) => s + b.amount, 0);
-
-  const items = [
-    {
-      label: period.month
-        ? `Chiffre d'affaires de ${monthName}`
-        : `Chiffre d'affaires de ${monthName}`,
-      value: revenue,
-      max: goals.monthlyRevenue * months,
-      fmt: fcfa,
-    },
-    pack
-      ? {
-          label: period.month ? `Pack du mois · places vendues` : `Packs du mois · places vendues`,
-          value: packSold,
-          max: pack.monthlyQuota! * months,
-          fmt: (n: number) => `${n} places`,
-        }
-      : null,
-    {
-      label: `Heures de live réservées en ${monthName}`,
-      value: Math.round(hoursBooked),
-      max: hoursOpen,
-      fmt: (n: number) => `${n} h`,
-    },
-  ].filter(Boolean) as { label: string; value: number; max: number; fmt: (n: number) => string }[];
-
-  return (
-    <Card title="Objectifs">
-      <ul className="mt-4 space-y-5">
-        {items.map((g) => {
-          const pct = Math.min(100, Math.round((g.value / g.max) * 100));
-          return (
-            <li key={g.label}>
-              <div className="flex items-baseline justify-between gap-3 text-sm">
-                <span className="text-night-900">{g.label}</span>
-                <span className="text-xs whitespace-nowrap text-muted">
-                  <strong className="text-night-900">{g.fmt(g.value)}</strong> / {g.fmt(g.max)}
-                </span>
-              </div>
-              <div
-                className="mt-2 h-5 overflow-hidden rounded-full bg-[#2a78d6]/15"
-                role="meter"
-                aria-label={g.label}
-                aria-valuemin={0}
-                aria-valuemax={g.max}
-                aria-valuenow={g.value}
-              >
-                <div
-                  className="flex h-full min-w-9 items-center justify-end rounded-full px-2 text-[10px] font-bold text-white"
-                  style={{ width: `${Math.max(pct, 8)}%`, background: CONFIRMED }}
-                >
-                  {pct}%
-                </div>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-    </Card>
-  );
-}
-
 export function Overview({
   rows: all,
   now,
@@ -745,10 +666,7 @@ export function Overview({
         <ActivityFeed rows={rows} now={now} />
       </div>
 
-      <div className="grid gap-5 min-[1360px]:grid-cols-[1fr_22rem]">
-        <RecentBookings rows={rows} onOpen={() => go("liste")} />
-        <Goals rows={rows} period={period} />
-      </div>
+      <RecentBookings rows={rows} onOpen={() => go("liste")} />
     </div>
   );
 }

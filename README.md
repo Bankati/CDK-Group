@@ -61,7 +61,7 @@ Les navigateurs n'autorisent la caméra que sur un site **sécurisé (https)** o
 
 ## 2. Tout modifier au même endroit
 
-**[`src/config/site.ts`](src/config/site.ts)** : prix des packages, WhatsApp, lien TikTok, compte affiché dans le live (`liveAccount`), horaires (10h–22h), premier jour (1er décembre), nom du Pack du mois, durée de réservation d'un créneau non confirmé (24 h), objectif de chiffre d'affaires mensuel (`goals`).
+**[`src/config/site.ts`](src/config/site.ts)** : prix des packages, WhatsApp, lien TikTok, compte affiché dans le live (`liveAccount`), horaires (10h–22h), premier jour (1er décembre), nom du Pack du mois, durée de réservation d'un créneau non confirmé (24 h).
 
 L'adresse qui reçoit les réservations se change dans **Espace Bovann → Réglages** (sans toucher au code).
 
