@@ -48,7 +48,6 @@
   --animate-shine: shine 2.8s ease-in-out infinite;
   --animate-wiggle: wiggle 2.4s ease-in-out infinite;
   --animate-phone-float: phone-float 7s ease-in-out infinite;
-  --animate-marquee: marquee 45s linear infinite;
   --animate-toast: toast 3.4s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 
   @keyframes phone-float {
@@ -58,14 +57,6 @@
     }
     50% {
       transform: translateY(-12px);
-    }
-  }
-  @keyframes marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
     }
   }
   @keyframes toast {

@@ -1,21 +1,5 @@
 "use client";
 
-import {
-  BE,
-  BF,
-  BJ,
-  CA,
-  CD,
-  CI,
-  CM,
-  FR,
-  GA,
-  GN,
-  ML,
-  NE,
-  SN,
-  TG,
-} from "country-flag-icons/react/3x2";
 import { Camera } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -67,24 +51,6 @@ const slides: {
     accent: "Du marché d'Adawlato",
     title: "jusqu'à Paris, Dakar et Abidjan.",
   },
-];
-
-/** Villes du bandeau et leur drapeau (SVG : les drapeaux emoji ne s'affichent pas sur Windows). */
-const CITIES = [
-  { name: "Lomé", Flag: TG },
-  { name: "Abidjan", Flag: CI },
-  { name: "Dakar", Flag: SN },
-  { name: "Douala", Flag: CM },
-  { name: "Cotonou", Flag: BJ },
-  { name: "Kinshasa", Flag: CD },
-  { name: "Bamako", Flag: ML },
-  { name: "Libreville", Flag: GA },
-  { name: "Ouagadougou", Flag: BF },
-  { name: "Niamey", Flag: NE },
-  { name: "Conakry", Flag: GN },
-  { name: "Paris", Flag: FR },
-  { name: "Bruxelles", Flag: BE },
-  { name: "Montréal", Flag: CA },
 ];
 
 const INTERVAL = 6500;
@@ -142,25 +108,28 @@ export function Hero() {
 
   return (
     <section ref={sectionRef} className="bg-night-900 text-white">
-      <header className="mx-auto flex h-18 w-full max-w-6xl items-center justify-between px-5 sm:h-22 sm:px-8">
-        <Link href="/" aria-label="OCD Live, accueil">
-          <OcdLiveLogo layout="stacked" className="w-[5.5rem] sm:w-28" />
-        </Link>
-        <a
-          href="https://bovanngroup.com"
-          target="_blank"
-          rel="noopener"
-          className="flex items-center gap-2 text-[11px] font-medium tracking-wide text-white/70 transition hover:text-white"
-        >
-          <span className="hidden sm:inline">une initiative</span>
-          <Image
-            src="/brand/bovann-group.png"
-            alt="Bovann Group"
-            width={120}
-            height={24}
-            className="h-5 w-auto sm:h-6"
-          />
-        </a>
+      {/* Barre d'en-tête : fine, sur fond blanc, logos en version « fond clair » */}
+      <header className="border-b border-line bg-white">
+        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-5 sm:h-16 sm:px-8">
+          <Link href="/" aria-label="OCD Live, accueil">
+            <OcdLiveLogo layout="stacked" tone="dark" className="w-16 sm:w-[4.5rem]" />
+          </Link>
+          <a
+            href="https://bovanngroup.com"
+            target="_blank"
+            rel="noopener"
+            className="flex items-center gap-2 text-[11px] font-medium tracking-wide text-muted transition hover:text-night-900"
+          >
+            <span className="hidden sm:inline">une initiative</span>
+            <Image
+              src="/brand/bovann-group-sombre.png"
+              alt="Bovann Group"
+              width={120}
+              height={24}
+              className="h-4 w-auto sm:h-5"
+            />
+          </a>
+        </div>
       </header>
 
       <div className="relative isolate">
@@ -281,27 +250,6 @@ export function Hero() {
                 ))}
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Bandeau des villes qui défile : « devant toute l'Afrique » */}
-      <div className="border-t border-white/10 bg-night-950 py-4">
-        <p className="sr-only">Des spectateurs dans toute l&apos;Afrique et la diaspora.</p>
-        <div
-          aria-hidden
-          className="flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]"
-        >
-          <div className={cn("flex shrink-0 gap-8 pr-8", running && "animate-marquee")}>
-            {[...CITIES, ...CITIES].map(({ name, Flag }, i) => (
-              <span
-                key={i}
-                className="flex items-center gap-3 font-display text-sm font-bold tracking-[0.2em] whitespace-nowrap text-white/60 uppercase"
-              >
-                <Flag className="h-4 w-6 shrink-0 rounded-[3px] shadow-sm ring-1 ring-white/20" />
-                {name}
-              </span>
-            ))}
           </div>
         </div>
       </div>
