@@ -1,19 +1,15 @@
 "use client";
 
-import { CheckCircle2, Clapperboard, Globe2, Radio, Sparkles } from "lucide-react";
+import { CheckCircle2, Globe2, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { Flag } from "@/components/booking/country-select";
-import { schedule } from "@/config/site";
 import { fcfa } from "@/lib/format";
-import { formatDayFr, formatRangeFr } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import type { AudienceMap } from "@/server/audience-map";
 import type { AdminBooking } from "./data";
 
 const BLUE = "#2a78d6";
-const ORANGE = "#eb6834";
-const isActive = (b: AdminBooking) => b.display === "confirmed" || b.display === "pending";
 
 /** Horloge partagée : avance toutes les `ms` (départ = l'heure du serveur, sans décalage d'hydratation). */
 function useClock(start: number, ms: number) {
@@ -25,232 +21,121 @@ function useClock(start: number, ms: number) {
   return t;
 }
 
-function Avatar({ b, size = "size-12" }: { b: AdminBooking; size?: string }) {
-  return b.photoUrl ? (
-    // eslint-disable-next-line @next/next/no-img-element -- photo produit (URL externe ou démo)
-    <img
-      src={b.photoUrl}
-      alt=""
-      className={cn(size, "shrink-0 rounded-2xl object-cover ring-2 ring-white/20")}
-    />
-  ) : (
-    <span
-      className={cn(
-        size,
-        "flex shrink-0 items-center justify-center rounded-2xl bg-white/10 font-display text-sm font-bold text-white ring-2 ring-white/20",
-      )}
-    >
-      {b.businessName.slice(0, 2).toUpperCase()}
-    </span>
-  );
+/* ─────────────────────── 1. BANNIÈRE DE PÉRIODE ─────────────────────── */
+
+/** Période analysée : une année, et un mois (1-12) ou toute l'année (null). */
+export type Period = { year: number; month: number | null };
+
+const MONTHS = [
+  "Janvier",
+  "Février",
+  "Mars",
+  "Avril",
+  "Mai",
+  "Juin",
+  "Juillet",
+  "Août",
+  "Septembre",
+  "Octobre",
+  "Novembre",
+  "Décembre",
+];
+
+export function periodLabel(p: Period) {
+  return p.month ? `${MONTHS[p.month - 1]} ${p.year}` : `Année ${p.year}`;
 }
 
-/* ────────────────────────────── 1. LA RÉGIE ────────────────────────────── */
-
-function Countdown({ ms }: { ms: number }) {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  const parts = [
-    [Math.floor(s / 86400), "jours"],
-    [Math.floor((s % 86400) / 3600), "h"],
-    [Math.floor((s % 3600) / 60), "min"],
-    [s % 60, "s"],
-  ] as const;
-  return (
-    <div className="flex gap-2" aria-label="Compte à rebours">
-      {parts.map(([v, u]) => (
-        <div
-          key={u}
-          className="min-w-14 rounded-xl bg-white/10 px-2 py-2 text-center ring-1 ring-white/10 backdrop-blur-sm"
-        >
-          <p className="font-display text-2xl leading-none font-extrabold tabular-nums sm:text-3xl">
-            {String(v).padStart(2, "0")}
-          </p>
-          <p className="mt-1 text-[10px] tracking-wider text-white/60 uppercase">{u}</p>
-        </div>
-      ))}
-    </div>
-  );
+/** La réservation a-t-elle son live dans la période ? */
+export function inPeriod(b: { startsAt: string }, p: Period) {
+  const prefix = p.month ? `${p.year}-${String(p.month).padStart(2, "0")}` : String(p.year);
+  return b.startsAt.startsWith(prefix);
 }
 
-export function ControlRoom({ rows, now }: { rows: AdminBooking[]; now: number }) {
-  const t = useClock(now, 1000);
-  const lives = useMemo(
-    () => rows.filter(isActive).sort((a, b) => a.startsAt.localeCompare(b.startsAt)),
-    [rows],
-  );
-  const end = (b: AdminBooking) => Date.parse(b.startsAt) + b.durationMinutes * 60_000;
-  const onAir = lives.find((b) => Date.parse(b.startsAt) <= t && t < end(b));
-  const upcoming = lives.filter((b) => Date.parse(b.startsAt) > t);
-  const featured = onAir ?? upcoming[0];
+const selectClass =
+  "h-11 cursor-pointer appearance-none rounded-xl border border-white/20 bg-white/10 bg-[url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22white%22 stroke-width=%222.5%22><path d=%22m6 9 6 6 6-6%22/></svg>')] bg-[length:12px] bg-[right_0.9rem_center] bg-no-repeat pr-9 pl-4 text-sm font-semibold text-white backdrop-blur-md transition outline-none hover:bg-white/15 focus:ring-4 focus:ring-white/20 [&>option]:text-night-900";
 
-  if (!featured) {
-    return (
-      <section className="relative overflow-hidden rounded-3xl bg-night-950 p-8 text-white">
-        <p className="font-display text-xl font-bold">Aucun live programmé pour l&apos;instant.</p>
-      </section>
-    );
-  }
-
-  const day = featured.startsAt.slice(0, 10);
-  const dayLives = lives.filter((b) => b.startsAt.startsWith(day));
-  const next = upcoming.filter((b) => b.id !== featured.id).slice(0, 3);
-  const open = Date.parse(`${day}T${String(schedule.openHour).padStart(2, "0")}:00:00Z`);
-  const span = (schedule.closeHour - schedule.openHour) * 3_600_000;
-  const pos = (ms: number) => Math.min(100, Math.max(0, ((ms - open) / span) * 100));
-  const isToday = new Date(t).toISOString().slice(0, 10) === day;
-  const progress = onAir
-    ? ((t - Date.parse(onAir.startsAt)) / (onAir.durationMinutes * 60_000)) * 100
-    : 0;
-
+/** Bannière simple : logo Bovann Group + filtres Mois / Année. Tout le tableau de bord suit. */
+export function PeriodBanner({
+  period,
+  onChange,
+  years,
+  count,
+}: {
+  period: Period;
+  onChange: (p: Period) => void;
+  years: number[];
+  count: number;
+}) {
   return (
     <section className="relative isolate overflow-hidden rounded-3xl bg-night-950 text-white">
+      {/* Photo provisoire (8e édition de House of Challenge) : à remplacer par une photo officielle */}
       <Image
-        src="/hero/ocd-live-studio.jpg"
+        src="/brand/house-of-challenge-equipe.jpg"
         alt=""
         fill
-        sizes="(min-width: 1024px) 70vw, 100vw"
-        className="-z-20 object-cover opacity-50"
-        style={{ objectPosition: "70% 40%" }}
+        sizes="(min-width: 1024px) 75vw, 100vw"
+        className="-z-20 object-cover"
+        style={{ objectPosition: "50% 30%" }}
       />
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-r from-night-950 via-night-950/85 to-night-950/30"
-      />
-      <div
-        aria-hidden
-        className="absolute inset-0 -z-10 opacity-[0.07]"
-        style={{
-          backgroundImage: "repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 3px)",
-        }}
+        className="absolute inset-0 -z-10 bg-gradient-to-r from-night-950/95 via-night-950/75 to-night-950/35"
       />
 
-      <div className="grid gap-6 p-6 sm:p-8 xl:grid-cols-[1fr_auto] xl:items-end">
+      <div className="flex flex-col gap-6 p-6 sm:flex-row sm:items-end sm:justify-between sm:p-8">
         <div>
-          <p className="flex items-center gap-2.5 text-[11px] font-bold tracking-[0.25em] text-white/70 uppercase">
-            <Clapperboard className="size-4" aria-hidden /> Régie OCD Live
-            {onAir ? (
-              <span className="ml-1 inline-flex animate-live-pulse items-center gap-1.5 rounded-md bg-live px-2 py-0.5 text-[11px] tracking-[0.15em] text-white">
-                <Radio className="size-3" aria-hidden /> ON AIR
-              </span>
-            ) : (
-              <span className="ml-1 rounded-md bg-white/15 px-2 py-0.5 text-[11px] tracking-[0.15em] text-white">
-                PROCHAIN LIVE
-              </span>
-            )}
+          <Image
+            src="/brand/bovann-group.png"
+            alt="Bovann Group"
+            width={180}
+            height={36}
+            className="h-7 w-auto sm:h-8"
+          />
+          <p
+            key={periodLabel(period)}
+            className="mt-6 animate-rise font-display text-3xl font-extrabold tracking-tight sm:text-4xl"
+          >
+            {periodLabel(period)}
           </p>
-
-          <div className="mt-5 flex items-center gap-4">
-            <Avatar b={featured} size="size-16" />
-            <div className="min-w-0">
-              <h2 className="truncate font-display text-2xl font-extrabold tracking-tight sm:text-3xl">
-                {featured.businessName}
-              </h2>
-              <p className="mt-0.5 text-sm text-white/70">
-                <span className="first-letter:uppercase">
-                  {formatDayFr(new Date(featured.startsAt))}
-                </span>{" "}
-                · {formatRangeFr(new Date(featured.startsAt), featured.durationMinutes)} ·{" "}
-                {featured.packageLabel} ·{" "}
-                {featured.mode === "presentiel" ? "en studio" : `depuis ${featured.city}`}
-              </p>
-            </div>
-          </div>
+          <p className="mt-1 text-sm text-white/70">
+            {count} live{count > 1 ? "s" : ""} sur la période · statistiques mises à jour
+          </p>
         </div>
 
-        {onAir ? (
-          <div className="w-full max-w-xs">
-            <p className="text-sm text-white/70">En direct depuis</p>
-            <p className="font-display text-3xl font-extrabold tabular-nums">
-              {Math.floor((t - Date.parse(onAir.startsAt)) / 60_000)} min
-            </p>
-            <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/15">
-              <div className="h-full rounded-full bg-live" style={{ width: `${progress}%` }} />
-            </div>
-          </div>
-        ) : (
-          <Countdown ms={Date.parse(featured.startsAt) - t} />
-        )}
-      </div>
-
-      {/* Piste de la journée : table de montage 10h → 22h */}
-      <div className="border-t border-white/10 bg-black/25 px-6 py-5 backdrop-blur-sm sm:px-8">
-        <div className="flex items-center justify-between text-xs text-white/60">
-          <span className="font-semibold text-white/80 first-letter:uppercase">
-            Piste du {formatDayFr(new Date(featured.startsAt))}
-          </span>
-          <span>
-            {dayLives.length} live{dayLives.length > 1 ? "s" : ""} ·{" "}
-            {fcfa(dayLives.reduce((s, b) => s + b.amount, 0))}
-          </span>
-        </div>
-        <div className="relative mt-3 h-12">
-          {/* graduations */}
-          {Array.from({ length: schedule.closeHour - schedule.openHour + 1 }, (_, i) => (
-            <span
-              key={i}
-              className="absolute top-0 bottom-0 border-l border-white/10"
-              style={{ left: `${(i / (schedule.closeHour - schedule.openHour)) * 100}%` }}
-            >
-              {i % 2 === 0 && (
-                <span className="absolute -bottom-5 -translate-x-1/2 text-[10px] text-white/45 tabular-nums">
-                  {schedule.openHour + i}h
-                </span>
-              )}
-            </span>
-          ))}
-          {dayLives.map((b, i) => {
-            const s = Date.parse(b.startsAt);
-            const live = onAir?.id === b.id;
-            return (
-              <div
-                key={b.id}
-                title={`${b.businessName} · ${formatRangeFr(new Date(b.startsAt), b.durationMinutes)}`}
-                className={cn(
-                  "absolute top-1 bottom-1 flex items-center gap-1.5 overflow-hidden rounded-lg px-2 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg",
-                  live && "ring-2 ring-white",
-                )}
-                style={{
-                  left: `${pos(s)}%`,
-                  width: `calc(${pos(end(b)) - pos(s)}% - 2px)`,
-                  background: live ? "#dc0c15" : b.display === "confirmed" ? BLUE : ORANGE,
-                  animation: `bar-grow-x 0.6s cubic-bezier(0.2,0.8,0.2,1) ${0.2 + i * 0.12}s both`,
-                  transformOrigin: "left",
-                }}
-              >
-                {b.businessName}
-              </div>
-            );
-          })}
-          {isToday && t >= open && t <= open + span && (
-            <span
-              className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-live shadow-[0_0_12px_#dc0c15]"
-              style={{ left: `${pos(t)}%` }}
-            >
-              <span className="absolute -top-1.5 left-1/2 size-2.5 -translate-x-1/2 rounded-full bg-live" />
-            </span>
-          )}
-        </div>
-        <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] text-white/60">
-          <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-sm" style={{ background: BLUE }} /> Confirmé
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="size-2 rounded-sm" style={{ background: ORANGE }} /> À confirmer
-          </span>
-          {next.length > 0 && (
-            <span className="ml-auto flex min-w-0 items-center gap-2">
-              Ensuite :
-              {next.map((b) => (
-                <span
-                  key={b.id}
-                  className="truncate rounded-full bg-white/10 px-2 py-0.5 text-white/85"
-                >
-                  {b.businessName} · {new Date(b.startsAt).getUTCDate()}/
-                  {new Date(b.startsAt).getUTCMonth() + 1}
-                </span>
-              ))}
-            </span>
-          )}
+        <div className="flex gap-2">
+          <label className="sr-only" htmlFor="period-month">
+            Mois
+          </label>
+          <select
+            id="period-month"
+            value={period.month ?? ""}
+            onChange={(e) =>
+              onChange({ ...period, month: e.target.value ? Number(e.target.value) : null })
+            }
+            className={selectClass}
+          >
+            <option value="">Toute l&apos;année</option>
+            {MONTHS.map((m, i) => (
+              <option key={m} value={i + 1}>
+                {m}
+              </option>
+            ))}
+          </select>
+          <label className="sr-only" htmlFor="period-year">
+            Année
+          </label>
+          <select
+            id="period-year"
+            value={period.year}
+            onChange={(e) => onChange({ ...period, year: Number(e.target.value) })}
+            className={selectClass}
+          >
+            {years.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
     </section>
@@ -259,18 +144,55 @@ export function ControlRoom({ rows, now }: { rows: AdminBooking[]; now: number }
 
 /* ─────────────────────── 2. CARTE DE L'AUDIENCE ─────────────────────── */
 
-export function AudienceMapCard({ map }: { map: AudienceMap }) {
+export function AudienceMapCard({ map, ids }: { map: AudienceMap; ids: Set<string> }) {
   const [hover, setHover] = useState<string | null>(null);
-  const max = Math.max(1, ...map.countries.map((c) => c.count));
+  const { countries, points, outside } = useMemo(() => {
+    const byCountry = new Map<string, number>();
+    const byCity = new Map<
+      string,
+      { x: number; y: number; city: string; country: string; code: string; count: number }
+    >();
+    const out = new Map<string, { country: string; code: string; count: number }>();
+    for (const sp of map.spots) {
+      if (!ids.has(sp.id)) continue;
+      byCountry.set(sp.code, (byCountry.get(sp.code) ?? 0) + 1);
+      if (!sp.inside) {
+        const o = out.get(sp.code) ?? { country: sp.country, code: sp.code, count: 0 };
+        o.count++;
+        out.set(sp.code, o);
+        continue;
+      }
+      const key = `${sp.code}-${sp.city.toLowerCase()}`;
+      const c = byCity.get(key) ?? {
+        x: sp.x,
+        y: sp.y,
+        city: sp.city,
+        country: sp.country,
+        code: sp.code,
+        count: 0,
+      };
+      c.count++;
+      byCity.set(key, c);
+    }
+    return {
+      countries: map.shapes.map((sh) => ({
+        d: sh.d,
+        count: (sh.code && byCountry.get(sh.code)) || 0,
+      })),
+      points: [...byCity.values()].sort((a, b) => b.count - a.count),
+      outside: [...out.values()],
+    };
+  }, [map, ids]);
+  const max = Math.max(1, ...countries.map((c) => c.count));
   const ranking = [
-    ...map.points.map((p) => ({
+    ...points.map((p) => ({
       key: `${p.code}-${p.city}`,
       label: p.city,
       country: p.country,
       code: p.code,
       count: p.count,
     })),
-    ...map.outside.map((o) => ({
+    ...outside.map((o) => ({
       key: o.code,
       label: o.country,
       country: o.country,
@@ -333,7 +255,7 @@ export function AudienceMapCard({ map }: { map: AudienceMap }) {
               <stop offset="1" stopColor="#ee6b07" stopOpacity="0.9" />
             </linearGradient>
           </defs>
-          {map.countries.map((c, i) => (
+          {countries.map((c, i) => (
             <path
               key={i}
               d={c.d}
@@ -344,7 +266,7 @@ export function AudienceMapCard({ map }: { map: AudienceMap }) {
             />
           ))}
           {/* Faisceaux vers le studio de Lomé */}
-          {map.points.map((p, i) =>
+          {points.map((p, i) =>
             p.x === map.hub.x && p.y === map.hub.y ? null : (
               <path
                 key={`arc-${i}`}
@@ -360,7 +282,7 @@ export function AudienceMapCard({ map }: { map: AudienceMap }) {
             ),
           )}
           {/* Villes */}
-          {map.points.map((p, i) => {
+          {points.map((p, i) => {
             const key = `${p.code}-${p.city}`;
             const r = 3.5 + Math.min(6, p.count * 1.5);
             return (

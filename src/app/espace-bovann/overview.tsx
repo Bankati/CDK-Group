@@ -8,7 +8,14 @@ import { formatDayFr, formatRangeFr } from "@/lib/time";
 import type { DisplayStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import type { AudienceMap } from "@/server/audience-map";
-import { ActivityFeed, AudienceMapCard, ControlRoom } from "./control-room";
+import {
+  ActivityFeed,
+  AudienceMapCard,
+  inPeriod,
+  PeriodBanner,
+  periodLabel,
+  type Period,
+} from "./control-room";
 import type { AdminBooking } from "./data";
 import { mondayOf, WeekPicker, weekLabel } from "./week-picker";
 
@@ -154,9 +161,9 @@ function useCountUp(target: number, ms = 700) {
   return value;
 }
 
-/** Colonnes groupées : réservations reçues chaque jour d'une semaine (confirmé / en attente). */
-function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
-  const [monday, setMondayState] = useState(() => mondayOf(now));
+/** Colonnes groupées : lives programmés chaque jour d'une semaine (confirmé / en attente). */
+function FlowChart({ rows, now, initial }: { rows: AdminBooking[]; now: number; initial: number }) {
+  const [monday, setMondayState] = useState(() => mondayOf(initial));
   const [dir, setDir] = useState<"next" | "prev" | null>(null);
   const setMonday = (m: number) => {
     setDir(m > monday ? "next" : m < monday ? "prev" : null);
@@ -166,12 +173,12 @@ function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
   const todayKey = dayKey(now);
   const WEEK = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
-  const marked = useMemo(() => new Set(rows.map((b) => b.createdAt.slice(0, 10))), [rows]);
+  const marked = useMemo(() => new Set(rows.map((b) => b.startsAt.slice(0, 10))), [rows]);
 
   const data = Array.from({ length: 7 }, (_, i) => {
     const d = monday + i * DAY;
     const key = dayKey(d);
-    const same = rows.filter((b) => b.createdAt.startsWith(key));
+    const same = rows.filter((b) => b.startsAt.startsWith(key));
     const confirmed = same.filter((b) => b.display === "confirmed");
     const pending = same.filter((b) => b.display === "pending");
     return {
@@ -202,7 +209,7 @@ function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
 
   return (
     <Card
-      title="Réservations reçues"
+      title="Lives programmés"
       action={<WeekPicker value={monday} onChange={setMonday} today={now} marked={marked} />}
     >
       {/* Résumé de la semaine + légende */}
@@ -226,8 +233,8 @@ function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
           </p>
         </div>
         <p className="text-xs text-muted">
-          <strong className="text-night-900">{totals.count}</strong> réservation
-          {totals.count > 1 ? "s" : ""} reçue{totals.count > 1 ? "s" : ""} · semaine du{" "}
+          <strong className="text-night-900">{totals.count}</strong> live{totals.count > 1 ? "s" : ""} programmé
+          {totals.count > 1 ? "s" : ""} · semaine du{" "}
           {weekLabel(monday)}
         </p>
       </div>
@@ -360,7 +367,7 @@ function FlowChart({ rows, now }: { rows: AdminBooking[]; now: number }) {
       </div>
       {totals.count === 0 && (
         <p className="mt-2 text-center text-sm text-muted">
-          Aucune réservation reçue cette semaine-là.
+          Aucun live programmé cette semaine-là.
         </p>
       )}
       <p className="sr-only">
@@ -508,33 +515,37 @@ function RecentBookings({ rows, onOpen }: { rows: AdminBooking[]; onOpen: () => 
 }
 
 /** Objectifs : jauges (piste et remplissage de la même teinte). */
-function Goals({ rows }: { rows: AdminBooking[] }) {
-  const month = schedule.firstDay.slice(0, 7);
-  const monthName = new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" }).format(
-    new Date(`${month}-15T00:00:00Z`),
-  );
-  const inMonth = rows.filter((b) => isActive(b) && b.startsAt.startsWith(month));
+function Goals({ rows, period }: { rows: AdminBooking[]; period: Period }) {
+  const months = period.month ? 1 : 12;
+  const monthName = period.month
+    ? new Intl.DateTimeFormat("fr-FR", { month: "long", timeZone: "UTC" }).format(
+        Date.UTC(period.year, period.month - 1, 15),
+      )
+    : `l'année ${period.year}`;
+  const inMonth = rows.filter(isActive);
   const pack = packages.find((p) => p.monthlyQuota);
   const packSold = inMonth.filter((b) => b.packageId === pack?.id).length;
-  const daysInMonth = new Date(
-    Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0),
-  ).getUTCDate();
+  const daysInMonth = period.month
+    ? new Date(Date.UTC(period.year, period.month, 0)).getUTCDate()
+    : (Date.UTC(period.year + 1, 0, 1) - Date.UTC(period.year, 0, 1)) / DAY;
   const hoursOpen = daysInMonth * (schedule.closeHour - schedule.openHour);
   const hoursBooked = inMonth.reduce((s, b) => s + b.durationMinutes / 60, 0);
   const revenue = inMonth.reduce((s, b) => s + b.amount, 0);
 
   const items = [
     {
-      label: `Chiffre d'affaires de ${monthName}`,
+      label: period.month
+        ? `Chiffre d'affaires de ${monthName}`
+        : `Chiffre d'affaires de ${monthName}`,
       value: revenue,
-      max: goals.monthlyRevenue,
+      max: goals.monthlyRevenue * months,
       fmt: fcfa,
     },
     pack
       ? {
-          label: `Pack du mois · places vendues`,
+          label: period.month ? `Pack du mois · places vendues` : `Packs du mois · places vendues`,
           value: packSold,
-          max: pack.monthlyQuota!,
+          max: pack.monthlyQuota! * months,
           fmt: (n: number) => `${n} places`,
         }
       : null,
@@ -583,7 +594,7 @@ function Goals({ rows }: { rows: AdminBooking[] }) {
 }
 
 export function Overview({
-  rows,
+  rows: all,
   now,
   go,
   map,
@@ -593,6 +604,25 @@ export function Overview({
   go: GoTo;
   map: AudienceMap;
 }) {
+  // Par défaut : toute l'année en cours.
+  const [period, setPeriod] = useState<Period>(() => ({
+    year: new Date(now).getUTCFullYear(),
+    month: null,
+  }));
+  const years = useMemo(() => {
+    const set = new Set(all.map((b) => Number(b.startsAt.slice(0, 4))));
+    set.add(new Date(now).getUTCFullYear());
+    return [...set].sort();
+  }, [all, now]);
+  const rows = useMemo(() => all.filter((b) => inPeriod(b, period)), [all, period]);
+  const ids = useMemo(() => new Set(rows.map((b) => b.id)), [rows]);
+  // Semaine affichée au départ dans le graphique : celle du premier live de la période.
+  const firstLive = rows
+    .filter(isActive)
+    .map((b) => Date.parse(b.startsAt))
+    .sort((a, b) => a - b)[0];
+  const initialWeek = firstLive ?? Date.UTC(period.year, (period.month ?? 1) - 1, 1);
+
   const stats = useMemo(() => {
     const weekAgo = now - 7 * DAY;
     const twoWeeksAgo = now - 14 * DAY;
@@ -626,7 +656,12 @@ export function Overview({
 
   return (
     <div className="space-y-5">
-      <ControlRoom rows={rows} now={now} />
+      <PeriodBanner
+        period={period}
+        onChange={setPeriod}
+        years={years}
+        count={rows.filter(isActive).length}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
@@ -701,18 +736,18 @@ export function Overview({
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_22rem]">
-        <FlowChart rows={rows} now={now} />
+        <FlowChart key={periodLabel(period)} rows={rows} now={now} initial={initialWeek} />
         <PackageSplit rows={rows} onOpen={() => go("stats")} />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-[1fr_22rem]">
-        <AudienceMapCard map={map} />
+        <AudienceMapCard map={map} ids={ids} />
         <ActivityFeed rows={rows} now={now} />
       </div>
 
       <div className="grid gap-5 min-[1360px]:grid-cols-[1fr_22rem]">
         <RecentBookings rows={rows} onOpen={() => go("liste")} />
-        <Goals rows={rows} />
+        <Goals rows={rows} period={period} />
       </div>
     </div>
   );

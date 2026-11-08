@@ -187,62 +187,54 @@ const shapes: CountryShape[] = (() => {
     .filter((s): s is CountryShape => s !== null);
 })();
 
+/** Code numérique → ISO alpha-2 (pour colorer les pays côté navigateur). */
+const ALPHA2 = Object.fromEntries(Object.entries(NUMERIC).map(([a, n]) => [n, a])) as Record<
+  number,
+  string
+>;
+
 export type AudienceMap = {
-  countries: { d: string; count: number }[];
-  points: { x: number; y: number; city: string; country: string; code: string; count: number }[];
-  /** Pays hors du cadre (ex. Canada) : affichés seulement dans le classement. */
-  outside: { country: string; code: string; count: number }[];
+  /** Formes des pays (code ISO si c'est un pays de la liste OCD Live). */
+  shapes: { d: string; code?: string }[];
+  /** Une position par réservation : le navigateur filtre selon la période choisie. */
+  spots: {
+    id: string;
+    x: number;
+    y: number;
+    /** Faux si la ville est hors du cadre de la carte (ex. Montréal). */
+    inside: boolean;
+    city: string;
+    country: string;
+    code: string;
+  }[];
   hub: { x: number; y: number };
   width: number;
   height: number;
 };
 
 export function audienceMap(bookings: Booking[]): AudienceMap {
-  const active = bookings.filter((b) => b.status !== "cancelled");
-  const byCountry = new Map<number, number>();
-  const byCity = new Map<
-    string,
-    { lonlat: [number, number]; city: string; country: string; code: string; count: number }
-  >();
-  const outside = new Map<string, { country: string; code: string; count: number }>();
-
-  for (const b of active) {
+  const spots: AudienceMap["spots"] = [];
+  for (const b of bookings) {
+    if (b.status === "cancelled") continue;
     const code = countryByName(b.country)?.code;
     if (!code) continue;
-    const num = NUMERIC[code];
-    if (num) byCountry.set(num, (byCountry.get(num) ?? 0) + 1);
     const lonlat = CITIES[norm(b.city)] ?? CAPITAL[code];
     if (!lonlat) continue;
     const [x, y] = projection(lonlat) ?? [-1, -1];
-    if (x < 0 || x > MAP_W || y < 0 || y > MAP_H) {
-      const o = outside.get(code) ?? { country: b.country, code, count: 0 };
-      o.count++;
-      outside.set(code, o);
-      continue;
-    }
-    const key = `${code}:${norm(b.city)}`;
-    const c = byCity.get(key) ?? { lonlat, city: b.city, country: b.country, code, count: 0 };
-    c.count++;
-    byCity.set(key, c);
+    spots.push({
+      id: b.id,
+      x: Math.round(x * 10) / 10,
+      y: Math.round(y * 10) / 10,
+      inside: x >= 0 && x <= MAP_W && y >= 0 && y <= MAP_H,
+      city: b.city,
+      country: b.country,
+      code,
+    });
   }
-
   const [hx, hy] = projection(LOME)!;
   return {
-    countries: shapes.map((s) => ({ d: s.d, count: byCountry.get(s.id) ?? 0 })),
-    points: [...byCity.values()]
-      .map((c) => {
-        const [x, y] = projection(c.lonlat)!;
-        return {
-          x: Math.round(x * 10) / 10,
-          y: Math.round(y * 10) / 10,
-          city: c.city,
-          country: c.country,
-          code: c.code,
-          count: c.count,
-        };
-      })
-      .sort((a, b) => b.count - a.count),
-    outside: [...outside.values()],
+    shapes: shapes.map((sh) => ({ d: sh.d, code: ALPHA2[sh.id] })),
+    spots,
     hub: { x: Math.round(hx * 10) / 10, y: Math.round(hy * 10) / 10 },
     width: MAP_W,
     height: MAP_H,
