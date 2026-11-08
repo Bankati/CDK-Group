@@ -81,10 +81,13 @@ export function BookingWizard({
     // eslint-disable-next-line react-hooks/set-state-in-effect -- restauration unique au montage
     setS((cur) => {
       if (initialMode && saved.mode && saved.mode !== initialMode) return cur;
+      // Le mode choisi sur l'accueil est déjà connu : on ne repasse jamais par l'étape « Mode ».
+      const minStep = initialMode || saved.mode ? 1 : 0;
       return {
         ...cur,
         ...saved,
-        step: Math.min(saved.step ?? cur.step, LAST),
+        mode: initialMode ?? saved.mode,
+        step: Math.max(minStep, Math.min(saved.step ?? cur.step, LAST)),
         // Le nom tapé dans le hero est prioritaire sur une réservation commencée avant.
         details: {
           ...emptyDetails,
