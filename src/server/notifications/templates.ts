@@ -4,7 +4,8 @@ import { getPackage, packageName } from "@/lib/packages";
 import { formatDayFr, formatHourInZone, formatRangeFr, zoneCity } from "@/lib/time";
 import type { Booking } from "@/lib/types";
 
-export type Email = { to: string; subject: string; text: string; html: string };
+/** `to` : une adresse, ou plusieurs (notifications envoyées à toute l'équipe). */
+export type Email = { to: string | string[]; subject: string; text: string; html: string };
 
 function describe(b: Booking) {
   const start = new Date(b.startsAt);
@@ -45,20 +46,49 @@ function rows(items: [string, string][]) {
     .join("")}</table>`;
 }
 
-/** Notification à Bovann Group, au format demandé. */
-export function adminNewBookingEmail(b: Booking, to: string, appUrl: string): Email {
+/** Tout ce que le client a saisi dans le formulaire, ligne par ligne. */
+function formRows(b: Booking): [string, string][] {
   const d = describe(b);
-  const text = `🔔 Nouvelle réservation OCD Live : ${b.fullName} (${b.businessName}, ${b.sector.toLowerCase()}) a réservé le ${d.day}, ${d.range}, package ${d.pkg}, ${d.where}. Montant : ${fcfa(b.amount)}. Statut : en attente de confirmation, à contacter sur WhatsApp au ${b.whatsapp}.`;
+  const start = new Date(b.startsAt);
+  return [
+    ["Code de réservation", b.code],
+    ["Nom complet", b.fullName],
+    ["WhatsApp", b.whatsapp],
+    ["Email", b.email],
+    ["Business", b.businessName],
+    ["Secteur", b.sector],
+    ["Produit(s) à présenter", b.products],
+    ["Compte TikTok", b.tiktok ?? "—"],
+    ["Mode", b.mode === "presentiel" ? "En présentiel à Lomé" : "À distance"],
+    ["Pays / ville", `${b.country}, ${b.city}`],
+    ["Date du live", formatDayFr(start, { year: true })],
+    ["Heure (Lomé)", d.range + clientTimeNote(b)],
+    ["Package", d.pkg],
+    ["Montant", fcfa(b.amount)],
+    [
+      "Photo du produit",
+      b.photoUrl?.startsWith("http")
+        ? b.photoUrl
+        : b.photoUrl
+          ? "Jointe (voir l'Espace Bovann)"
+          : "—",
+    ],
+  ];
+}
+
+/** Notification à Bovann Group, au format demandé + toutes les réponses du formulaire. */
+export function adminNewBookingEmail(b: Booking, to: string | string[], appUrl: string): Email {
+  const d = describe(b);
+  const summary = `🔔 Nouvelle réservation OCD Live : ${b.fullName} (${b.businessName}, ${b.sector.toLowerCase()}) a réservé le ${d.day}, ${d.range}, package ${d.pkg}, ${d.where}. Montant : ${fcfa(b.amount)}. Statut : en attente de confirmation, à contacter sur WhatsApp au ${b.whatsapp}.`;
+  const text = `${summary}\n\n${formRows(b)
+    .map(([k, v]) => `${k} : ${v}`)
+    .join("\n")}\n\nConfirmer dans l'Espace Bovann : ${appUrl}/espace-bovann`;
   const html = layout(
     "🔔 Nouvelle réservation OCD Live",
-    `<p style="font-size:15px;line-height:1.6;margin:0 0 20px">${esc(text.replace(/^🔔 Nouvelle réservation OCD Live : /, ""))}</p>
-     ${rows([
-       ["Code", b.code],
-       ["WhatsApp", b.whatsapp],
-       ["Email", b.email],
-       ["Produits", b.products],
-     ])}
-     <p style="margin:24px 0 0"><a href="${appUrl}/espace-bovann" style="background:#dc0c15;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block">Confirmer dans l'Espace Bovann</a></p>`,
+    `<p style="font-size:15px;line-height:1.6;margin:0 0 20px">${esc(summary.replace(/^🔔 Nouvelle réservation OCD Live : /, ""))}</p>
+     <p style="font-size:12px;font-weight:bold;letter-spacing:.08em;text-transform:uppercase;color:#5f6b76;margin:0 0 6px">Formulaire du client</p>
+     ${rows(formRows(b))}
+     <p style="margin:24px 0 0"><a href="${appUrl}/espace-bovann" style="background:#dc0c15;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block;margin:0 8px 8px 0">Confirmer dans l'Espace Bovann</a><a href="https://wa.me/${b.whatsapp.replace(/\D/g, "")}" style="background:#1fa855;color:#fff;text-decoration:none;padding:12px 20px;border-radius:10px;font-weight:bold;display:inline-block;margin:0 8px 8px 0">Écrire sur WhatsApp</a></p>`,
     appUrl,
   );
   return {
@@ -66,6 +96,21 @@ export function adminNewBookingEmail(b: Booking, to: string, appUrl: string): Em
     subject: `🔔 Nouvelle réservation : ${b.businessName} · ${d.day} ${d.range}`,
     text,
     html,
+  };
+}
+
+/** Email de test envoyé depuis l'onglet Réglages. */
+export function testEmail(to: string[], appUrl: string): Email {
+  const text = `Ceci est un email de test OCD Live. Les nouvelles réservations arriveront à ${to.join(", ")}.`;
+  return {
+    to,
+    subject: "✅ Test OCD Live : les notifications fonctionnent",
+    text,
+    html: layout(
+      "✅ Les notifications fonctionnent",
+      `<p style="font-size:15px;line-height:1.6">${esc(text)}</p>`,
+      appUrl,
+    ),
   };
 }
 

@@ -11,7 +11,7 @@ Dès que les clés Supabase sont présentes, le site quitte automatiquement le m
    - Nom : `ocd-live` · Région : **West EU (Paris)** ou **Frankfurt** (les plus proches de Lomé)
    - Note bien le mot de passe de la base.
 2. Dans le projet : menu **SQL Editor** → **New query** → colle tout le contenu de [`supabase/schema.sql`](../supabase/schema.sql) → **Run**.
-   Tu dois voir « Success ». Cela crée la table des réservations, la fonction anti double réservation et l'espace de stockage des photos.
+   Tu dois voir « Success ». Cela crée la table des réservations, la table des réglages (adresse de notification), la fonction anti double réservation et l'espace de stockage des photos.
 3. Menu **Project Settings → API** (ou **API Keys**), copie :
    - **Project URL** → `SUPABASE_URL`
    - **service_role** (clé secrète) → `SUPABASE_SERVICE_ROLE_KEY`
@@ -32,7 +32,7 @@ Dans le fichier `.env.local` (à la racine du projet), remplis :
 SUPABASE_URL=https://xxxx.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 RESEND_API_KEY=re_...
-NOTIFICATION_EMAIL=contact@bovanngroup.com
+NOTIFICATION_EMAIL=contact@bovanngroup.com   # adresse par défaut ; modifiable ensuite dans Espace Bovann → Réglages
 ADMIN_PASSWORD=un-mot-de-passe-solide
 ADMIN_SECRET=une-longue-phrase-au-hasard-de-32-caracteres-minimum
 ```

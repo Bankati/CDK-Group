@@ -11,10 +11,12 @@ import {
   List,
   LogOut,
   Mail,
+  Send,
+  Settings,
   X,
 } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useActionState, useMemo, useState, useTransition } from "react";
 import { OcdLiveLogo } from "@/components/brand";
 import { WhatsAppIcon } from "@/components/icons";
 import { packages } from "@/config/site";
@@ -23,7 +25,13 @@ import { addMonths, daysInMonth, formatDayFr, formatRangeFr, monthLabel } from "
 import { statusLabels, type DisplayStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { waLink } from "@/lib/whatsapp";
-import { cancelReservation, logout, confirmReservation } from "./actions";
+import {
+  cancelReservation,
+  confirmReservation,
+  logout,
+  saveNotificationEmails,
+  sendTestNotification,
+} from "./actions";
 import { applyFilters, type AdminBooking, type Filters, type kpis as kpisFn } from "./data";
 
 type Kpis = ReturnType<typeof kpisFn>;
@@ -35,7 +43,7 @@ type EmailRow = {
   delivered: boolean;
   error?: string;
 };
-type Tab = "liste" | "calendrier" | "stats" | "emails";
+type Tab = "liste" | "calendrier" | "stats" | "emails" | "reglages";
 
 const statusStyle: Record<DisplayStatus, string> = {
   pending: "bg-amber-100 text-amber-900",
@@ -54,6 +62,7 @@ export function Dashboard({
   demo,
   emails,
   emailsEnabled,
+  notificationEmails,
 }: {
   bookings: AdminBooking[];
   kpis: Kpis;
@@ -61,6 +70,8 @@ export function Dashboard({
   demo: boolean;
   emails: EmailRow[];
   emailsEnabled: boolean;
+  /** Adresses qui reçoivent les nouvelles réservations. */
+  notificationEmails: string[];
 }) {
   const [tab, setTab] = useState<Tab>("liste");
   const [filters, setFilters] = useState<Filters>({});
@@ -76,6 +87,7 @@ export function Dashboard({
     { id: "calendrier", label: "Calendrier", Icon: CalendarDays },
     { id: "stats", label: "Statistiques", Icon: BarChart3 },
     ...(!emailsEnabled ? [{ id: "emails" as const, label: "Emails", Icon: Mail }] : []),
+    { id: "reglages", label: "Réglages", Icon: Settings },
   ];
 
   return (
@@ -245,6 +257,9 @@ export function Dashboard({
         {tab === "calendrier" && <CalendarView rows={filtered} now={now} />}
         {tab === "stats" && <Stats rows={bookings} />}
         {tab === "emails" && <Emails rows={emails} />}
+        {tab === "reglages" && (
+          <SettingsPanel emails={notificationEmails} emailsEnabled={emailsEnabled} />
+        )}
       </main>
     </div>
   );
@@ -676,6 +691,90 @@ function Emails({ rows }: { rows: EmailRow[] }) {
           </li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+/** Onglet « Réglages » : adresse(s) qui reçoivent chaque nouvelle réservation. */
+function SettingsPanel({ emails, emailsEnabled }: { emails: string[]; emailsEnabled: boolean }) {
+  const [state, save, saving] = useActionState(saveNotificationEmails, undefined);
+  const [testing, startTest] = useTransition();
+  const [testMsg, setTestMsg] = useState<{ ok: boolean; message: string }>();
+  const current = state?.emails ?? emails;
+
+  return (
+    <div className="mt-6 max-w-2xl">
+      <form action={save} className="rounded-2xl border border-line bg-white p-5 sm:p-6">
+        <h3 className="font-display text-lg font-bold text-night-900">Email de notification</h3>
+        <p className="mt-1 text-sm text-muted">
+          À chaque nouvelle réservation, toutes les réponses du formulaire (nom, WhatsApp, email,
+          business, secteur, produits, TikTok, pays, date, heure, package, montant, photo) sont
+          envoyées à cette adresse. Plusieurs adresses possibles, séparées par des virgules.
+        </p>
+        <label htmlFor="emails" className="mt-5 mb-1.5 block text-sm font-semibold text-night-900">
+          Adresse(s) email
+        </label>
+        <input
+          id="emails"
+          name="emails"
+          type="text"
+          inputMode="email"
+          autoComplete="email"
+          defaultValue={current.join(", ")}
+          placeholder="contact@bovanngroup.com"
+          aria-invalid={state?.ok === false || undefined}
+          className="block min-h-12 w-full rounded-xl border border-line bg-white px-4 text-base text-ink outline-none focus:border-night-700 focus:ring-4 focus:ring-night-700/15 aria-invalid:border-danger"
+        />
+        {state?.message && (
+          <p
+            role="status"
+            className={cn(
+              "mt-2 text-sm font-semibold",
+              state.ok ? "text-emerald-700" : "text-danger",
+            )}
+          >
+            {state.message}
+          </p>
+        )}
+        <div className="mt-5 flex flex-wrap gap-3">
+          <button
+            type="submit"
+            disabled={saving}
+            className="flex min-h-11 items-center gap-2 rounded-xl bg-night-900 px-5 text-sm font-bold text-white transition hover:bg-night-800 disabled:opacity-60"
+          >
+            <Check className="size-4" aria-hidden />
+            {saving ? "Enregistrement…" : "Enregistrer"}
+          </button>
+          <button
+            type="button"
+            disabled={testing}
+            onClick={() =>
+              startTest(async () => {
+                setTestMsg(await sendTestNotification());
+              })
+            }
+            className="flex min-h-11 items-center gap-2 rounded-xl border border-line bg-white px-5 text-sm font-bold text-night-900 transition hover:bg-paper disabled:opacity-60"
+          >
+            <Send className="size-4" aria-hidden />
+            {testing ? "Envoi…" : "Envoyer un email de test"}
+          </button>
+        </div>
+        {testMsg && (
+          <p
+            role="status"
+            className={cn("mt-3 text-sm", testMsg.ok ? "text-emerald-700" : "text-danger")}
+          >
+            {testMsg.message}
+          </p>
+        )}
+      </form>
+      {!emailsEnabled && (
+        <p className="mt-4 rounded-2xl bg-amber-100 p-4 text-sm text-amber-950">
+          Mode démo : les emails ne partent pas encore (aucune clé Resend). Ils s&apos;affichent
+          dans l&apos;onglet « Emails ». Une fois Resend branché (étape 2), ils arriveront
+          réellement à ces adresses.
+        </p>
+      )}
     </div>
   );
 }

@@ -17,8 +17,8 @@ import { getPackage, monthlyPackage } from "@/lib/packages";
 import { addMonths, toDate } from "@/lib/time";
 import type { Booking } from "@/lib/types";
 import { db } from "@/server/db";
-import { serverEnv } from "@/server/env";
 import { sendEmail } from "@/server/notifications";
+import { getNotificationEmails } from "@/server/settings";
 import {
   adminNewBookingEmail,
   clientConfirmedEmail,
@@ -166,7 +166,7 @@ export async function createBooking(raw: unknown): Promise<CreateResult> {
       }
     }
     await Promise.all([
-      sendEmail(adminNewBookingEmail(saved, serverEnv.NOTIFICATION_EMAIL, url)),
+      getNotificationEmails().then((to) => sendEmail(adminNewBookingEmail(saved, to, url))),
       sendEmail(clientPendingEmail(saved, url)),
     ]);
   });

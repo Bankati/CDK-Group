@@ -5,6 +5,7 @@ import { isAdmin } from "@/server/auth";
 import { db } from "@/server/db";
 import { emailsEnabled, isDemo, usingDefaultPassword } from "@/server/env";
 import { recentEmails } from "@/server/notifications";
+import { getNotificationEmails } from "@/server/settings";
 import { Dashboard } from "./dashboard";
 import { kpis, toAdmin } from "./data";
 import { LoginForm } from "./login-form";
@@ -19,20 +20,20 @@ async function loadDashboard() {
   const emails = emailsEnabled
     ? []
     : recentEmails().map((e) => ({
-        to: e.to,
+        to: [e.to].flat().join(", "),
         subject: e.subject,
         text: e.text,
         at: e.at,
         delivered: e.delivered,
         error: e.error,
       }));
-  return { now, rows, emails };
+  return { now, rows, emails, notificationEmails: await getNotificationEmails() };
 }
 
 async function Gate() {
   await connection();
   if (!(await isAdmin())) return <LoginForm demo={usingDefaultPassword} />;
-  const { now, rows, emails } = await loadDashboard();
+  const { now, rows, emails, notificationEmails } = await loadDashboard();
   return (
     <Dashboard
       bookings={rows}
@@ -41,6 +42,7 @@ async function Gate() {
       demo={isDemo}
       emails={emails}
       emailsEnabled={emailsEnabled}
+      notificationEmails={notificationEmails}
     />
   );
 }

@@ -86,3 +86,12 @@ revoke all on function public.insert_booking_if_free(jsonb, integer) from public
 insert into storage.buckets (id, name, public)
 values ('produits', 'produits', true)
 on conflict (id) do nothing;
+
+-- ── Réglages modifiables depuis l'Espace Bovann ───────────────────
+-- Ex. : adresses qui reçoivent les nouvelles réservations (onglet « Réglages »).
+create table if not exists public.settings (
+  key        text primary key,
+  value      jsonb not null,
+  updated_at timestamptz not null default now()
+);
+alter table public.settings enable row level security;

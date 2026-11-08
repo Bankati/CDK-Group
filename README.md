@@ -55,6 +55,7 @@ Les navigateurs n'autorisent la caméra que sur un site **sécurisé (https)** o
 4. **Double réservation** : sur un 2e appareil, prendre le même créneau → refusé, « Ce créneau vient d'être pris ».
 5. **Espace Bovann** : la réservation apparaît « En attente » → **Confirmer la réservation** (une fois le client recontacté sur WhatsApp) → le total confirmé augmente, l'email de confirmation apparaît dans l'onglet Emails, et la page du client passe à « Confirmée » toute seule.
 6. Calendrier, statistiques, export Excel.
+7. **Réglages** : l'adresse email qui reçoit chaque nouvelle réservation (avec toutes les réponses du formulaire) se change ici, sans toucher au code. Bouton « Envoyer un email de test ».
 
 ---
 

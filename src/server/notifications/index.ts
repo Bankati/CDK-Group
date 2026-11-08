@@ -23,7 +23,7 @@ export async function sendEmail(email: Email) {
 
   if (!emailsEnabled) {
     console.info(
-      `✉️  [démo] Email non envoyé (pas de clé Resend) → ${email.to} : ${email.subject}`,
+      `✉️  [démo] Email non envoyé (pas de clé Resend) → ${[email.to].flat().join(", ")} : ${email.subject}`,
     );
     return;
   }
@@ -36,7 +36,7 @@ export async function sendEmail(email: Email) {
       },
       body: JSON.stringify({
         from: serverEnv.RESEND_FROM,
-        to: [email.to],
+        to: Array.isArray(email.to) ? email.to : [email.to],
         subject: email.subject,
         html: email.html,
         text: email.text,
