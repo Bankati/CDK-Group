@@ -1,5 +1,21 @@
 "use client";
 
+import {
+  BE,
+  BF,
+  BJ,
+  CA,
+  CD,
+  CI,
+  CM,
+  FR,
+  GA,
+  GN,
+  ML,
+  NE,
+  SN,
+  TG,
+} from "country-flag-icons/react/3x2";
 import { CalendarClock, ShoppingBag, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -35,21 +51,22 @@ const slides: (LiveSlide & { word: string })[] = [
   },
 ];
 
+/** Villes du bandeau et leur drapeau (SVG : les drapeaux emoji ne s'affichent pas sur Windows). */
 const CITIES = [
-  "Lomé",
-  "Abidjan",
-  "Dakar",
-  "Douala",
-  "Cotonou",
-  "Kinshasa",
-  "Bamako",
-  "Libreville",
-  "Ouagadougou",
-  "Niamey",
-  "Conakry",
-  "Paris",
-  "Bruxelles",
-  "Montréal",
+  { name: "Lomé", Flag: TG },
+  { name: "Abidjan", Flag: CI },
+  { name: "Dakar", Flag: SN },
+  { name: "Douala", Flag: CM },
+  { name: "Cotonou", Flag: BJ },
+  { name: "Kinshasa", Flag: CD },
+  { name: "Bamako", Flag: ML },
+  { name: "Libreville", Flag: GA },
+  { name: "Ouagadougou", Flag: BF },
+  { name: "Niamey", Flag: NE },
+  { name: "Conakry", Flag: GN },
+  { name: "Paris", Flag: FR },
+  { name: "Bruxelles", Flag: BE },
+  { name: "Montréal", Flag: CA },
 ];
 
 const ORDERS = ["Abidjan", "Lomé", "Dakar", "Douala", "Paris", "Cotonou"];
@@ -315,13 +332,13 @@ export function Hero() {
           className="flex overflow-hidden [mask-image:linear-gradient(90deg,transparent,black_8%,black_92%,transparent)]"
         >
           <div className={cn("flex shrink-0 gap-8 pr-8", running && "animate-marquee")}>
-            {[...CITIES, ...CITIES].map((c, i) => (
+            {[...CITIES, ...CITIES].map(({ name, Flag }, i) => (
               <span
                 key={i}
-                className="flex items-center gap-8 font-display text-sm font-bold tracking-[0.2em] whitespace-nowrap text-white/55 uppercase"
+                className="flex items-center gap-3 font-display text-sm font-bold tracking-[0.2em] whitespace-nowrap text-white/60 uppercase"
               >
-                {c}
-                <span className="size-1.5 rounded-full bg-live" />
+                <Flag className="h-4 w-6 shrink-0 rounded-[3px] shadow-sm ring-1 ring-white/20" />
+                {name}
               </span>
             ))}
           </div>
