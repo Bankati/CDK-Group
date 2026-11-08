@@ -39,6 +39,7 @@
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-bricolage), var(--font-geist-sans), ui-sans-serif, sans-serif;
   /* Poppins : uniquement pour le mot « Live » du logo, comme sur le logo officiel */
+  --font-heading: var(--font-raleway), var(--font-geist-sans), ui-sans-serif, sans-serif;
   --font-logo: var(--font-poppins), var(--font-geist-sans), ui-sans-serif, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
