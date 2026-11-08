@@ -2,7 +2,10 @@
 
 import {
   BarChart3,
-  BellRing,
+  Bell,
+  ExternalLink,
+  LayoutGrid,
+  Search,
   CalendarDays,
   Check,
   ChevronLeft,
@@ -20,7 +23,7 @@ import { useActionState, useMemo, useState, useTransition } from "react";
 import { OcdLiveLogo } from "@/components/brand";
 import { WhatsAppIcon } from "@/components/icons";
 import { packages } from "@/config/site";
-import { fcfa, number } from "@/lib/format";
+import { fcfa } from "@/lib/format";
 import { addMonths, daysInMonth, formatDayFr, formatRangeFr, monthLabel } from "@/lib/time";
 import { statusLabels, type DisplayStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -32,6 +35,7 @@ import {
   saveNotificationEmails,
   sendTestNotification,
 } from "./actions";
+import { Overview, type GoTo } from "./overview";
 import { applyFilters, type AdminBooking, type Filters, type kpis as kpisFn } from "./data";
 
 type Kpis = ReturnType<typeof kpisFn>;
@@ -43,7 +47,7 @@ type EmailRow = {
   delivered: boolean;
   error?: string;
 };
-type Tab = "liste" | "calendrier" | "stats" | "emails" | "reglages";
+type Tab = "apercu" | "liste" | "calendrier" | "stats" | "emails" | "reglages";
 
 const statusStyle: Record<DisplayStatus, string> = {
   pending: "bg-amber-100 text-amber-900",
@@ -73,7 +77,8 @@ export function Dashboard({
   /** Adresses qui reçoivent les nouvelles réservations. */
   notificationEmails: string[];
 }) {
-  const [tab, setTab] = useState<Tab>("liste");
+  const [tab, setTab] = useState<Tab>("apercu");
+  const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<Filters>({});
   const filtered = useMemo(() => applyFilters(bookings, filters), [bookings, filters]);
   const countries = useMemo(() => [...new Set(bookings.map((b) => b.country))].sort(), [bookings]);
@@ -83,6 +88,7 @@ export function Dashboard({
   const hasFilters = Object.values(filters).some(Boolean);
 
   const tabs: { id: Tab; label: string; Icon: typeof List }[] = [
+    { id: "apercu", label: "Tableau de bord", Icon: LayoutGrid },
     { id: "liste", label: "Réservations", Icon: List },
     { id: "calendrier", label: "Calendrier", Icon: CalendarDays },
     { id: "stats", label: "Statistiques", Icon: BarChart3 },
@@ -90,76 +96,48 @@ export function Dashboard({
     { id: "reglages", label: "Réglages", Icon: Settings },
   ];
 
+  const visible = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return filtered;
+    return filtered.filter((b) =>
+      [b.fullName, b.businessName, b.code, b.whatsapp, b.email, b.city, b.country]
+        .join(" ")
+        .toLowerCase()
+        .includes(q),
+    );
+  }, [filtered, search]);
+
+  const go: GoTo = (t, status) => {
+    setTab(t);
+    setFilters(status ? { status } : {});
+  };
+
+  const today = new Intl.DateTimeFormat("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Africa/Lome",
+  }).format(now);
+
+  const titles: Record<Tab, string> = {
+    apercu: "Bonjour, l'équipe Bovann 👋",
+    liste: "Réservations",
+    calendrier: "Calendrier des lives",
+    stats: "Statistiques",
+    emails: "Emails envoyés",
+    reglages: "Réglages",
+  };
+
   return (
-    <div className="flex-1 bg-paper">
-      <header className="bg-night-900 text-white">
-        <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
-          <Link href="/" aria-label="Voir le site">
-            <OcdLiveLogo className="text-xl" />
-          </Link>
-          <span className="hidden text-sm text-white/60 sm:inline">Espace Bovann</span>
-          {demo && (
-            <span className="rounded-full bg-amber-300 px-2.5 py-0.5 text-xs font-bold text-amber-950">
-              MODE DÉMO
-            </span>
-          )}
-          <form action={logout} className="ml-auto">
-            <button
-              type="submit"
-              className="flex min-h-10 items-center gap-2 rounded-full px-3 text-sm text-white/80 hover:bg-white/10 hover:text-white"
-            >
-              <LogOut className="size-4" aria-hidden />
-              <span className="hidden sm:inline">Déconnexion</span>
-            </button>
-          </form>
-        </div>
-      </header>
-
-      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
-        {/* Indicateurs */}
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Indicateurs">
-          <Kpi
-            label="Total confirmé"
-            value={fcfa(kpis.collected)}
-            sub={
-              kpis.pendingAmount ? `+ ${fcfa(kpis.pendingAmount)} en attente` : "lives confirmés"
-            }
-            strong
-          />
-          <Kpi
-            label="Réservations"
-            value={number(kpis.bookings)}
-            sub={`dont ${kpis.pending} en attente`}
-          />
-          <Kpi label="Lives aujourd'hui" value={number(kpis.today)} sub="heure de Lomé" />
-          <Kpi label="Lives cette semaine" value={number(kpis.week)} sub="du lundi au dimanche" />
-        </section>
-
-        {kpis.next && (
-          <p className="mt-3 text-sm text-muted">
-            Prochain live : <strong className="text-night-900">{kpis.next.businessName}</strong>,{" "}
-            {formatDayFr(new Date(kpis.next.startsAt))} ·{" "}
-            {formatRangeFr(new Date(kpis.next.startsAt), kpis.next.durationMinutes)}
-          </p>
-        )}
-
-        {kpis.pending > 0 && (
-          <button
-            type="button"
-            onClick={() => {
-              setTab("liste");
-              setFilters({ status: "pending" });
-            }}
-            className="mt-4 flex w-full items-center gap-3 rounded-2xl bg-amber-100 p-4 text-left text-sm font-semibold text-amber-950 transition hover:bg-amber-200"
-          >
-            <BellRing className="size-5 shrink-0" aria-hidden />
-            {kpis.pending} réservation{kpis.pending > 1 ? "s" : ""} à confirmer
-            <span className="ml-auto underline underline-offset-4">Voir</span>
-          </button>
-        )}
-
-        {/* Onglets */}
-        <nav className="mt-8 flex gap-1 overflow-x-auto border-b border-line" aria-label="Vues">
+    <div className="flex min-h-svh flex-1 bg-paper">
+      {/* Menu latéral (ordinateur) */}
+      <aside className="sticky top-0 hidden h-svh w-64 shrink-0 flex-col border-r border-line bg-white px-4 py-6 lg:flex">
+        <Link href="/" aria-label="Voir le site" className="px-2">
+          <OcdLiveLogo tone="dark" className="text-2xl" />
+        </Link>
+        <p className="mt-1 px-2 text-xs text-muted">Espace Bovann</p>
+        <nav aria-label="Espace Bovann" className="mt-8 space-y-1">
           {tabs.map(({ id, label, Icon }) => (
             <button
               key={id}
@@ -167,134 +145,241 @@ export function Dashboard({
               onClick={() => setTab(id)}
               aria-current={tab === id ? "page" : undefined}
               className={cn(
-                "-mb-px flex min-h-12 shrink-0 items-center gap-2 border-b-2 px-4 text-sm font-semibold transition",
+                "flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold transition",
                 tab === id
-                  ? "border-live text-night-900"
-                  : "border-transparent text-muted hover:text-night-900",
+                  ? "bg-night-900 text-white shadow-md shadow-night-900/20"
+                  : "text-muted hover:bg-paper hover:text-night-900",
               )}
             >
-              <Icon className="size-4" aria-hidden />
+              <Icon className="size-[18px]" aria-hidden />
               {label}
+              {id === "liste" && kpis.pending > 0 && (
+                <span
+                  className={cn(
+                    "ml-auto rounded-full px-2 py-0.5 text-[11px] font-bold",
+                    tab === id ? "bg-white/15 text-white" : "bg-live-50 text-live-700",
+                  )}
+                >
+                  {kpis.pending}
+                </span>
+              )}
               {id === "emails" && emails.length > 0 && (
-                <span className="rounded-full bg-live-600 px-1.5 text-[10px] text-white">
+                <span
+                  className={cn(
+                    "ml-auto rounded-full px-2 py-0.5 text-[11px] font-bold",
+                    tab === id ? "bg-white/15 text-white" : "bg-paper text-muted",
+                  )}
+                >
                   {emails.length}
                 </span>
               )}
             </button>
           ))}
         </nav>
+        <div className="mt-auto space-y-1 border-t border-line pt-4">
+          <Link
+            href="/"
+            className="flex min-h-11 items-center gap-3 rounded-xl px-3 text-sm font-semibold text-muted transition hover:bg-paper hover:text-night-900"
+          >
+            <ExternalLink className="size-[18px]" aria-hidden /> Voir le site
+          </Link>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-semibold text-muted transition hover:bg-paper hover:text-night-900"
+            >
+              <LogOut className="size-[18px]" aria-hidden /> Déconnexion
+            </button>
+          </form>
+        </div>
+      </aside>
 
-        {(tab === "liste" || tab === "calendrier") && (
-          <div className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-5">
-            <input
-              type="date"
-              aria-label="Filtrer par date"
-              value={filters.date ?? ""}
-              onChange={(e) => setFilters((f) => ({ ...f, date: e.target.value || undefined }))}
-              className={selectClass}
-            />
-            <select
-              aria-label="Filtrer par package"
-              value={filters.packageId ?? ""}
-              onChange={(e) =>
-                setFilters((f) => ({ ...f, packageId: e.target.value || undefined }))
-              }
-              className={selectClass}
-            >
-              <option value="">Tous les packages</option>
-              {packages.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Filtrer par statut"
-              value={filters.status ?? ""}
-              onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value || undefined }))}
-              className={selectClass}
-            >
-              <option value="">Tous les statuts</option>
-              {(Object.keys(statusLabels) as DisplayStatus[]).map((s) => (
-                <option key={s} value={s}>
-                  {statusLabels[s]}
-                </option>
-              ))}
-            </select>
-            <select
-              aria-label="Filtrer par pays"
-              value={filters.country ?? ""}
-              onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value || undefined }))}
-              className={selectClass}
-            >
-              <option value="">Tous les pays</option>
-              {countries.map((c) => (
-                <option key={c}>{c}</option>
-              ))}
-            </select>
-            <div className="col-span-2 flex gap-2 sm:col-span-1">
-              {hasFilters && (
-                <button
-                  type="button"
-                  onClick={() => setFilters({})}
-                  className="min-h-11 rounded-xl border border-line bg-white px-3 text-sm font-semibold text-muted hover:text-night-900"
-                >
-                  Effacer
-                </button>
-              )}
-              <a
-                href={exportHref}
-                className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-night-900 px-3 text-sm font-bold text-white hover:bg-night-800"
+      <div className="min-w-0 flex-1">
+        {/* Barre du haut (téléphone) */}
+        <div className="sticky top-0 z-20 border-b border-line bg-white lg:hidden">
+          <div className="flex h-14 items-center justify-between px-4">
+            <OcdLiveLogo tone="dark" className="text-xl" />
+            <form action={logout}>
+              <button
+                type="submit"
+                aria-label="Déconnexion"
+                className="flex size-10 items-center justify-center rounded-full text-muted hover:bg-paper"
               >
-                <Download className="size-4" aria-hidden />
-                Excel / CSV
-              </a>
+                <LogOut className="size-5" />
+              </button>
+            </form>
+          </div>
+          <nav aria-label="Espace Bovann" className="flex gap-1 overflow-x-auto px-3 pb-2">
+            {tabs.map(({ id, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setTab(id)}
+                aria-current={tab === id ? "page" : undefined}
+                className={cn(
+                  "min-h-9 shrink-0 rounded-full px-3.5 text-sm font-semibold",
+                  tab === id ? "bg-night-900 text-white" : "text-muted",
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <main className="mx-auto w-full max-w-[90rem] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          {/* En-tête : titre, recherche, notifications, profil */}
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+            <div>
+              <h1 className="font-display text-2xl font-extrabold tracking-tight text-night-900 sm:text-[1.7rem]">
+                {titles[tab]}
+              </h1>
+              <p className="mt-0.5 text-sm text-muted first-letter:uppercase">
+                {today} · heure de Lomé
+                {demo && (
+                  <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-900">
+                    MODE DÉMO
+                  </span>
+                )}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="relative min-w-0 flex-1 xl:w-72 xl:flex-none">
+                <Search
+                  className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted"
+                  aria-hidden
+                />
+                <input
+                  type="search"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    if (e.target.value && tab !== "liste" && tab !== "calendrier") setTab("liste");
+                  }}
+                  placeholder="Rechercher un client, un business…"
+                  aria-label="Rechercher une réservation"
+                  className="h-11 w-full rounded-full border border-line bg-white pr-4 pl-10 text-sm text-ink outline-none focus:border-night-700 focus:ring-4 focus:ring-night-700/10"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => go("liste", "pending")}
+                aria-label={`${kpis.pending} réservation(s) à confirmer`}
+                className="relative flex size-11 shrink-0 items-center justify-center rounded-full border border-line bg-white text-night-900 transition hover:bg-paper"
+              >
+                <Bell className="size-[18px]" aria-hidden />
+                {kpis.pending > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full bg-live-600 text-[10px] font-bold text-white ring-2 ring-white">
+                    {kpis.pending}
+                  </span>
+                )}
+              </button>
+              <div className="hidden shrink-0 items-center gap-2.5 rounded-full border border-line bg-white py-1 pr-4 pl-1 sm:flex">
+                {/* eslint-disable-next-line @next/next/no-img-element -- petite image locale */}
+                <img
+                  src="/brand/bovann-avatar.jpg"
+                  alt=""
+                  className="size-9 rounded-full object-cover"
+                />
+                <span className="leading-tight">
+                  <span className="block text-sm font-semibold text-night-900">Bovann Group</span>
+                  <span className="block max-w-40 truncate text-xs text-muted">
+                    {notificationEmails[0]}
+                  </span>
+                </span>
+              </div>
             </div>
           </div>
-        )}
 
-        {tab === "liste" && <BookingList rows={filtered} />}
-        {tab === "calendrier" && <CalendarView rows={filtered} now={now} />}
-        {tab === "stats" && <Stats rows={bookings} />}
-        {tab === "emails" && <Emails rows={emails} />}
-        {tab === "reglages" && (
-          <SettingsPanel emails={notificationEmails} emailsEnabled={emailsEnabled} />
-        )}
-      </main>
-    </div>
-  );
-}
+          <div className="mt-6">
+            {tab === "apercu" && <Overview rows={bookings} now={now} go={go} />}
 
-function Kpi({
-  label,
-  value,
-  sub,
-  strong,
-}: {
-  label: string;
-  value: string;
-  sub: string;
-  strong?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "rounded-2xl p-4 sm:p-5",
-        strong ? "bg-night-900 text-white" : "border border-line bg-white",
-      )}
-    >
-      <p className={cn("text-xs font-semibold", strong ? "text-white/70" : "text-muted")}>
-        {label}
-      </p>
-      <p
-        className={cn(
-          "mt-1 font-display text-2xl font-extrabold tracking-tight sm:text-3xl",
-          !strong && "text-night-900",
-        )}
-      >
-        {value}
-      </p>
-      <p className={cn("mt-0.5 text-xs", strong ? "text-white/60" : "text-muted")}>{sub}</p>
+            {(tab === "liste" || tab === "calendrier") && (
+              <div className="grid grid-cols-2 gap-2 rounded-2xl border border-line bg-white p-3 sm:grid-cols-5">
+                <input
+                  type="date"
+                  aria-label="Filtrer par date"
+                  value={filters.date ?? ""}
+                  onChange={(e) => setFilters((f) => ({ ...f, date: e.target.value || undefined }))}
+                  className={selectClass}
+                />
+                <select
+                  aria-label="Filtrer par package"
+                  value={filters.packageId ?? ""}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, packageId: e.target.value || undefined }))
+                  }
+                  className={selectClass}
+                >
+                  <option value="">Tous les packages</option>
+                  {packages.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label="Filtrer par statut"
+                  value={filters.status ?? ""}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, status: e.target.value || undefined }))
+                  }
+                  className={selectClass}
+                >
+                  <option value="">Tous les statuts</option>
+                  {(Object.keys(statusLabels) as DisplayStatus[]).map((st) => (
+                    <option key={st} value={st}>
+                      {statusLabels[st]}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  aria-label="Filtrer par pays"
+                  value={filters.country ?? ""}
+                  onChange={(e) =>
+                    setFilters((f) => ({ ...f, country: e.target.value || undefined }))
+                  }
+                  className={selectClass}
+                >
+                  <option value="">Tous les pays</option>
+                  {countries.map((c) => (
+                    <option key={c}>{c}</option>
+                  ))}
+                </select>
+                <div className="col-span-2 flex gap-2 sm:col-span-1">
+                  {(hasFilters || search) && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFilters({});
+                        setSearch("");
+                      }}
+                      className="min-h-11 rounded-xl border border-line bg-white px-3 text-sm font-semibold text-muted hover:text-night-900"
+                    >
+                      Effacer
+                    </button>
+                  )}
+                  <a
+                    href={exportHref}
+                    className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-night-900 px-3 text-sm font-bold text-white hover:bg-night-800"
+                  >
+                    <Download className="size-4" aria-hidden />
+                    Excel / CSV
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {tab === "liste" && <BookingList rows={visible} />}
+            {tab === "calendrier" && <CalendarView rows={visible} now={now} />}
+            {tab === "stats" && <Stats rows={bookings} />}
+            {tab === "emails" && <Emails rows={emails} />}
+            {tab === "reglages" && (
+              <SettingsPanel emails={notificationEmails} emailsEnabled={emailsEnabled} />
+            )}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }

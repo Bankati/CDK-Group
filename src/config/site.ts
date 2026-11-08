@@ -39,6 +39,12 @@ export const site = {
   },
 } as const;
 
+/** Objectifs affichés dans le tableau de bord de l'Espace Bovann. */
+export const goals = {
+  /** Chiffre d'affaires visé par mois (FCFA). */
+  monthlyRevenue: 1_000_000,
+} as const;
+
 /**
  * Réservations. Pas de paiement en ligne pour l'instant : l'équipe contacte le client
  * sur WhatsApp pour le règlement, puis confirme la réservation dans l'Espace Bovann.
