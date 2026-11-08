@@ -39,7 +39,7 @@ Redémarrer le serveur remet les données de départ.
 
 ### L'effet « Rejoins le live » (caméra)
 
-Dans le téléphone du hero, le bouton **Rejoins le live** ouvre la caméra du visiteur : il se voit en direct dans le live de Bovann, puis peut garder une **photo de live** au format story (partage WhatsApp sur téléphone, téléchargement sur ordinateur). Tout reste sur l'appareil : rien n'est envoyé ni enregistré.
+Dans le hero, le lien **Essaie : rejoins le live avec ta caméra** ouvre une fenêtre où la caméra du visiteur s'affiche : il se voit en direct dans le live de Bovann, puis peut garder une **photo de live** au format story (partage WhatsApp sur téléphone, téléchargement sur ordinateur). Tout reste sur l'appareil : rien n'est envoyé ni enregistré.
 
 Les navigateurs n'autorisent la caméra que sur un site **sécurisé (https)** ou sur `localhost` :
 
@@ -62,7 +62,9 @@ Les navigateurs n'autorisent la caméra que sur un site **sécurisé (https)** o
 
 **[`src/config/site.ts`](src/config/site.ts)** : prix des packages, WhatsApp, lien TikTok, horaires (10h–22h), premier jour (1er décembre), nom du Pack du mois, durée de réservation d'un créneau non confirmé (24 h).
 
-Les images de l'accueil sont dans `public/hero/` : `ocd-live-studio.jpg` (le live dans le téléphone du hero), `affiche-lancement.jpg` (section « Lancement »). Le compte affiché dans le live (photo, nom, abonnés) se règle dans `src/config/site.ts` (`liveAccount`) ; les produits et mots du titre dans `src/components/home/hero.tsx` (tableau `slides`) ; les commentaires dans `src/components/home/live-phone.tsx`.
+Les images de l'accueil sont dans `public/hero/` : `live-entrepreneure.jpg`, `live-couturier.jpg`, `live-commercante.jpg` (les 3 photos du hero ; textes et cadrage dans `src/components/home/hero.tsx`, tableau `slides`), `affiche-lancement.jpg` (section « Lancement »), `ocd-live-studio.jpg` (fond de la fenêtre « Rejoins le live »).
+
+**Crédits photos du hero** (licence Unsplash : usage commercial gratuit, sans obligation de crédit) : [Ahmed Nasiru](https://unsplash.com/@ahmed_nasiru) (photo 1), [Ali Mkumbwa](https://unsplash.com/@mkumbwajr) (photos 2 et 3).
 
 ---
 
