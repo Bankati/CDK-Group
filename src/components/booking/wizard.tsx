@@ -45,18 +45,22 @@ function load(): Partial<State> | null {
 export function BookingWizard({
   initialMode,
   suggestedPackage,
+  initialBusiness,
 }: {
   initialMode?: BookingMode;
   suggestedPackage?: string;
+  /** Nom du business tapé dans le hero de l'accueil. */
+  initialBusiness?: string;
 }) {
   const router = useRouter();
   const tz = useTimeZone();
   const topRef = useRef<HTMLDivElement>(null);
+  const prefill = initialBusiness ? { businessName: initialBusiness } : {};
 
   const [s, setS] = useState<State>({
     step: initialMode ? 1 : 0,
     mode: initialMode,
-    details: emptyDetails,
+    details: { ...emptyDetails, ...prefill },
   });
   const [monthKey, setMonthKey] = useState(FIRST_MONTH);
   const [months, setMonths] = useState<Record<string, Record<string, DayState>>>({});
@@ -81,11 +85,16 @@ export function BookingWizard({
         ...cur,
         ...saved,
         step: Math.min(saved.step ?? cur.step, LAST),
-        details: { ...emptyDetails, ...saved.details },
+        // Le nom tapé dans le hero est prioritaire sur une réservation commencée avant.
+        details: {
+          ...emptyDetails,
+          ...saved.details,
+          ...(initialBusiness ? { businessName: initialBusiness } : {}),
+        },
       };
     });
     if (saved.date) setMonthKey(saved.date.slice(0, 7));
-  }, [initialMode]);
+  }, [initialMode, initialBusiness]);
 
   useEffect(() => {
     try {

@@ -16,7 +16,7 @@ import {
   SN,
   TG,
 } from "country-flag-icons/react/3x2";
-import { CalendarClock, ShoppingBag, Zap } from "lucide-react";
+import { CalendarClock, ShoppingBag, Sparkles, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
@@ -96,7 +96,7 @@ function useDaysToLaunch() {
 }
 
 /** Notification flottante « Nouvelle commande ». */
-function OrderToast({ running }: { running: boolean }) {
+function OrderToast({ running, brand }: { running: boolean; brand: string }) {
   const [i, setI] = useState(0);
   useEffect(() => {
     if (!running) return;
@@ -115,7 +115,9 @@ function OrderToast({ running }: { running: boolean }) {
         <ShoppingBag className="size-4.5" />
       </span>
       <span className="leading-tight">
-        <span className="block text-[13px] font-bold">Nouvelle commande</span>
+        <span className="block max-w-56 truncate text-[13px] font-bold">
+          {brand ? `Nouvelle commande pour ${brand}` : "Nouvelle commande"}
+        </span>
         <span className="block text-xs whitespace-nowrap text-muted">
           depuis {ORDERS[i % ORDERS.length]} · à l&apos;instant
         </span>
@@ -129,15 +131,33 @@ export function Hero() {
   const running = useLiveRunning(sectionRef);
   const days = useDaysToLaunch();
   const [active, setActive] = useState(0);
+  // Le visiteur écrit le nom de son business : il passe « en live » dans le hero.
+  const [brand, setBrand] = useState("");
+  const [liveBrand, setLiveBrand] = useState("");
+  const typed = brand.trim();
 
-  // Produit suivant toutes les 6,5 s (redémarre après un clic sur un point).
+  // Produit suivant toutes les 6,5 s (en pause quand le visiteur a écrit son business).
   useEffect(() => {
-    if (!running) return;
+    if (!running || typed) return;
     const id = setInterval(() => setActive((a) => (a + 1) % slides.length), INTERVAL);
     return () => clearInterval(id);
-  }, [active, running]);
+  }, [active, running, typed]);
+
+  // Le live réagit (cœurs, spectateurs, commentaires) quand le visiteur s'arrête de taper.
+  useEffect(() => {
+    const t = setTimeout(() => setLiveBrand(typed), 450);
+    return () => clearTimeout(t);
+  }, [typed]);
 
   const slide = slides[active]!;
+  const headline = typed || slide.word;
+  const headlineSize =
+    headline.length <= 14
+      ? "text-[2.7rem] sm:text-6xl lg:text-7xl"
+      : headline.length <= 24
+        ? "text-[2.1rem] sm:text-5xl lg:text-6xl"
+        : "text-[1.7rem] sm:text-4xl lg:text-5xl";
+  const business = typed ? `&business=${encodeURIComponent(typed)}` : "";
 
   return (
     <section ref={sectionRef} className="relative isolate overflow-hidden bg-night-950 text-white">
@@ -199,10 +219,10 @@ export function Hero() {
 
           <h1 className="mt-6 font-display font-extrabold tracking-tight">
             <span
-              key={slide.word}
-              className="block animate-rise text-[2.7rem] leading-none sm:text-6xl lg:text-7xl"
+              key={typed ? "brand" : slide.word}
+              className={cn("block animate-rise leading-[1.05] break-words", headlineSize)}
             >
-              {slide.word}
+              {headline}
             </span>
             <span className="mt-3 inline-block -skew-x-[10deg] bg-live px-4 pt-1 pb-2 shadow-2xl shadow-live/30 sm:px-6">
               <span className="inline-block skew-x-[10deg] text-[3.7rem] leading-none italic sm:text-8xl lg:text-[8rem]">
@@ -211,14 +231,55 @@ export function Hero() {
             </span>
           </h1>
 
-          <p className="mt-6 max-w-lg text-lg leading-relaxed text-white/75">
-            <strong className="font-semibold text-white">Devant toute l&apos;Afrique</strong>, sur
-            le TikTok de House of Challenge. En présentiel à Lomé ou depuis chez toi.
-          </p>
+          {/* L'effet « waouh » : le visiteur voit son propre business passer en live */}
+          <div className="mt-7 max-w-md">
+            <label htmlFor="hero-business" className="text-sm font-semibold text-white/80">
+              Essaie&nbsp;: écris le nom de ton business
+            </label>
+            <div className="relative mt-2">
+              <Sparkles
+                className="pointer-events-none absolute top-1/2 left-4 z-10 size-5 -translate-y-1/2 text-gold"
+                aria-hidden
+              />
+              <input
+                id="hero-business"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value.slice(0, 40))}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.currentTarget.blur();
+                    document
+                      .getElementById("ton-live")
+                      ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                  }
+                }}
+                placeholder="Ex. Afi Cosmétiques"
+                autoComplete="organization"
+                enterKeyHint="go"
+                className="min-h-14 w-full rounded-2xl border border-white/20 bg-white/10 pr-4 pl-12 text-lg font-semibold text-white backdrop-blur-sm transition outline-none placeholder:font-normal placeholder:text-white/45 focus:border-live focus:bg-white/15 focus:ring-4 focus:ring-live/25"
+              />
+            </div>
+            <p className="mt-2 min-h-5 text-sm text-white/65" aria-live="polite">
+              {liveBrand ? (
+                <>
+                  <strong className="text-white">{liveBrand}</strong> est en direct devant toute
+                  l&apos;Afrique.{" "}
+                  <a
+                    href="#ton-live"
+                    className="font-semibold text-white underline underline-offset-4 lg:hidden"
+                  >
+                    Regarde ton live ↓
+                  </a>
+                </>
+              ) : (
+                <>Devant toute l&apos;Afrique, sur le TikTok de House of Challenge.</>
+              )}
+            </p>
+          </div>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link
-              href="/reserver?mode=presentiel"
+              href={`/reserver?mode=presentiel${business}`}
               className="group relative flex min-h-15 items-center justify-center gap-2.5 overflow-hidden rounded-2xl bg-live px-6 text-[1.05rem] font-bold whitespace-nowrap shadow-xl shadow-live/30 transition hover:bg-live-700 active:scale-[0.98]"
             >
               <span aria-hidden className="text-xl">
@@ -231,7 +292,7 @@ export function Hero() {
               />
             </Link>
             <Link
-              href="/reserver?mode=distance"
+              href={`/reserver?mode=distance${business}`}
               className="flex min-h-15 items-center justify-center gap-2.5 rounded-2xl border border-white/25 bg-white/10 px-6 text-[1.05rem] font-bold whitespace-nowrap backdrop-blur-sm transition hover:bg-white/20 active:scale-[0.98]"
             >
               <span aria-hidden className="text-xl">
@@ -252,7 +313,10 @@ export function Hero() {
         </div>
 
         {/* Téléphone en direct */}
-        <div className="relative mx-auto w-[min(66vw,250px)] sm:w-[270px] lg:w-[300px]">
+        <div
+          id="ton-live"
+          className="relative mx-auto w-[min(66vw,250px)] scroll-mt-6 sm:w-[270px] lg:w-[300px]"
+        >
           <div
             aria-hidden
             className="absolute top-1/2 left-1/2 -z-10 size-[130%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-live/30 blur-3xl"
@@ -265,12 +329,13 @@ export function Hero() {
                 product={slide.product}
                 productKey={active}
                 running={running}
+                brand={liveBrand}
               />
             </div>
           </div>
 
           <div aria-hidden className="absolute top-[22%] -left-[62%] hidden sm:block">
-            <OrderToast running={running} />
+            <OrderToast running={running} brand={liveBrand} />
           </div>
           <div
             aria-hidden
@@ -281,7 +346,10 @@ export function Hero() {
           </div>
 
           <div
-            className="mt-8 flex justify-center gap-2"
+            className={cn(
+              "mt-8 flex justify-center gap-2 transition-opacity",
+              typed && "invisible opacity-0",
+            )}
             role="tablist"
             aria-label="Produits présentés dans le live"
           >

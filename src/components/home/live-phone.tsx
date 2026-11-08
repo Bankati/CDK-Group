@@ -22,36 +22,52 @@ const COMMENTS = [
   { name: "Serge", city: "Kinshasa", text: "Lien de la boutique svp" },
 ];
 
+/** Quand le visiteur écrit le nom de son business, les spectateurs parlent de lui. */
+const brandComments = (b: string) => [
+  { name: "Aminata", city: "Dakar", text: `${b}, je prends 2 🔥` },
+  { name: "Fatou", city: "Abidjan", text: `Bravo ${b} 👏👏` },
+  { name: "Kossi", city: "Lomé", text: `C'est où ${b} ? Je passe ce soir` },
+  { name: "Yannick", city: "Paris", text: `${b} livre en France ?` },
+  { name: "Nadège", city: "Douala", text: `Commande passée chez ${b} ✅` },
+  { name: "Serge", city: "Kinshasa", text: `Abonné à ${b} ! 🙌` },
+];
+
 const HEART_COLORS = ["#dc0c15", "#ff4d6d", "#ffffff", "#ff8fa3"];
 
-/** Le compteur de spectateurs grimpe doucement. */
-function Viewers({ running }: { running: boolean }) {
+/** Le compteur de spectateurs grimpe doucement, et bondit quand un business passe en live. */
+function Viewers({ running, boost }: { running: boolean; boost: string }) {
   const [count, setCount] = useState(8412);
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => setCount((c) => c + 3 + Math.floor(Math.random() * 38)), 1200);
     return () => clearInterval(id);
   }, [running]);
+  useEffect(() => {
+    if (!boost) return;
+    const t = setTimeout(() => setCount((c) => c + 900 + Math.floor(Math.random() * 700)), 200);
+    return () => clearTimeout(t);
+  }, [boost]);
   return <span className="tabular-nums">{number(count)}</span>;
 }
 
 /** Les commentaires arrivent un par un, les plus anciens s'effacent. */
-function Comments({ running }: { running: boolean }) {
+function Comments({ running, brand }: { running: boolean; brand: string }) {
   const [start, setStart] = useState(0);
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => setStart((s) => s + 1), 2100);
     return () => clearInterval(id);
   }, [running]);
+  const list = brand ? brandComments(brand) : COMMENTS;
   const visible = [0, 1, 2].map((i) => ({
     n: start + i,
-    c: COMMENTS[(start + i) % COMMENTS.length]!,
+    c: list[(start + i) % list.length]!,
   }));
   return (
     <ul className="space-y-1.5">
       {visible.map(({ n, c }, i) => (
         <li
-          key={n}
+          key={`${brand}-${n}`}
           className={cn(
             "w-fit max-w-full animate-rise rounded-2xl bg-black/35 px-2.5 py-1.5 text-[11px] leading-snug text-white backdrop-blur-sm",
             i === 0 && "opacity-60",
@@ -68,25 +84,34 @@ function Comments({ running }: { running: boolean }) {
   );
 }
 
-/** Pluie de cœurs (12 maximum à l'écran). */
-function Hearts({ running }: { running: boolean }) {
+/** Pluie de cœurs (12 à l'écran), qui explose quand un business passe en live (`burst`). */
+function Hearts({ running, burst }: { running: boolean; burst: string }) {
   const [hearts, setHearts] = useState<{ id: number; x: number; color: string; ms: number }[]>([]);
   const next = useRef(0);
+  const add = (max: number) =>
+    setHearts((h) => [
+      ...h.slice(-(max - 1)),
+      {
+        id: next.current++,
+        x: Math.round(Math.random() * 56 - 38),
+        color: HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)]!,
+        ms: 2000 + Math.round(Math.random() * 1600),
+      },
+    ]);
   useEffect(() => {
     if (!running) return;
-    const id = setInterval(() => {
-      setHearts((h) => [
-        ...h.slice(-11),
-        {
-          id: next.current++,
-          x: Math.round(Math.random() * 46 - 30),
-          color: HEART_COLORS[Math.floor(Math.random() * HEART_COLORS.length)]!,
-          ms: 2200 + Math.round(Math.random() * 1400),
-        },
-      ]);
-    }, 420);
+    const id = setInterval(() => add(12), 420);
     return () => clearInterval(id);
   }, [running]);
+  useEffect(() => {
+    if (!burst || !running) return;
+    const id = setInterval(() => add(32), 70);
+    const stop = setTimeout(() => clearInterval(id), 2200);
+    return () => {
+      clearInterval(id);
+      clearTimeout(stop);
+    };
+  }, [burst, running]);
   return (
     <div className="pointer-events-none absolute right-3 bottom-16 h-0 w-8">
       {hearts.map((h) => (
@@ -115,6 +140,7 @@ export function LivePhone({
   product,
   productKey,
   running,
+  brand = "",
 }: {
   /** Visuel du live (une seule image : c'est un seul direct). */
   image: string;
@@ -124,6 +150,8 @@ export function LivePhone({
   product: LiveProduct;
   productKey: number;
   running: boolean;
+  /** Nom du business tapé par le visiteur : il passe « en live » dans le téléphone. */
+  brand?: string;
 }) {
   const account = site.liveAccount;
   return (
@@ -186,7 +214,7 @@ export function LivePhone({
             </span>
             <span className="flex items-center gap-1 rounded bg-black/40 px-1.5 py-0.5 text-[10px] font-semibold backdrop-blur-sm">
               <Eye className="size-3" />
-              <Viewers running={running} />
+              <Viewers running={running} boost={brand} />
             </span>
           </div>
         </div>
@@ -194,18 +222,20 @@ export function LivePhone({
         {/* Bas : commentaires, produit, barre de saisie */}
         <div className="absolute inset-x-3 bottom-3 text-white">
           <div className="w-[78%]">
-            <Comments running={running} />
+            <Comments running={running} brand={brand} />
           </div>
           <div
-            key={productKey}
+            key={brand || productKey}
             className="mt-2.5 flex animate-rise items-center gap-2 rounded-xl bg-white p-1.5 pr-2 text-night-900 shadow-lg"
           >
             <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-live/10 text-live">
               <ShoppingBag className="size-4" />
             </span>
             <span className="min-w-0 flex-1 leading-tight">
-              <span className="block truncate text-[11px] font-bold">{product.name}</span>
-              <span className="block text-[10px] text-muted">{product.price}</span>
+              <span className="block truncate text-[11px] font-bold">{brand || product.name}</span>
+              <span className="block text-[10px] text-muted">
+                {brand ? "En direct maintenant" : product.price}
+              </span>
             </span>
             <span className="rounded-md bg-live px-2 py-1 text-[10px] font-bold text-white">
               Acheter
@@ -219,7 +249,7 @@ export function LivePhone({
           </div>
         </div>
 
-        <Hearts running={running} />
+        <Hearts running={running} burst={brand} />
       </div>
     </div>
   );
