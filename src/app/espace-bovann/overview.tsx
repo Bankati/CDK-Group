@@ -7,6 +7,8 @@ import { fcfa, number } from "@/lib/format";
 import { formatDayFr, formatRangeFr } from "@/lib/time";
 import type { DisplayStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import type { AudienceMap } from "@/server/audience-map";
+import { ActivityFeed, AudienceMapCard, ControlRoom } from "./control-room";
 import type { AdminBooking } from "./data";
 import { mondayOf, WeekPicker, weekLabel } from "./week-picker";
 
@@ -580,7 +582,17 @@ function Goals({ rows }: { rows: AdminBooking[] }) {
   );
 }
 
-export function Overview({ rows, now, go }: { rows: AdminBooking[]; now: number; go: GoTo }) {
+export function Overview({
+  rows,
+  now,
+  go,
+  map,
+}: {
+  rows: AdminBooking[];
+  now: number;
+  go: GoTo;
+  map: AudienceMap;
+}) {
   const stats = useMemo(() => {
     const weekAgo = now - 7 * DAY;
     const twoWeeksAgo = now - 14 * DAY;
@@ -614,6 +626,8 @@ export function Overview({ rows, now, go }: { rows: AdminBooking[]; now: number;
 
   return (
     <div className="space-y-5">
+      <ControlRoom rows={rows} now={now} />
+
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           icon={Wallet}
@@ -689,6 +703,11 @@ export function Overview({ rows, now, go }: { rows: AdminBooking[]; now: number;
       <div className="grid gap-5 xl:grid-cols-[1fr_22rem]">
         <FlowChart rows={rows} now={now} />
         <PackageSplit rows={rows} onOpen={() => go("stats")} />
+      </div>
+
+      <div className="grid gap-5 xl:grid-cols-[1fr_22rem]">
+        <AudienceMapCard map={map} />
+        <ActivityFeed rows={rows} now={now} />
       </div>
 
       <div className="grid gap-5 min-[1360px]:grid-cols-[1fr_22rem]">

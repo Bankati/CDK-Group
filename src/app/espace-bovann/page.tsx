@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { isAdmin } from "@/server/auth";
+import { audienceMap } from "@/server/audience-map";
 import { db } from "@/server/db";
 import { emailsEnabled, isDemo, usingDefaultPassword } from "@/server/env";
 import { recentEmails } from "@/server/notifications";
@@ -27,13 +28,20 @@ async function loadDashboard() {
         delivered: e.delivered,
         error: e.error,
       }));
-  return { now, rows, emails, notificationEmails: await getNotificationEmails() };
+  const all = await db.list();
+  return {
+    now,
+    rows,
+    emails,
+    notificationEmails: await getNotificationEmails(),
+    map: audienceMap(all),
+  };
 }
 
 async function Gate() {
   await connection();
   if (!(await isAdmin())) return <LoginForm demo={usingDefaultPassword} />;
-  const { now, rows, emails, notificationEmails } = await loadDashboard();
+  const { now, rows, emails, notificationEmails, map } = await loadDashboard();
   return (
     <Dashboard
       bookings={rows}
@@ -43,6 +51,7 @@ async function Gate() {
       emails={emails}
       emailsEnabled={emailsEnabled}
       notificationEmails={notificationEmails}
+      map={map}
     />
   );
 }

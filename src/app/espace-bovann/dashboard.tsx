@@ -38,6 +38,7 @@ import {
   saveNotificationEmails,
   sendTestNotification,
 } from "./actions";
+import type { AudienceMap } from "@/server/audience-map";
 import { Overview, type GoTo } from "./overview";
 import { applyFilters, type AdminBooking, type Filters, type kpis as kpisFn } from "./data";
 
@@ -70,6 +71,7 @@ export function Dashboard({
   emails,
   emailsEnabled,
   notificationEmails,
+  map,
 }: {
   bookings: AdminBooking[];
   kpis: Kpis;
@@ -79,6 +81,8 @@ export function Dashboard({
   emailsEnabled: boolean;
   /** Adresses qui reçoivent les nouvelles réservations. */
   notificationEmails: string[];
+  /** Carte de l'audience, calculée côté serveur. */
+  map: AudienceMap;
 }) {
   const [tab, setTab] = useState<Tab>("apercu");
   const [search, setSearch] = useState("");
@@ -295,7 +299,7 @@ export function Dashboard({
           </div>
 
           <div className="mt-6">
-            {tab === "apercu" && <Overview rows={bookings} now={now} go={go} />}
+            {tab === "apercu" && <Overview rows={bookings} now={now} go={go} map={map} />}
 
             {(tab === "liste" || tab === "calendrier") && (
               <div className="grid grid-cols-2 gap-2 rounded-2xl border border-line bg-white p-3 sm:grid-cols-[repeat(auto-fit,minmax(11rem,1fr))]">
