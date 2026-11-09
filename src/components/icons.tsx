@@ -21,3 +21,14 @@ export const LinkedInIcon = (p: P) => (
     <path d="M9.4 8.6h4.2v1.9c.7-1.2 2.2-2.2 4.4-2.2 4.2 0 4.7 2.8 4.7 6.3v7h-4.4v-6.2c0-1.6-.1-3.4-2.2-3.4s-2.4 1.6-2.4 3.3v6.3H9.4z" />
   </svg>
 );
+
+/** Logo TikTok officiel en couleurs : la note blanche avec ses deux ombres cyan et rose. */
+export function TikTokLogo({ className }: { className?: string }) {
+  return (
+    <span className={`relative inline-block ${className ?? ""}`} role="img" aria-label="TikTok">
+      <TikTokIcon className="absolute inset-0 size-full -translate-x-[6%] -translate-y-[4%] text-[#25f4ee]" />
+      <TikTokIcon className="absolute inset-0 size-full translate-x-[6%] translate-y-[4%] text-[#fe2c55]" />
+      <TikTokIcon className="relative size-full text-white" />
+    </span>
+  );
+}

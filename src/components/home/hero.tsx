@@ -1,18 +1,20 @@
 "use client";
 
-import { ArrowRight, Camera } from "lucide-react";
+import { ArrowRight, Camera, Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { OcdLiveLogo } from "@/components/brand";
+import { TikTokLogo } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { LiveModal } from "./live-modal";
 
 /**
- * Hero « grande photo + titre », joyeux.
- * À gauche : le titre et les deux choix. À droite : une grande photo d'entrepreneur
- * (elle change doucement), un badge EN DIRECT et des réactions qui montent comme
- * dans un live TikTok. Photos : Unsplash (licence libre).
+ * Hero : un présentateur enthousiaste montre son téléphone et nous parle,
+ * devant la carte de l'Afrique.
+ * - Personne : photo réelle détourée (Pexels 19518397, licence libre), recadrée 1950 × 1350.
+ * - Écran : interface de live en code, posée en perspective exacte sur l'écran de la photo.
+ * - Carte : continent en points orange, Togo en charbon (public/hero/afrique.svg).
  */
 const NAV = [
   { href: "#comment-ca-marche", label: "Comment ça marche" },
@@ -22,16 +24,57 @@ const NAV = [
 ];
 
 const PHOTOS = [
-  { src: "/hero/live/commercante.jpg", label: "Commerce" },
-  { src: "/hero/live/vendeur.jpg", label: "Fruits & légumes" },
-  { src: "/hero/live/couturiere.jpg", label: "Mode & pagne" },
-  { src: "/hero/live/marche.jpg", label: "Marché" },
+  "/hero/live/commercante.jpg",
+  "/hero/live/vendeur.jpg",
+  "/hero/live/couturiere.jpg",
+  "/hero/live/marche.jpg",
 ];
 
-/** Réactions qui montent sur la photo, l'une après l'autre. */
-const REACTIONS = ["😍 Trop beau !", "🛒 Je commande", "🔥 Ça c'est du live", "❤️ ❤️ ❤️"];
+const REACTIONS = ["😍 Trop beau !", "🛒 Je commande", "🔥 Ça c'est du live"];
 
-const SWITCH_MS = 5000;
+/** Coins de l'écran dans l'image recadrée (fractions largeur / hauteur). */
+const QUAD: [number, number][] = [
+  [0.1395, 0.2407], // haut gauche
+  [0.2436, 0.2837], // haut droite
+  [0.1703, 0.6319], // bas droite
+  [0.0667, 0.5911], // bas gauche
+];
+/** Taille de dessin de l'interface (px), avant mise en perspective. */
+const SW = 200;
+const SH = 430;
+
+/**
+ * Matrice de perspective (homographie) qui envoie le rectangle SW × SH
+ * sur les 4 coins de l'écran. Résolution d'un système linéaire 8 × 8.
+ */
+function perspective(dst: [number, number][]) {
+  const src: [number, number][] = [
+    [0, 0],
+    [SW, 0],
+    [SW, SH],
+    [0, SH],
+  ];
+  const A: number[][] = [];
+  for (let i = 0; i < 4; i++) {
+    const [x, y] = src[i]!;
+    const [u, v] = dst[i]!;
+    A.push([x, y, 1, 0, 0, 0, -x * u, -y * u, u]);
+    A.push([0, 0, 0, x, y, 1, -x * v, -y * v, v]);
+  }
+  for (let c = 0; c < 8; c++) {
+    let piv = c;
+    for (let r = c + 1; r < 8; r++) if (Math.abs(A[r]![c]!) > Math.abs(A[piv]![c]!)) piv = r;
+    [A[c], A[piv]] = [A[piv]!, A[c]!];
+    for (let r = 0; r < 8; r++) {
+      if (r === c) continue;
+      const f = A[r]![c]! / A[c]![c]!;
+      for (let k = c; k < 9; k++) A[r]![k]! -= f * A[c]![k]!;
+    }
+  }
+  const [a, b, c, d, e, f, g, h] = A.map((row, i) => row[8]! / row[i]!) as number[];
+  // x' = (a x + b y + c) / (g x + h y + 1) ; y' = (d x + e y + f) / (g x + h y + 1)
+  return `matrix3d(${a},${d},0,${g},${b},${e},0,${h},0,0,1,0,${c},${f},0,1)`;
+}
 
 function useReducedMotion() {
   return useSyncExternalStore(
@@ -45,6 +88,129 @@ function useReducedMotion() {
   );
 }
 
+/** Interface de live dessinée à plat (SW × SH), puis mise en perspective. */
+function PhoneLive({ active, transform }: { active: number; transform: string }) {
+  return (
+    <div
+      aria-hidden
+      className="absolute top-0 left-0 origin-top-left overflow-hidden rounded-[22px] bg-night-950 blur-[0.6px]"
+      style={{ width: SW, height: SH, transform }}
+    >
+      {PHOTOS.map((src, i) => (
+        <Image
+          key={src}
+          src={src}
+          alt=""
+          fill
+          sizes="220px"
+          className={cn(
+            "object-cover transition-opacity duration-700",
+            i === active ? "opacity-100" : "opacity-0",
+          )}
+        />
+      ))}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60" />
+      <div className="absolute inset-x-3 top-4 flex items-center justify-between">
+        <span className="rounded-md bg-[#fe2c55] px-2 py-0.5 text-[13px] font-extrabold tracking-wide text-white">
+          LIVE
+        </span>
+        <TikTokLogo className="size-9" />
+      </div>
+      <div className="absolute inset-x-3 bottom-4 flex items-center gap-2">
+        <span className="h-9 flex-1 rounded-full bg-white/25" />
+        <span className="flex size-9 items-center justify-center rounded-full bg-[#fe2c55]">
+          <Heart className="size-5 fill-white text-white" />
+        </span>
+      </div>
+      {/* Reflet sur la vitre */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-transparent" />
+    </div>
+  );
+}
+
+/** La scène : carte, présentateur, téléphone en perspective, bulle de parole. */
+function Stage({ active }: { active: number }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => {
+      const r = e!.contentRect;
+      setSize({ w: r.width, h: r.height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const transform = size ? perspective(QUAD.map(([x, y]) => [x * size.w, y * size.h])) : undefined;
+
+  return (
+    <div
+      ref={ref}
+      className="absolute bottom-0 left-[-6%] aspect-[1950/1350] w-[145%] sm:left-0 sm:w-full lg:right-[-4%] lg:left-auto lg:w-[108%]"
+    >
+      <Image
+        src="/hero/live-presentateur.webp"
+        alt="Un entrepreneur montre son téléphone : il est en live sur TikTok avec OCD Live"
+        fill
+        sizes="(min-width: 1024px) 60vw, 145vw"
+        preload
+        className="object-contain object-bottom"
+      />
+      {transform && <PhoneLive active={active} transform={transform} />}
+
+      {/* Bulle de parole, reliée à la bouche */}
+      <div className="absolute top-[-6%] left-[28%] w-[38%] max-w-[17rem] sm:top-[18%] sm:left-[67%] sm:w-[26%]">
+        <div className="relative rounded-3xl bg-white px-4 py-3 shadow-[0_18px_40px_-18px_rgba(35,35,38,0.5)] sm:px-5 sm:py-4">
+          <p className="font-display text-[clamp(0.85rem,1.5vw,1.3rem)] leading-tight font-extrabold text-night-950">
+            L&apos;Afrique entière te regarde{" "}
+            <span className="text-live-600">en live sur TikTok&nbsp;!</span>
+          </p>
+          <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-muted">
+            <span className="flex size-5 items-center justify-center rounded-full bg-night-950">
+              <TikTokLogo className="size-3" />
+            </span>
+            House of Challenge
+          </span>
+          {/* Queue de la bulle, tournée vers la bouche (à droite sur mobile, à gauche ensuite) */}
+          <svg
+            aria-hidden
+            viewBox="0 0 28 20"
+            className="absolute right-6 -bottom-[18px] h-5 w-7 fill-white sm:hidden"
+          >
+            <path d="M0 0 H28 L24 20 Z" />
+          </svg>
+          <svg
+            aria-hidden
+            viewBox="0 0 28 20"
+            className="absolute -bottom-[18px] left-3 hidden h-5 w-7 fill-white sm:block"
+          >
+            <path d="M0 0 H28 L2 20 Z" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Réactions qui sortent du téléphone */}
+      <ul
+        aria-hidden
+        className="absolute top-[12%] left-[26%] hidden flex-col items-start gap-2 sm:flex"
+      >
+        {REACTIONS.map((r, i) => (
+          <li
+            key={r}
+            className="reaction rounded-full bg-white px-3 py-1.5 text-[clamp(0.65rem,1vw,0.85rem)] font-semibold whitespace-nowrap text-night-950 shadow-lg"
+            style={{ animationDelay: `${i * 1.3}s` }}
+          >
+            {r}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function Hero() {
   const reduced = useReducedMotion();
   const [active, setActive] = useState(0);
@@ -52,19 +218,13 @@ export function Hero() {
 
   useEffect(() => {
     if (reduced) return;
-    const id = setInterval(() => setActive((a) => (a + 1) % PHOTOS.length), SWITCH_MS);
+    const id = setInterval(() => setActive((a) => (a + 1) % PHOTOS.length), 4500);
     return () => clearInterval(id);
-  }, [reduced, active]);
+  }, [reduced]);
 
   return (
-    <section className="relative isolate overflow-hidden bg-[#fff7ee] text-night-950">
-      {/* Soleil orange, très doux */}
-      <div
-        aria-hidden
-        className="absolute -top-48 -left-48 -z-10 size-[40rem] rounded-full bg-live/12 blur-3xl"
-      />
-
-      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
+    <section className="relative isolate flex flex-col overflow-hidden bg-[#fff7ee] text-night-950 lg:min-h-svh">
+      <header className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
         <Link href="/" aria-label="OCD Live, accueil">
           <OcdLiveLogo tone="dark" className="text-xl sm:text-2xl" />
         </Link>
@@ -87,15 +247,15 @@ export function Hero() {
         </Link>
       </header>
 
-      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-5 pt-8 pb-16 sm:px-8 lg:min-h-[calc(100svh-5rem)] lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:pt-4 lg:pb-12">
+      <div className="mx-auto grid w-full max-w-7xl flex-1 px-5 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-6">
         {/* Texte */}
-        <div>
+        <div className="relative z-10 pt-6 pb-4 lg:self-center lg:pt-0 lg:pb-20">
           <p className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold tracking-wide text-night-800 shadow-sm">
             <span className="size-2 animate-live-pulse rounded-full bg-live" />
             Live TikTok · House of Challenge
           </p>
 
-          <h1 className="mt-6 font-display text-[2.8rem] leading-[1] font-extrabold tracking-[-0.035em] sm:text-6xl xl:text-[4.6rem]">
+          <h1 className="mt-6 font-display text-[2.8rem] leading-[1] font-extrabold tracking-[-0.035em] sm:text-6xl xl:text-[3.9rem]">
             Ton business{" "}
             <span className="relative inline-block whitespace-nowrap text-live">
               en live
@@ -133,7 +293,7 @@ export function Hero() {
             Group te confirme tout sur WhatsApp.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
             <Link
               href="/reserver?mode=presentiel"
               className="group flex min-h-14 items-center justify-between gap-4 rounded-full bg-live py-2 pr-2 pl-6 font-bold whitespace-nowrap text-night-950 shadow-[0_12px_30px_-12px] shadow-live transition hover:-translate-y-0.5"
@@ -166,88 +326,20 @@ export function Hero() {
           </button>
         </div>
 
-        {/* Grande photo */}
-        <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-          <div className="relative">
-            {/* Bloc orange décalé derrière la photo */}
-            <div
-              aria-hidden
-              className="absolute inset-0 translate-x-4 translate-y-4 rounded-[2.5rem] bg-live sm:translate-x-6 sm:translate-y-6"
-            />
-            <div className="relative aspect-[5/6] overflow-hidden rounded-[2.5rem] bg-night-900 lg:aspect-auto lg:h-[min(70svh,40rem)]">
-              {PHOTOS.map((p, i) => (
-                <Image
-                  key={p.src}
-                  src={p.src}
-                  alt={i === active ? `Entrepreneur en live · ${p.label}` : ""}
-                  fill
-                  sizes="(min-width: 1024px) 45vw, 90vw"
-                  preload={i === 0}
-                  className={cn(
-                    "object-cover transition-opacity duration-1000",
-                    i === active ? "opacity-100" : "opacity-0",
-                  )}
-                />
-              ))}
-              <div
-                aria-hidden
-                className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10"
-              />
-
-              {/* Badge EN DIRECT */}
-              <span className="absolute top-5 left-5 inline-flex items-center gap-2 rounded-full bg-live-600 px-3 py-1.5 text-xs font-bold tracking-wider text-white shadow-lg">
-                <span className="size-2 animate-pulse rounded-full bg-white" />
-                EN DIRECT
+        {/* Scène */}
+        <div className="relative -mx-5 mt-14 h-[24rem] sm:mx-0 sm:mt-0 sm:h-[34rem] lg:h-auto lg:min-h-[40rem]">
+          {/* Carte de l'Afrique, derrière */}
+          <div className="absolute top-0 left-1/2 aspect-[600/640] w-[90%] max-w-[40rem] -translate-x-1/2 opacity-90 lg:top-[-4%] lg:left-[55%] lg:w-[85%]">
+            <Image src="/hero/afrique.svg" alt="" fill unoptimized className="object-contain" />
+            <span className="absolute top-[41.4%] left-[29%] -translate-x-1/2 -translate-y-1/2">
+              <span className="absolute inset-0 m-auto size-3 animate-ping rounded-full bg-night-950/40" />
+              <span className="relative block size-3 rounded-full bg-night-950 ring-4 ring-[#fff7ee]" />
+              <span className="absolute top-1/2 right-5 hidden -translate-y-1/2 rounded-full bg-night-950 px-2.5 py-1 text-[11px] font-bold whitespace-nowrap text-white sm:block">
+                Studio · Lomé
               </span>
-
-              {/* Secteur de la photo en cours */}
-              <span
-                key={active}
-                className="absolute top-5 right-5 animate-rise rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-night-900"
-              >
-                {PHOTOS[active]!.label}
-              </span>
-
-              {/* Réactions qui montent */}
-              <ul aria-hidden className="absolute bottom-5 left-5 flex flex-col items-start gap-2">
-                {REACTIONS.map((r, i) => (
-                  <li
-                    key={r}
-                    className="reaction rounded-full bg-white px-3.5 py-2 text-sm font-semibold text-night-950 shadow-lg"
-                    style={{ animationDelay: `${i * 1.1}s` }}
-                  >
-                    {r}
-                  </li>
-                ))}
-              </ul>
-            </div>
+            </span>
           </div>
-
-          {/* Points de la galerie */}
-          <div
-            className="mt-8 flex justify-center gap-2 sm:mt-10"
-            role="tablist"
-            aria-label="Photos"
-          >
-            {PHOTOS.map((p, i) => (
-              <button
-                key={p.src}
-                type="button"
-                role="tab"
-                aria-selected={i === active}
-                aria-label={`Photo ${i + 1} : ${p.label}`}
-                onClick={() => setActive(i)}
-                className="flex h-8 items-center"
-              >
-                <span
-                  className={cn(
-                    "block h-2 rounded-full transition-all duration-500",
-                    i === active ? "w-8 bg-night-950" : "w-2 bg-night-950/25",
-                  )}
-                />
-              </button>
-            ))}
-          </div>
+          <Stage active={active} />
         </div>
       </div>
 
