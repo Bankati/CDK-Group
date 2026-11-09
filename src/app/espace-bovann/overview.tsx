@@ -234,9 +234,9 @@ function FlowChart({ rows, now, initial }: { rows: AdminBooking[]; now: number; 
           </p>
         </div>
         <p className="text-xs text-muted">
-          <strong className="text-night-900">{totals.count}</strong> live{totals.count > 1 ? "s" : ""} programmé
-          {totals.count > 1 ? "s" : ""} · semaine du{" "}
-          {weekLabel(monday)}
+          <strong className="text-night-900">{totals.count}</strong> live
+          {totals.count > 1 ? "s" : ""} programmé
+          {totals.count > 1 ? "s" : ""} · semaine du {weekLabel(monday)}
         </p>
       </div>
 

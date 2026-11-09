@@ -1,21 +1,19 @@
 "use client";
 
 import { ArrowRight, Camera } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { OcdLiveLogo } from "@/components/brand";
-import { site } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { LiveModal } from "./live-modal";
 
 /**
- * Hero « 8 000 000 » : un seul nombre.
- * Les chiffres tournent comme un compteur jusqu'au nombre d'abonnés, puis
- * l'intérieur des chiffres se remplit d'une photo de live qui bouge lentement.
- * Photo : une foule (Unsplash, licence libre, photo NRv8BsouFBQ).
+ * Hero « grande photo + titre », joyeux.
+ * À gauche : le titre et les deux choix. À droite : une grande photo d'entrepreneur
+ * (elle change doucement), un badge EN DIRECT et des réactions qui montent comme
+ * dans un live TikTok. Photos : Unsplash (licence libre).
  */
-const PHOTO = "/hero/foule.jpg";
-
 const NAV = [
   { href: "#comment-ca-marche", label: "Comment ça marche" },
   { href: "#packages", label: "Packages" },
@@ -23,17 +21,17 @@ const NAV = [
   { href: "#contact", label: "Contact" },
 ];
 
-const CHOICES = [
-  { href: "/reserver?mode=presentiel", kicker: "En présentiel", label: "Au studio, à Lomé" },
-  { href: "/reserver?mode=distance", kicker: "À distance", label: "Depuis chez toi" },
+const PHOTOS = [
+  { src: "/hero/live/commercante.jpg", label: "Commerce" },
+  { src: "/hero/live/vendeur.jpg", label: "Fruits & légumes" },
+  { src: "/hero/live/couturiere.jpg", label: "Mode & pagne" },
+  { src: "/hero/live/marche.jpg", label: "Marché" },
 ];
 
-/** 8000000 → "8 000 000" (espaces simples : même largeur dans les deux calques). */
-const NUMBER = site.liveAccount.followersCount
-  .toString()
-  .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+/** Réactions qui montent sur la photo, l'une après l'autre. */
+const REACTIONS = ["😍 Trop beau !", "🛒 Je commande", "🔥 Ça c'est du live", "❤️ ❤️ ❤️"];
 
-const ROLL_MS = 1700;
+const SWITCH_MS = 5000;
 
 function useReducedMotion() {
   return useSyncExternalStore(
@@ -47,49 +45,25 @@ function useReducedMotion() {
   );
 }
 
-/** Une colonne du compteur : 0→9 deux fois, puis le chiffre final. */
-function Reel({ digit, rolling, delay }: { digit: number; rolling: boolean; delay: number }) {
-  const stack = [...Array(20).keys()].map((n) => n % 10).concat(digit);
-  return (
-    <span className="inline-block h-[1em] overflow-hidden align-top">
-      <span
-        className="flex flex-col"
-        style={{
-          transform: `translateY(${rolling ? -(stack.length - 1) : 0}em)`,
-          transition: `transform ${ROLL_MS}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
-        }}
-      >
-        {stack.map((n, i) => (
-          <span key={i} className="block h-[1em]">
-            {n}
-          </span>
-        ))}
-      </span>
-    </span>
-  );
-}
-
 export function Hero() {
   const reduced = useReducedMotion();
-  const [rolling, setRolling] = useState(false);
-  const [filled, setFilled] = useState(false);
+  const [active, setActive] = useState(0);
   const [liveOpen, setLiveOpen] = useState(false);
 
-  // Le compteur démarre juste après l'affichage, la photo arrive quand il s'arrête.
   useEffect(() => {
-    const start = requestAnimationFrame(() => setRolling(true));
-    const done = setTimeout(() => setFilled(true), ROLL_MS + 650);
-    return () => {
-      cancelAnimationFrame(start);
-      clearTimeout(done);
-    };
-  }, []);
-
-  const showPhoto = filled || reduced;
+    if (reduced) return;
+    const id = setInterval(() => setActive((a) => (a + 1) % PHOTOS.length), SWITCH_MS);
+    return () => clearInterval(id);
+  }, [reduced, active]);
 
   return (
-    <section className="relative flex min-h-svh flex-col bg-white text-night-950">
-      {/* En-tête blanc, fin */}
+    <section className="relative isolate overflow-hidden bg-[#fff7ee] text-night-950">
+      {/* Soleil orange, très doux */}
+      <div
+        aria-hidden
+        className="absolute -top-48 -left-48 -z-10 size-[40rem] rounded-full bg-live/12 blur-3xl"
+      />
+
       <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
         <Link href="/" aria-label="OCD Live, accueil">
           <OcdLiveLogo tone="dark" className="text-xl sm:text-2xl" />
@@ -99,7 +73,7 @@ export function Hero() {
             <a
               key={n.href}
               href={n.href}
-              className="text-sm font-medium text-night-800 transition hover:text-live"
+              className="text-sm font-medium text-night-800 transition hover:text-live-600"
             >
               {n.label}
             </a>
@@ -107,115 +81,171 @@ export function Hero() {
         </nav>
         <Link
           href="/reserver"
-          className="rounded-full bg-live px-5 py-2.5 text-sm font-bold text-night-950 transition hover:bg-night-950 hover:text-white"
+          className="rounded-full bg-night-950 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-live hover:text-night-950"
         >
           Réserver
         </Link>
       </header>
 
-      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-5 pt-6 pb-10 sm:px-8 lg:pb-14">
-        <h1>
-          <span className="sr-only">
-            Demain, ta boutique devant {NUMBER} personnes, en live sur TikTok.
-          </span>
+      <div className="mx-auto grid w-full max-w-7xl items-center gap-12 px-5 pt-8 pb-16 sm:px-8 lg:min-h-[calc(100svh-5rem)] lg:grid-cols-[1.05fr_1fr] lg:gap-16 lg:pt-4 lg:pb-12">
+        {/* Texte */}
+        <div>
+          <p className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-xs font-bold tracking-wide text-night-800 shadow-sm">
+            <span className="size-2 animate-live-pulse rounded-full bg-live" />
+            Live TikTok · House of Challenge
+          </p>
 
-          <span
-            aria-hidden
-            className="block font-display text-2xl font-semibold tracking-tight text-night-800 sm:text-4xl"
-          >
-            Demain, ta boutique devant
-          </span>
-
-          {/* Le nombre : calque compteur + calque photo, exactement superposés */}
-          <span
-            aria-hidden
-            className="relative -ml-[0.04em] block font-display text-[19.5vw] leading-none font-extrabold tracking-[-0.045em] tabular-nums sm:text-[17vw] xl:text-[15.5rem]"
-          >
-            <span
-              className={cn(
-                "block text-night-950 transition-opacity duration-700",
-                showPhoto && "opacity-0",
-              )}
-            >
-              {NUMBER.split("").map((ch, i) =>
-                ch === " " ? (
-                  <span key={i}> </span>
-                ) : (
-                  <Reel
-                    key={i}
-                    digit={Number(ch)}
-                    rolling={rolling || reduced}
-                    delay={i * 60}
-                  />
-                ),
-              )}
+          <h1 className="mt-6 font-display text-[2.8rem] leading-[1] font-extrabold tracking-[-0.035em] sm:text-6xl xl:text-[4.6rem]">
+            Ton business{" "}
+            <span className="relative inline-block whitespace-nowrap text-live">
+              en live
+              <svg
+                aria-hidden
+                viewBox="0 0 300 24"
+                preserveAspectRatio="none"
+                className="squiggle absolute -bottom-2 left-0 h-[0.22em] w-full"
+              >
+                <path
+                  d="M4 16 C 60 4, 110 22, 160 12 S 250 6, 296 14"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  pathLength={1}
+                />
+              </svg>
             </span>
-            <span
-              className={cn(
-                "number-photo absolute inset-0 block bg-clip-text text-transparent transition-opacity duration-1000",
-                showPhoto ? "opacity-100" : "opacity-0",
-              )}
-              style={{ backgroundImage: `url(${PHOTO})` }}
-            >
-              {NUMBER}
-            </span>
-          </span>
-
-          <span
-            aria-hidden
-            className="mt-2 block font-display text-2xl font-semibold tracking-tight sm:text-4xl"
-          >
-            de personnes. <span className="text-live">En live sur TikTok.</span>
-          </span>
-        </h1>
-
-        <div className="mt-10 grid gap-8 border-t border-line pt-8 lg:grid-cols-[1fr_auto] lg:items-end">
-          <div className="max-w-xl">
-            <p className="text-base leading-relaxed text-muted sm:text-lg">
-              Réserve ton passage sur le TikTok de{" "}
-              <strong className="font-semibold text-night-950">House of Challenge</strong> et
-              présente tes produits à la communauté de Bovann. Rien à payer en ligne :
-              l&apos;équipe Bovann Group te confirme tout sur WhatsApp.
-            </p>
-            <button
-              type="button"
-              onClick={() => setLiveOpen(true)}
-              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-night-800 transition hover:text-live"
-            >
-              <Camera className="size-4 text-live" aria-hidden />
-              <span className="underline decoration-line underline-offset-4">
-                Essaie : passe en live avec ta caméra
+            , devant toute{" "}
+            <span className="whitespace-nowrap">
+              l&apos;Afrique
+              <span
+                className="ml-[0.12em] inline-block origin-bottom animate-wiggle text-[0.8em]"
+                aria-hidden
+              >
+                🌍
               </span>
-            </button>
+            </span>
+          </h1>
+
+          <p className="mt-6 max-w-lg text-base leading-relaxed text-night-800 sm:text-lg">
+            Réserve ton passage sur le TikTok de <strong>House of Challenge</strong> et montre tes
+            produits à des milliers d&apos;acheteurs. Rien à payer en ligne : l&apos;équipe Bovann
+            Group te confirme tout sur WhatsApp.
+          </p>
+
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Link
+              href="/reserver?mode=presentiel"
+              className="group flex min-h-14 items-center justify-between gap-4 rounded-full bg-live py-2 pr-2 pl-6 font-bold whitespace-nowrap text-night-950 shadow-[0_12px_30px_-12px] shadow-live transition hover:-translate-y-0.5"
+            >
+              🎥 Au studio, à Lomé
+              <span className="flex size-10 items-center justify-center rounded-full bg-night-950 text-white transition group-hover:translate-x-0.5">
+                <ArrowRight className="size-4" aria-hidden />
+              </span>
+            </Link>
+            <Link
+              href="/reserver?mode=distance"
+              className="group flex min-h-14 items-center justify-between gap-4 rounded-full bg-night-950 py-2 pr-2 pl-6 font-bold whitespace-nowrap text-white transition hover:-translate-y-0.5"
+            >
+              🌍 Depuis chez toi
+              <span className="flex size-10 items-center justify-center rounded-full bg-live text-night-950 transition group-hover:translate-x-0.5">
+                <ArrowRight className="size-4" aria-hidden />
+              </span>
+            </Link>
           </div>
 
-          <div className="flex flex-col gap-1 lg:min-w-[26rem]">
-            {CHOICES.map((c, i) => (
-              <Link
-                key={c.href}
-                href={c.href}
-                className={cn(
-                  "group flex items-center justify-between gap-6 border-b-2 py-3 transition",
-                  i === 0 ? "border-live" : "border-night-950",
-                )}
+          <button
+            type="button"
+            onClick={() => setLiveOpen(true)}
+            className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-night-800 transition hover:text-live-600"
+          >
+            <Camera className="size-4 text-live-600" aria-hidden />
+            <span className="underline decoration-live/40 underline-offset-4">
+              Essaie : passe en live avec ta caméra
+            </span>
+          </button>
+        </div>
+
+        {/* Grande photo */}
+        <div className="relative mx-auto w-full max-w-md lg:max-w-none">
+          <div className="relative">
+            {/* Bloc orange décalé derrière la photo */}
+            <div
+              aria-hidden
+              className="absolute inset-0 translate-x-4 translate-y-4 rounded-[2.5rem] bg-live sm:translate-x-6 sm:translate-y-6"
+            />
+            <div className="relative aspect-[5/6] overflow-hidden rounded-[2.5rem] bg-night-900 lg:aspect-auto lg:h-[min(70svh,40rem)]">
+              {PHOTOS.map((p, i) => (
+                <Image
+                  key={p.src}
+                  src={p.src}
+                  alt={i === active ? `Entrepreneur en live · ${p.label}` : ""}
+                  fill
+                  sizes="(min-width: 1024px) 45vw, 90vw"
+                  preload={i === 0}
+                  className={cn(
+                    "object-cover transition-opacity duration-1000",
+                    i === active ? "opacity-100" : "opacity-0",
+                  )}
+                />
+              ))}
+              <div
+                aria-hidden
+                className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-black/10"
+              />
+
+              {/* Badge EN DIRECT */}
+              <span className="absolute top-5 left-5 inline-flex items-center gap-2 rounded-full bg-live-600 px-3 py-1.5 text-xs font-bold tracking-wider text-white shadow-lg">
+                <span className="size-2 animate-pulse rounded-full bg-white" />
+                EN DIRECT
+              </span>
+
+              {/* Secteur de la photo en cours */}
+              <span
+                key={active}
+                className="absolute top-5 right-5 animate-rise rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-night-900"
               >
-                <span>
-                  <span className="block text-xs font-semibold tracking-[0.18em] text-muted uppercase">
-                    {c.kicker}
-                  </span>
-                  <span className="block font-display text-2xl font-bold tracking-tight sm:text-3xl">
-                    {c.label}
-                  </span>
-                </span>
+                {PHOTOS[active]!.label}
+              </span>
+
+              {/* Réactions qui montent */}
+              <ul aria-hidden className="absolute bottom-5 left-5 flex flex-col items-start gap-2">
+                {REACTIONS.map((r, i) => (
+                  <li
+                    key={r}
+                    className="reaction rounded-full bg-white px-3.5 py-2 text-sm font-semibold text-night-950 shadow-lg"
+                    style={{ animationDelay: `${i * 1.1}s` }}
+                  >
+                    {r}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Points de la galerie */}
+          <div
+            className="mt-8 flex justify-center gap-2 sm:mt-10"
+            role="tablist"
+            aria-label="Photos"
+          >
+            {PHOTOS.map((p, i) => (
+              <button
+                key={p.src}
+                type="button"
+                role="tab"
+                aria-selected={i === active}
+                aria-label={`Photo ${i + 1} : ${p.label}`}
+                onClick={() => setActive(i)}
+                className="flex h-8 items-center"
+              >
                 <span
                   className={cn(
-                    "flex size-11 shrink-0 items-center justify-center rounded-full text-white transition group-hover:translate-x-1",
-                    i === 0 ? "bg-live" : "bg-night-950",
+                    "block h-2 rounded-full transition-all duration-500",
+                    i === active ? "w-8 bg-night-950" : "w-2 bg-night-950/25",
                   )}
-                >
-                  <ArrowRight className="size-5" aria-hidden />
-                </span>
-              </Link>
+                />
+              </button>
             ))}
           </div>
         </div>

@@ -300,23 +300,44 @@
   transition-property: color, background-color, border-color, box-shadow;
 }
 
-/* Hero « 8 000 000 » : la photo vit à l'intérieur des chiffres et bouge lentement. */
-.number-photo {
-  background-size: 115% auto;
-  background-position: 50% 40%;
-  -webkit-background-clip: text;
-  animation: number-pan 18s ease-in-out infinite alternate;
+/* Hero : les réactions montent l'une après l'autre, comme les commentaires d'un live. */
+@keyframes reaction {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.9);
+  }
+  8%,
+  62% {
+    opacity: 1;
+    transform: none;
+  }
+  75%,
+  100% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
 }
-@keyframes number-pan {
+.reaction {
+  animation: reaction 5.5s ease-out infinite both;
+}
+
+/* Trait dessiné à la main sous « en live » : il se trace au chargement. */
+@keyframes squiggle-draw {
   from {
-    background-position: 20% 25%;
+    stroke-dashoffset: 1;
   }
   to {
-    background-position: 80% 70%;
+    stroke-dashoffset: 0;
   }
 }
+.squiggle path {
+  stroke-dasharray: 1;
+  animation: squiggle-draw 1.1s 0.4s cubic-bezier(0.6, 0, 0.2, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .number-photo {
+  .reaction,
+  .squiggle path {
     animation: none;
   }
 }

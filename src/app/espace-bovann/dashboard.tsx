@@ -1024,8 +1024,8 @@ function SettingsPanel({ emails, emailsEnabled }: { emails: string[]; emailsEnab
       </form>
       {!emailsEnabled && (
         <p className="mt-4 rounded-2xl bg-amber-100 p-4 text-sm text-amber-950">
-          Mode démo : les emails ne partent pas encore (aucune clé Resend). Une fois
-          Resend branché (étape 2), ils arriveront réellement à ces adresses.
+          Mode démo : les emails ne partent pas encore (aucune clé Resend). Une fois Resend branché
+          (étape 2), ils arriveront réellement à ces adresses.
         </p>
       )}
     </div>
