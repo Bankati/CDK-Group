@@ -805,9 +805,9 @@ function Bars({
                 {it.sub ? ` · ${it.sub}` : ""}
               </span>
             </div>
-            <div className="mt-1.5 h-2 rounded-full bg-[#2a78d6]/12">
+            <div className="mt-1.5 h-2 rounded-full bg-[#EE6B07]/12">
               <div
-                className="h-full rounded-full bg-[#2a78d6] transition-[width] duration-700"
+                className="h-full rounded-full bg-[#EE6B07] transition-[width] duration-700"
                 style={{ width: `${(it.value / max) * 100}%`, minWidth: it.value ? 6 : 0 }}
               />
             </div>
@@ -921,19 +921,19 @@ function Stats({ rows }: { rows: AdminBooking[] }) {
               Présentiel ou à distance
             </h3>
             <div className="mt-5 flex h-3 gap-[2px] overflow-hidden rounded-full" aria-hidden>
-              <span style={{ width: `${pct}%`, background: "#2a78d6" }} />
-              <span className="flex-1" style={{ background: "#eb6834" }} />
+              <span style={{ width: `${pct}%`, background: "#EE6B07" }} />
+              <span className="flex-1" style={{ background: "#1f9e89" }} />
             </div>
             <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
               <p className="flex items-center gap-2">
-                <span className="size-2.5 rounded-full bg-[#2a78d6]" />
+                <span className="size-2.5 rounded-full bg-[#EE6B07]" />
                 <span className="text-night-900">Présentiel</span>
                 <strong className="ml-auto text-night-900 tabular-nums">
                   {presentiel} · {pct} %
                 </strong>
               </p>
               <p className="flex items-center gap-2">
-                <span className="size-2.5 rounded-full bg-[#eb6834]" />
+                <span className="size-2.5 rounded-full bg-[#1f9e89]" />
                 <span className="text-night-900">À distance</span>
                 <strong className="ml-auto text-night-900 tabular-nums">
                   {distance} · {active.length ? 100 - pct : 0} %

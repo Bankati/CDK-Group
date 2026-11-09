@@ -6,7 +6,7 @@ import { OCD_PATH } from "@/components/ocd-symbol-path";
 
 const W = 1080;
 const H = 1920;
-const RED = "#dc0c15";
+const RED = "#EE6B07";
 const FONT = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
 
 function roundRect(

@@ -23,7 +23,8 @@ import { mondayOf, WeekPicker, weekLabel } from "./week-picker";
  * Couleurs des graphiques : palette catégorielle validée (daltonisme, contraste)
  * avec le script du guide dataviz. Ordre fixe, jamais recyclé.
  */
-const SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300"];
+// Palette catégorielle validée (dataviz) : orange du logo en tête, puis teintes bien séparées.
+const SERIES = ["#EE6B07", "#1f9e89", "#b8860b", "#c0397a", "#3d8b2f", "#8a5cc7"];
 const CONFIRMED = SERIES[0]!;
 const PENDING = SERIES[1]!;
 

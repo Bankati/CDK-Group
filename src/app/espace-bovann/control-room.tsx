@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import type { AudienceMap } from "@/server/audience-map";
 import type { AdminBooking } from "./data";
 
-const BLUE = "#2a78d6";
+const ORANGE = "#EE6B07";
 
 /** Horloge partagée : avance toutes les `ms` (départ = l'heure du serveur, sans décalage d'hydratation). */
 function useClock(start: number, ms: number) {
@@ -231,7 +231,7 @@ export function AudienceMapCard({ map, ids }: { map: AudienceMap; ids: Set<strin
       <div className="flex flex-wrap items-start justify-between gap-3 p-5 pb-0">
         <div>
           <h2 className="flex items-center gap-2 font-display text-base font-bold">
-            <Globe2 className="size-4 text-[#7fb2ef]" aria-hidden /> Carte de l&apos;audience
+            <Globe2 className="size-4 text-[#f7a35c]" aria-hidden /> Carte de l&apos;audience
           </h2>
           <p className="mt-0.5 text-xs text-white/60">
             D&apos;où viennent les entrepreneurs qui passent en live
@@ -258,7 +258,7 @@ export function AudienceMapCard({ map, ids }: { map: AudienceMap; ids: Set<strin
               <stop offset="1" stopColor="#ee6b07" stopOpacity="0" />
             </radialGradient>
             <linearGradient id="arc-grad" x1="0" x2="1">
-              <stop offset="0" stopColor="#7fb2ef" stopOpacity="0.15" />
+              <stop offset="0" stopColor="#f7a35c" stopOpacity="0.15" />
               <stop offset="1" stopColor="#ee6b07" stopOpacity="0.9" />
             </linearGradient>
           </defs>
@@ -266,9 +266,9 @@ export function AudienceMapCard({ map, ids }: { map: AudienceMap; ids: Set<strin
             <path
               key={i}
               d={c.d}
-              fill={c.count ? BLUE : "#1b2b37"}
+              fill={c.count ? ORANGE : "#2c2c31"}
               fillOpacity={c.count ? 0.35 + 0.55 * (c.count / max) : 1}
-              stroke="#0a1620"
+              stroke="#161618"
               strokeWidth={0.6}
             />
           ))}
@@ -302,18 +302,18 @@ export function AudienceMapCard({ map, ids }: { map: AudienceMap; ids: Set<strin
                   cx={p.x}
                   cy={p.y}
                   r={r}
-                  fill="#7fb2ef"
+                  fill="#f7a35c"
                   className="map-ping"
                   style={{ animationDelay: `${i * 0.35}s` }}
                 />
-                <circle cx={p.x} cy={p.y} r={r} fill="#7fb2ef" stroke="#0a1620" strokeWidth={2} />
+                <circle cx={p.x} cy={p.y} r={r} fill="#f7a35c" stroke="#161618" strokeWidth={2} />
                 {hover === key && (
                   <g>
                     <rect x={p.x + 10} y={p.y - 26} width={130} height={36} rx={8} fill="#fff" />
-                    <text x={p.x + 20} y={p.y - 11} fontSize={12} fontWeight={700} fill="#15222b">
+                    <text x={p.x + 20} y={p.y - 11} fontSize={12} fontWeight={700} fill="#232326">
                       {p.city}
                     </text>
-                    <text x={p.x + 20} y={p.y + 3} fontSize={11} fill="#5f6b76">
+                    <text x={p.x + 20} y={p.y + 3} fontSize={11} fill="#a19c95">
                       {p.count} réservation{p.count > 1 ? "s" : ""}
                     </text>
                   </g>
@@ -428,7 +428,7 @@ export function ActivityFeed({ rows, now }: { rows: AdminBooking[]; now: number 
               <span
                 className={cn(
                   "absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full ring-2 ring-white",
-                  e.kind === "ok" ? "bg-emerald-600" : "bg-[#2a78d6]",
+                  e.kind === "ok" ? "bg-emerald-600" : "bg-live-600",
                 )}
               >
                 {e.kind === "ok" ? (

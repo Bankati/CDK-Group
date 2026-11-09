@@ -1,25 +1,26 @@
 @import "tailwindcss";
 
 /*
- * Palette OCD Live = palette du site bovanngroup.com (assets/css/main.css)
- * - Rouge d'accent #dc0c15 : boutons, liens, badge EN DIRECT
- * - Fond sombre #000910, en-tête #15222b, titres #273d4e (« night »)
- * - Texte #444444, fond clair #f1f4fa, traits #e5eaee
+ * Palette OCD Live = couleurs du logo OCD Live.
+ * - Orange du symbole #EE6B07 (« live ») : boutons, accents, badge EN DIRECT
+ * - Orange profond #BF5203 (« live-600 ») : petit texte blanc sur orange (contraste 4,7:1)
+ * - Charbon du mot « Live » #232326 (« night ») : titres, fonds sombres
+ * - Blanc cassé chaud #F7F5F2, traits #EBE7E2, texte secondaire #6B665F
  * - Or : réservé au VIP
- * Le logo OCD Live garde toujours ses couleurs officielles (orange #EE6B07).
+ * Le logo Bovann Group, lui, garde ses couleurs.
  */
 @theme {
-  --color-night-950: #000910;
-  --color-night-900: #15222b;
-  --color-night-800: #273d4e;
-  --color-night-700: #34506a;
-  --color-night-600: #4a6a85;
+  --color-night-950: #161618;
+  --color-night-900: #232326;
+  --color-night-800: #38383d;
+  --color-night-700: #52525a;
+  --color-night-600: #706f78;
 
-  --color-live: #dc0c15;
-  --color-live-600: #b80a12;
-  --color-live-700: #9a080f;
-  --color-live-800: #7d060c;
-  --color-live-50: #fdecec;
+  --color-live: #ee6b07;
+  --color-live-600: #bf5203;
+  --color-live-700: #9e4502;
+  --color-live-800: #7a3502;
+  --color-live-50: #fdf1e7;
 
   /* Noir du mot « Live » dans le logo officiel (version sur fond clair) */
   --color-logo-ink: #232326;
@@ -31,10 +32,10 @@
   --color-gold-300: #f0d48c;
   --color-gold-700: #8c6a1f;
 
-  --color-ink: #444444;
-  --color-muted: #5f6b76;
-  --color-line: #e5eaee;
-  --color-paper: #f1f4fa;
+  --color-ink: #3d3a36;
+  --color-muted: #6b665f;
+  --color-line: #ebe7e2;
+  --color-paper: #f7f5f2;
 
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-bricolage), var(--font-geist-sans), ui-sans-serif, sans-serif;
@@ -78,13 +79,13 @@
 
   @keyframes live-pulse {
     0% {
-      box-shadow: 0 0 0 0 rgb(220 12 21 / 0.75);
+      box-shadow: 0 0 0 0 rgb(238 107 7 / 0.75);
     }
     70% {
-      box-shadow: 0 0 0 10px rgb(220 12 21 / 0);
+      box-shadow: 0 0 0 10px rgb(238 107 7 / 0);
     }
     100% {
-      box-shadow: 0 0 0 0 rgb(220 12 21 / 0);
+      box-shadow: 0 0 0 0 rgb(238 107 7 / 0);
     }
   }
   @keyframes kenburns {

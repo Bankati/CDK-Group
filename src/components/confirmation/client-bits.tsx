@@ -14,7 +14,7 @@ export function Confetti({ id }: { id: string }) {
       if (sessionStorage.getItem(key)) return;
       sessionStorage.setItem(key, "1");
     } catch {}
-    const colors = ["#dc0c15", "#ffffff", "#d9ad4f", "#4a6a85"];
+    const colors = ["#EE6B07", "#ffffff", "#d9ad4f", "#232326"];
     const fire = (x: number, angle: number) =>
       confetti({
         particleCount: 70,

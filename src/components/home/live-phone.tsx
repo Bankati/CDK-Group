@@ -32,7 +32,7 @@ export const GUEST_COMMENTS = [
   { name: "Serge", city: "Kinshasa", text: "C'est quand ton vrai live ?" },
 ];
 
-const HEART_COLORS = ["#dc0c15", "#ff4d6d", "#ffffff", "#ff8fa3"];
+const HEART_COLORS = ["#EE6B07", "#ff9a4d", "#ffffff", "#ffc38f"];
 
 /** Le compteur de spectateurs grimpe doucement, et bondit quand le visiteur rejoint le live. */
 function Viewers({ running, boost }: { running: boolean; boost: boolean }) {
@@ -268,7 +268,7 @@ export function LivePhone({
                 <span className="block truncate text-[11px] font-bold">{product.name}</span>
                 <span className="block text-[10px] text-muted">{product.price}</span>
               </span>
-              <span className="rounded-md bg-live px-2 py-1 text-[10px] font-bold text-white">
+              <span className="rounded-md bg-live-600 px-2 py-1 text-[10px] font-bold text-white">
                 Acheter
               </span>
             </div>

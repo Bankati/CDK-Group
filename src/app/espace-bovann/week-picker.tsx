@@ -191,7 +191,7 @@ export function WeekPicker({
                           <span
                             className={cn(
                               "absolute bottom-1 size-1 rounded-full",
-                              selected ? "bg-white" : "bg-[#2a78d6]",
+                              selected ? "bg-white" : "bg-[#EE6B07]",
                             )}
                           />
                         )}
@@ -205,7 +205,7 @@ export function WeekPicker({
 
           <div className="mt-3 flex items-center justify-between border-t border-line pt-3">
             <span className="flex items-center gap-1.5 text-[11px] text-muted">
-              <span className="size-1.5 rounded-full bg-[#2a78d6]" /> jour avec réservations
+              <span className="size-1.5 rounded-full bg-[#EE6B07]" /> jour avec réservations
             </span>
             <button
               type="button"

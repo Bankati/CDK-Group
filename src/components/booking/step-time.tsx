@@ -97,7 +97,7 @@ export function StepTime({
               className={cn(
                 "flex min-h-[4.5rem] flex-col items-center justify-center rounded-2xl border px-2 py-2 transition active:scale-[0.98]",
                 isSel
-                  ? "border-live bg-live text-white shadow-lg"
+                  ? "border-live bg-live text-night-950 shadow-lg"
                   : "border-line bg-white text-night-900 hover:border-night-700",
               )}
             >

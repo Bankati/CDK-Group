@@ -107,7 +107,7 @@ export function Hero() {
         </nav>
         <Link
           href="/reserver"
-          className="rounded-full bg-live px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-live-700"
+          className="rounded-full bg-live px-5 py-2.5 text-sm font-bold text-night-950 transition hover:bg-night-950 hover:text-white"
         >
           Réserver
         </Link>
