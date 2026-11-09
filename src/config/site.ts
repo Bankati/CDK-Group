@@ -19,6 +19,8 @@ export const site = {
   liveAccount: {
     handle: "bovann",
     followers: "8M",
+    /** Nombre exact affiché en grand dans le hero de la page d'accueil — À CONFIRMER */
+    followersCount: 8_000_000,
     avatar: "/brand/bovann-avatar.jpg",
   },
 

@@ -7,7 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 export default function HomePage() {
   return (
     <>
-      <main className="flex-1">
+      <main className="flex-1 overflow-x-clip">
         <Hero />
         <Launch />
         <HowItWorks />

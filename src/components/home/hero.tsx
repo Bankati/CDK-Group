@@ -1,45 +1,20 @@
 "use client";
 
-import { Camera } from "lucide-react";
-import Image from "next/image";
+import { ArrowRight, Camera } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { OcdLiveLogo } from "@/components/brand";
+import { site } from "@/config/site";
 import { cn } from "@/lib/utils";
 import { LiveModal } from "./live-modal";
 
 /**
- * Hero sur le modèle du site bovanngroup.com : photo plein écran assombrie,
- * menu transparent, grand titre centré en majuscules, boutons rouges.
- * Les photos défilent en fond (dossier public/hero) avec leur titre.
- * Photos 2 à 4 : Unsplash (licence libre) — Ahmed Nasiru, Ali Mkumbwa.
+ * Hero « 8 000 000 » : un seul nombre.
+ * Les chiffres tournent comme un compteur jusqu'au nombre d'abonnés, puis
+ * l'intérieur des chiffres se remplit d'une photo de live qui bouge lentement.
+ * Photo : une foule (Unsplash, licence libre, photo NRv8BsouFBQ).
  */
-const slides: { image: string; position: string; kicker: string; title: string }[] = [
-  {
-    image: "/hero/ocd-live-studio.jpg",
-    position: "60% 50%",
-    kicker: "Live TikTok · House of Challenge",
-    title: "Ton business. En live.",
-  },
-  {
-    image: "/hero/live-entrepreneure.jpg",
-    position: "50% 30%",
-    kicker: "Un téléphone, un live",
-    title: "Toute l'Afrique devient ta clientèle.",
-  },
-  {
-    image: "/hero/live-couturier.jpg",
-    position: "50% 40%",
-    kicker: "Artisans & créateurs",
-    title: "De ton atelier à des millions d'écrans.",
-  },
-  {
-    image: "/hero/live-commercante.jpg",
-    position: "50% 35%",
-    kicker: "Commerçants",
-    title: "Du marché d'Adawlato à Paris.",
-  },
-];
+const PHOTO = "/hero/foule.jpg";
 
 const NAV = [
   { href: "#comment-ca-marche", label: "Comment ça marche" },
@@ -48,13 +23,20 @@ const NAV = [
   { href: "#contact", label: "Contact" },
 ];
 
-const INTERVAL = 6500;
+const CHOICES = [
+  { href: "/reserver?mode=presentiel", kicker: "En présentiel", label: "Au studio, à Lomé" },
+  { href: "/reserver?mode=distance", kicker: "À distance", label: "Depuis chez toi" },
+];
 
-/** Les animations ne tournent que si le hero est visible et si l'utilisateur accepte les animations. */
-function useLiveRunning(ref: React.RefObject<HTMLElement | null>) {
-  const [inView, setInView] = useState(true);
-  const [pageVisible, setPageVisible] = useState(true);
-  const reduced = useSyncExternalStore(
+/** 8000000 → "8 000 000" (espaces simples : même largeur dans les deux calques). */
+const NUMBER = site.liveAccount.followersCount
+  .toString()
+  .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
+const ROLL_MS = 1700;
+
+function useReducedMotion() {
+  return useSyncExternalStore(
     (cb) => {
       const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
       mq.addEventListener("change", cb);
@@ -63,94 +45,61 @@ function useLiveRunning(ref: React.RefObject<HTMLElement | null>) {
     () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
     () => false,
   );
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(([e]) => setInView(Boolean(e?.isIntersecting)));
-    io.observe(el);
-    const onVis = () => setPageVisible(document.visibilityState === "visible");
-    document.addEventListener("visibilitychange", onVis);
-    return () => {
-      io.disconnect();
-      document.removeEventListener("visibilitychange", onVis);
-    };
-  }, [ref]);
-  return inView && pageVisible && !reduced;
+}
+
+/** Une colonne du compteur : 0→9 deux fois, puis le chiffre final. */
+function Reel({ digit, rolling, delay }: { digit: number; rolling: boolean; delay: number }) {
+  const stack = [...Array(20).keys()].map((n) => n % 10).concat(digit);
+  return (
+    <span className="inline-block h-[1em] overflow-hidden align-top">
+      <span
+        className="flex flex-col"
+        style={{
+          transform: `translateY(${rolling ? -(stack.length - 1) : 0}em)`,
+          transition: `transform ${ROLL_MS}ms cubic-bezier(0.16, 1, 0.3, 1) ${delay}ms`,
+        }}
+      >
+        {stack.map((n, i) => (
+          <span key={i} className="block h-[1em]">
+            {n}
+          </span>
+        ))}
+      </span>
+    </span>
+  );
 }
 
 export function Hero() {
-  const sectionRef = useRef<HTMLElement>(null);
-  const running = useLiveRunning(sectionRef);
-  const [{ active, prev }, setState] = useState<{ active: number; prev: number | null }>({
-    active: 0,
-    prev: null,
-  });
+  const reduced = useReducedMotion();
+  const [rolling, setRolling] = useState(false);
+  const [filled, setFilled] = useState(false);
   const [liveOpen, setLiveOpen] = useState(false);
 
-  const go = (i: number) => setState((s) => (s.active === i ? s : { active: i, prev: s.active }));
-
-  // Photo suivante toutes les 6,5 s (redémarre après un clic sur un point).
+  // Le compteur démarre juste après l'affichage, la photo arrive quand il s'arrête.
   useEffect(() => {
-    if (!running) return;
-    const id = setInterval(
-      () => setState((s) => ({ active: (s.active + 1) % slides.length, prev: s.active })),
-      INTERVAL,
-    );
-    return () => clearInterval(id);
-  }, [active, running]);
+    const start = requestAnimationFrame(() => setRolling(true));
+    const done = setTimeout(() => setFilled(true), ROLL_MS + 650);
+    return () => {
+      cancelAnimationFrame(start);
+      clearTimeout(done);
+    };
+  }, []);
 
-  const slide = slides[active]!;
+  const showPhoto = filled || reduced;
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative isolate flex h-svh min-h-[600px] flex-col overflow-hidden bg-night-950 text-white"
-    >
-      {/* Photos plein écran : fondu enchaîné + zoom lent */}
-      {slides.map((s, i) => (
-        <div
-          key={s.image}
-          data-gsap="hero-bg"
-          aria-hidden
-          className={cn(
-            "absolute inset-0 -z-20 transition-opacity duration-[1400ms] ease-out",
-            i === active ? "opacity-100" : "opacity-0",
-          )}
-        >
-          <Image
-            src={s.image}
-            alt=""
-            fill
-            sizes="100vw"
-            preload={i === 0}
-            style={{ objectPosition: s.position }}
-            className={cn("object-cover", (i === active || i === prev) && "animate-kenburns")}
-          />
-        </div>
-      ))}
-      {/* Voile sombre du site Bovann Group (#000910) */}
-      <div aria-hidden className="absolute inset-0 -z-10 bg-night-950/65" />
-
-      {/* Menu transparent, comme sur bovanngroup.com */}
-      <header
-        data-gsap="hero-nav"
-        className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 pt-5 sm:px-8 sm:pt-7"
-      >
+    <section className="relative flex min-h-svh flex-col bg-white text-night-950">
+      {/* En-tête blanc, fin */}
+      <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
         <Link href="/" aria-label="OCD Live, accueil">
-          <OcdLiveLogo layout="stacked" className="w-20 sm:w-24" />
+          <OcdLiveLogo tone="dark" className="text-xl sm:text-2xl" />
         </Link>
         <nav aria-label="Menu principal" className="hidden items-center gap-8 lg:flex">
-          <Link
-            href="/"
-            className="border-b-2 border-live pb-1.5 text-sm font-semibold tracking-wide uppercase"
-          >
-            Accueil
-          </Link>
           {NAV.map((n) => (
             <a
               key={n.href}
               href={n.href}
-              className="border-b-2 border-transparent pb-1.5 text-sm font-semibold tracking-wide text-white/85 uppercase transition hover:border-live hover:text-white"
+              className="text-sm font-medium text-night-800 transition hover:text-live"
             >
               {n.label}
             </a>
@@ -158,95 +107,118 @@ export function Hero() {
         </nav>
         <Link
           href="/reserver"
-          className="rounded bg-live px-4 py-2 text-xs font-semibold tracking-wider uppercase transition hover:bg-live-700 lg:hidden"
+          className="rounded-full bg-live px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-live-700"
         >
           Réserver
         </Link>
       </header>
 
-      {/* Contenu centré */}
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-5 text-center sm:px-8">
-        <div key={active} className="flex flex-col items-center">
-          <p className="flex animate-rise items-center gap-2.5 text-xs font-semibold tracking-[0.25em] text-white/80 uppercase sm:text-sm">
-            <span className="relative flex size-2">
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-live opacity-75" />
-              <span className="relative inline-flex size-2 rounded-full bg-live" />
-            </span>
-            {slide.kicker}
-          </p>
-          <h1
-            className="mt-5 animate-rise font-heading text-[2.1rem] leading-[1.1] font-semibold tracking-tight text-balance uppercase sm:text-5xl lg:text-6xl"
-            style={{ animationDelay: "80ms" }}
-          >
-            {slide.title}
-          </h1>
-        </div>
-
-        <p
-          data-gsap="hero-up"
-          className="mt-5 max-w-3xl text-base leading-relaxed text-pretty text-white/85 sm:text-xl"
-        >
-          Réserve ton passage en live sur le TikTok de{" "}
-          <strong className="font-bold text-white">House of Challenge</strong> et présente tes
-          produits à toute l&apos;Afrique. En présentiel à Lomé ou à distance.
-        </p>
-
-        <div
-          data-gsap="hero-up"
-          className="mt-8 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row"
-        >
-          <Link
-            href="/reserver?mode=presentiel"
-            className="flex min-h-12 w-full items-center justify-center rounded bg-live px-7 text-sm font-semibold tracking-wider uppercase shadow-lg shadow-black/20 transition hover:bg-live-700 sm:w-auto"
-          >
-            🎥&nbsp;&nbsp;En présentiel au Togo
-          </Link>
-          <Link
-            href="/reserver?mode=distance"
-            className="flex min-h-12 w-full items-center justify-center rounded border border-white/70 px-7 text-sm font-semibold tracking-wider uppercase transition hover:border-white hover:bg-white hover:text-night-900 sm:w-auto"
-          >
-            🌍&nbsp;&nbsp;À distance
-          </Link>
-        </div>
-
-        <button
-          type="button"
-          data-gsap="hero-up"
-          onClick={() => setLiveOpen(true)}
-          className="mt-6 inline-flex items-center gap-2 text-sm text-white/75 transition hover:text-white"
-        >
-          <Camera className="size-4 text-live" aria-hidden />
-          <span className="underline decoration-white/30 underline-offset-4 hover:decoration-live">
-            Essaie : passe en live avec ta caméra
+      <div className="mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center px-5 pt-6 pb-10 sm:px-8 lg:pb-14">
+        <h1>
+          <span className="sr-only">
+            Demain, ta boutique devant {NUMBER} personnes, en live sur TikTok.
           </span>
-        </button>
-      </div>
 
-      {/* Points du slider */}
-      <div
-        data-gsap="hero-up"
-        className="mx-auto mb-8 flex items-center gap-2"
-        role="tablist"
-        aria-label="Photos"
-      >
-        {slides.map((s, i) => (
-          <button
-            key={s.image}
-            type="button"
-            role="tab"
-            aria-selected={i === active}
-            aria-label={`Photo ${i + 1} : ${s.kicker}`}
-            onClick={() => go(i)}
-            className="group flex h-8 items-center"
+          <span
+            aria-hidden
+            className="block font-display text-2xl font-semibold tracking-tight text-night-800 sm:text-4xl"
+          >
+            Demain, ta boutique devant
+          </span>
+
+          {/* Le nombre : calque compteur + calque photo, exactement superposés */}
+          <span
+            aria-hidden
+            className="relative -ml-[0.04em] block font-display text-[19.5vw] leading-none font-extrabold tracking-[-0.045em] tabular-nums sm:text-[17vw] xl:text-[15.5rem]"
           >
             <span
               className={cn(
-                "block h-1.5 rounded-full transition-all duration-500",
-                i === active ? "w-10 bg-white" : "w-4 bg-white/40 group-hover:bg-white/80",
+                "block text-night-950 transition-opacity duration-700",
+                showPhoto && "opacity-0",
               )}
-            />
-          </button>
-        ))}
+            >
+              {NUMBER.split("").map((ch, i) =>
+                ch === " " ? (
+                  <span key={i}> </span>
+                ) : (
+                  <Reel
+                    key={i}
+                    digit={Number(ch)}
+                    rolling={rolling || reduced}
+                    delay={i * 60}
+                  />
+                ),
+              )}
+            </span>
+            <span
+              className={cn(
+                "number-photo absolute inset-0 block bg-clip-text text-transparent transition-opacity duration-1000",
+                showPhoto ? "opacity-100" : "opacity-0",
+              )}
+              style={{ backgroundImage: `url(${PHOTO})` }}
+            >
+              {NUMBER}
+            </span>
+          </span>
+
+          <span
+            aria-hidden
+            className="mt-2 block font-display text-2xl font-semibold tracking-tight sm:text-4xl"
+          >
+            de personnes. <span className="text-live">En live sur TikTok.</span>
+          </span>
+        </h1>
+
+        <div className="mt-10 grid gap-8 border-t border-line pt-8 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div className="max-w-xl">
+            <p className="text-base leading-relaxed text-muted sm:text-lg">
+              Réserve ton passage sur le TikTok de{" "}
+              <strong className="font-semibold text-night-950">House of Challenge</strong> et
+              présente tes produits à la communauté de Bovann. Rien à payer en ligne :
+              l&apos;équipe Bovann Group te confirme tout sur WhatsApp.
+            </p>
+            <button
+              type="button"
+              onClick={() => setLiveOpen(true)}
+              className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-night-800 transition hover:text-live"
+            >
+              <Camera className="size-4 text-live" aria-hidden />
+              <span className="underline decoration-line underline-offset-4">
+                Essaie : passe en live avec ta caméra
+              </span>
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-1 lg:min-w-[26rem]">
+            {CHOICES.map((c, i) => (
+              <Link
+                key={c.href}
+                href={c.href}
+                className={cn(
+                  "group flex items-center justify-between gap-6 border-b-2 py-3 transition",
+                  i === 0 ? "border-live" : "border-night-950",
+                )}
+              >
+                <span>
+                  <span className="block text-xs font-semibold tracking-[0.18em] text-muted uppercase">
+                    {c.kicker}
+                  </span>
+                  <span className="block font-display text-2xl font-bold tracking-tight sm:text-3xl">
+                    {c.label}
+                  </span>
+                </span>
+                <span
+                  className={cn(
+                    "flex size-11 shrink-0 items-center justify-center rounded-full text-white transition group-hover:translate-x-1",
+                    i === 0 ? "bg-live" : "bg-night-950",
+                  )}
+                >
+                  <ArrowRight className="size-5" aria-hidden />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
 
       {liveOpen && <LiveModal onClose={() => setLiveOpen(false)} />}

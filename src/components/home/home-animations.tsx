@@ -20,33 +20,6 @@ export function HomeAnimations() {
       const q = <T extends Element = HTMLElement>(sel: string) => gsap.utils.toArray<T>(sel);
       const reveal = { toggleActions: "play none none none", start: "top 85%" } as const;
 
-      /* ── Hero : entrée en scène ─────────────────────────────── */
-      const intro = gsap.timeline({ defaults: { ease: "power3.out" } });
-      intro
-        .from("[data-gsap='hero-nav']", {
-          y: -30,
-          opacity: 0,
-          clearProps: "transform,opacity",
-          duration: 0.8,
-        })
-        .from(
-          "[data-gsap='hero-up']",
-          { y: 36, opacity: 0, clearProps: "transform,opacity", duration: 0.9, stagger: 0.12 },
-          "-=0.4",
-        );
-
-      // Profondeur : la photo défile plus lentement que la page.
-      gsap.to("[data-gsap='hero-bg']", {
-        yPercent: 18,
-        ease: "none",
-        scrollTrigger: {
-          trigger: "[data-gsap='hero-bg']",
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-      });
-
       /* ── Titres de section ─────────────────────────────────── */
       q("[data-gsap='title']").forEach((el) => {
         gsap.from(el.children, {

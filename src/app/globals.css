@@ -298,3 +298,24 @@
 .gsap-on [data-gsap="cards"] > * {
   transition-property: color, background-color, border-color, box-shadow;
 }
+
+/* Hero « 8 000 000 » : la photo vit à l'intérieur des chiffres et bouge lentement. */
+.number-photo {
+  background-size: 115% auto;
+  background-position: 50% 40%;
+  -webkit-background-clip: text;
+  animation: number-pan 18s ease-in-out infinite alternate;
+}
+@keyframes number-pan {
+  from {
+    background-position: 20% 25%;
+  }
+  to {
+    background-position: 80% 70%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .number-photo {
+    animation: none;
+  }
+}
