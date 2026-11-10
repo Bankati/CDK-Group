@@ -4,9 +4,11 @@ import { ArrowRight, Camera, Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { CI, CM, NG, SN, TG } from "country-flag-icons/react/3x2";
 import { OcdLiveLogo } from "@/components/brand";
 import { TikTokLogo } from "@/components/icons";
 import { cn } from "@/lib/utils";
+import { AFRICA_VIEWBOX, AUDIENCE, LOME } from "./africa-points";
 import { LiveModal } from "./live-modal";
 
 /**
@@ -15,7 +17,7 @@ import { LiveModal } from "./live-modal";
  * - Personne : photo réelle détourée (Pexels 19518397, licence libre), en buste jusqu'à
  *   l'ourlet du pull (public/hero/presentateur-buste.webp, 1500 × 1731).
  * - Écran : vitre découpée dans la photo ; l'interface de live passe dessous (pur CSS).
- * - Carte : continent en points noirs en toile de fond, Togo en orange (public/hero/afrique.svg).
+ * - Carte : le continent africain en orange (vraies frontières), faisceaux du live depuis Lomé.
  */
 const NAV = [
   { href: "#comment-ca-marche", label: "Comment ça marche" },
@@ -106,22 +108,60 @@ function PhoneLive({ active }: { active: number }) {
   );
 }
 
-/** Cadre de la carte de l'Afrique (partagé par la carte et le repère du Togo). */
-const MAP_BOX =
-  "pointer-events-none absolute top-[26%] left-1/2 aspect-[600/640] w-[140%] -translate-x-1/2 sm:top-[18%] sm:w-[110%] lg:top-[52%] lg:left-[calc(50%+36px)] lg:w-[min(56%,660px)] lg:-translate-y-1/2";
+/** Faisceau courbe de Lomé vers une capitale (bombé vers le haut). */
+function beam(x: number, y: number) {
+  const mx = (LOME.x + x) / 2;
+  const my = (LOME.y + y) / 2 - Math.hypot(x - LOME.x, y - LOME.y) * 0.28;
+  return `M${LOME.x} ${LOME.y} Q${mx} ${my} ${x} ${y}`;
+}
 
-/** Point orange sur le Togo (position dans afrique.svg) : le studio, à Lomé. */
-function TogoPin({ className }: { className?: string }) {
+/**
+ * Le continent africain (vraies frontières, public/hero/afrique-continent.svg) et,
+ * par-dessus, les faisceaux du live qui partent du studio de Lomé vers les capitales.
+ */
+function AfricaArt({ className }: { className?: string }) {
+  const { w, h } = AFRICA_VIEWBOX;
   return (
-    <span
-      className={cn(
-        "absolute top-[41.3%] left-[28.7%] -translate-x-1/2 -translate-y-1/2",
-        className,
-      )}
-    >
-      <span className="absolute inset-0 m-auto size-4 animate-ping rounded-full bg-live/50" />
-      <span className="relative block size-4 rounded-full bg-live ring-4 ring-[#fff7ee]" />
-    </span>
+    <div aria-hidden className={cn("pointer-events-none absolute aspect-[600/640]", className)}>
+      {/* Halo chaud derrière le continent */}
+      <div className="absolute inset-[8%] rounded-full bg-live/25 blur-3xl" />
+      <Image
+        src="/hero/afrique-continent.svg"
+        alt=""
+        fill
+        unoptimized
+        preload
+        className="object-contain drop-shadow-[0_30px_40px_rgba(158,69,2,0.25)]"
+      />
+      <svg viewBox={`0 0 ${w} ${h}`} className="absolute inset-0 size-full overflow-visible">
+        {AUDIENCE.map((c, i) => (
+          <g key={c.code}>
+            <path
+              d={beam(c.x, c.y)}
+              fill="none"
+              stroke="#fff7ee"
+              strokeOpacity={0.85}
+              strokeWidth={1.6}
+              strokeLinecap="round"
+              strokeDasharray="2 6"
+              className="motion-safe:animate-[dash-flow_1.2s_linear_infinite]"
+            />
+            <circle
+              cx={c.x}
+              cy={c.y}
+              r={5}
+              fill="#fff7ee"
+              className="map-ping"
+              style={{ animationDelay: `${(i % 6) * 0.4}s` }}
+            />
+            <circle cx={c.x} cy={c.y} r={3.5} fill="#fff7ee" />
+          </g>
+        ))}
+        {/* Le studio, à Lomé */}
+        <circle cx={LOME.x} cy={LOME.y} r={9} fill="#232326" className="map-ping" />
+        <circle cx={LOME.x} cy={LOME.y} r={7} fill="#232326" stroke="#fff7ee" strokeWidth={3} />
+      </svg>
+    </div>
   );
 }
 
@@ -221,22 +261,11 @@ export function Hero() {
 
   return (
     <section className="relative isolate flex flex-col overflow-hidden bg-[#fff7ee] text-night-950 lg:h-[min(100svh,46rem)] lg:min-h-[38rem]">
-      {/* Toute la toile de fond : la carte de l'Afrique en points noirs */}
-      <div aria-hidden className={cn(MAP_BOX, "-z-10")}>
-        <Image
-          src="/hero/afrique.svg"
-          alt=""
-          fill
-          unoptimized
-          preload
-          className="object-contain opacity-[0.22]"
-        />
-        <TogoPin className="lg:hidden" />
-      </div>
-      {/* Sur grand écran, le point du Togo passe devant la photo pour rester visible */}
-      <div aria-hidden className={cn(MAP_BOX, "z-10 hidden lg:block")}>
-        <TogoPin />
-      </div>
+      {/* Lumière chaude, côté scène */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 right-[-10%] -z-10 size-[46rem] rounded-full bg-[radial-gradient(closest-side,rgba(238,107,7,0.16),transparent)]"
+      />
       <header className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
         <Link href="/" aria-label="OCD Live, accueil">
           <OcdLiveLogo tone="dark" className="text-xl sm:text-2xl" />
@@ -252,12 +281,6 @@ export function Hero() {
             </a>
           ))}
         </nav>
-        <Link
-          href="/reserver"
-          className="rounded-full bg-night-950 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-live hover:text-night-950"
-        >
-          Réserver
-        </Link>
       </header>
 
       <div className="mx-auto grid w-full max-w-7xl flex-1 px-5 sm:px-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-6">
@@ -300,47 +323,56 @@ export function Hero() {
             </span>
           </h1>
 
-          <p className="mt-6 max-w-lg text-base leading-relaxed text-night-800 sm:text-lg">
-            Réserve ton passage sur le TikTok de <strong>House of Challenge</strong> et montre tes
-            produits à des milliers d&apos;acheteurs. Rien à payer en ligne : l&apos;équipe Bovann
-            Group te confirme tout sur WhatsApp.
+          <p className="mt-6 max-w-md text-base leading-relaxed text-night-800 sm:text-lg">
+            Passe sur le TikTok de <strong>House of Challenge</strong> et montre tes produits à des
+            milliers d&apos;acheteurs, au studio à Lomé ou depuis chez toi.
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row lg:flex-col xl:flex-row">
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-4">
             <Link
-              href="/reserver?mode=presentiel"
-              className="group flex min-h-14 items-center justify-between gap-4 rounded-full bg-live py-2 pr-2 pl-6 font-bold whitespace-nowrap text-night-950 shadow-[0_12px_30px_-12px] shadow-live transition hover:-translate-y-0.5"
+              href="/reserver"
+              className="group flex min-h-14 items-center gap-4 rounded-full bg-night-950 py-2 pr-2 pl-7 font-bold whitespace-nowrap text-white shadow-[0_18px_36px_-16px_rgba(35,35,38,0.7)] transition hover:-translate-y-0.5"
             >
-              🎥 Au studio, à Lomé
-              <span className="flex size-10 items-center justify-center rounded-full bg-night-950 text-white transition group-hover:translate-x-0.5">
-                <ArrowRight className="size-4" aria-hidden />
-              </span>
-            </Link>
-            <Link
-              href="/reserver?mode=distance"
-              className="group flex min-h-14 items-center justify-between gap-4 rounded-full bg-night-950 py-2 pr-2 pl-6 font-bold whitespace-nowrap text-white transition hover:-translate-y-0.5"
-            >
-              🌍 Depuis chez toi
+              Réserver mon live
               <span className="flex size-10 items-center justify-center rounded-full bg-live text-night-950 transition group-hover:translate-x-0.5">
                 <ArrowRight className="size-4" aria-hidden />
               </span>
             </Link>
+            <button
+              type="button"
+              onClick={() => setLiveOpen(true)}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-night-800 transition hover:text-live-600"
+            >
+              <Camera className="size-4 text-live-600" aria-hidden />
+              <span className="underline decoration-live/40 underline-offset-4">
+                Essaie avec ta caméra
+              </span>
+            </button>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setLiveOpen(true)}
-            className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-night-800 transition hover:text-live-600"
-          >
-            <Camera className="size-4 text-live-600" aria-hidden />
-            <span className="underline decoration-live/40 underline-offset-4">
-              Essaie : passe en live avec ta caméra
-            </span>
-          </button>
+          {/* Toute l'Afrique : quelques drapeaux, puis les 54 pays */}
+          <div className="mt-9 flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {[TG, CI, SN, CM, NG].map((F, i) => (
+                <span
+                  key={i}
+                  className="flex size-8 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-[#fff7ee]"
+                >
+                  <F aria-hidden className="h-8 w-12 max-w-none shrink-0" />
+                </span>
+              ))}
+            </div>
+            <p className="text-sm leading-tight text-night-800">
+              <strong className="text-night-950">Ouvert aux 54 pays d&apos;Afrique</strong>
+              <br />
+              Rien à payer en ligne : tout se confirme sur WhatsApp.
+            </p>
+          </div>
         </div>
 
         {/* Scène */}
-        <div className="relative -mx-5 mt-14 h-[24rem] sm:mx-0 sm:mt-0 sm:h-[34rem] lg:[container-type:size] lg:h-auto">
+        <div className="[container-type:size] relative -mx-5 mt-10 h-[26rem] sm:mx-0 sm:mt-4 sm:h-[36rem] lg:mt-0 lg:h-auto">
+          <AfricaArt className="top-[2%] left-1/2 h-[96cqh] -translate-x-[46%] lg:-top-[3%] lg:h-[min(104cqh,95cqw)] lg:-translate-x-[40%]" />
           <Stage active={active} />
         </div>
       </div>
