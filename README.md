@@ -65,7 +65,11 @@ Les navigateurs n'autorisent la caméra que sur un site **sécurisé (https)** o
 
 L'adresse qui reçoit les réservations se change dans **Espace Bovann → Réglages** (sans toucher au code).
 
-Les images de l'accueil sont dans `public/hero/` : `ocd-live-studio.jpg`, `live-entrepreneure.jpg`, `live-couturier.jpg`, `live-commercante.jpg` (les 4 photos du hero ; textes et cadrage dans `src/components/home/hero.tsx`, tableau `slides`), `affiche-lancement.jpg` (section « Lancement »).
+Les images de l'accueil sont dans `public/hero/` :
+
+- `afrique-mosaique.svg` : la carte du hero, pays par pays (frontières world-atlas), chaque région remplie d'une photo de commerçant ; les repères (Lomé, capitales) sont dans `src/components/home/africa-points.ts` ;
+- `live/*.jpg` : les lives qui défilent dans le téléphone du hero (tableau `LIVES` de `src/components/home/hero.tsx`) ;
+- `ocd-live-studio.jpg` (fenêtre « Essaie avec ta caméra »), `live-entrepreneure.jpg`, `live-couturier.jpg`, `live-commercante.jpg`, `affiche-lancement.jpg` (section « Lancement »).
 
 **Crédits photos du hero** (licence Unsplash : usage commercial gratuit, sans obligation de crédit) : [Ahmed Nasiru](https://unsplash.com/@ahmed_nasiru) (photo 2), [Ali Mkumbwa](https://unsplash.com/@mkumbwajr) (photos 3 et 4) ; la photo 1 est le visuel officiel OCD Live.
 

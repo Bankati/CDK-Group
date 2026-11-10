@@ -150,6 +150,7 @@ export function LivePhone({
   running,
   stream = null,
   videoRef,
+  sizes = "(min-width: 1024px) 1080px, 750px",
 }: {
   image: string;
   /** Cadrage de la photo dans l'écran vertical du téléphone. */
@@ -161,6 +162,8 @@ export function LivePhone({
   /** Flux de la caméra du visiteur (reste sur l'appareil, rien n'est envoyé). */
   stream?: MediaStream | null;
   videoRef?: React.RefObject<HTMLVideoElement | null>;
+  /** Largeur d'image demandée (le hero, plus petit, en demande moins). */
+  sizes?: string;
 }) {
   const account = site.liveAccount;
   // Le flux est branché sur la vidéo par le composant parent (propriétaire de `videoRef`).
@@ -177,7 +180,7 @@ export function LivePhone({
           alt=""
           fill
           // Photo paysage dans un écran vertical : elle est agrandie ~3,5×, il faut donc une image plus large que le téléphone.
-          sizes="(min-width: 1024px) 1080px, 750px"
+          sizes={sizes}
           preload
           style={{
             objectPosition: position,

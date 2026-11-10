@@ -1,5 +1,5 @@
 /**
- * Repères de la carte du hero (public/hero/afrique-continent.svg, viewBox 600 × 640).
+ * Repères de la carte du hero (public/hero/afrique-mosaique.svg, viewBox 600 × 640).
  * Généré à partir de world-atlas (projection de Mercator) : ne pas modifier à la main.
  */
 export const AFRICA_VIEWBOX = { w: 600, h: 640 } as const;

@@ -1,23 +1,22 @@
 "use client";
 
-import { ArrowRight, Camera, Heart } from "lucide-react";
+import { ArrowRight, Camera } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import { CI, CM, NG, SN, TG } from "country-flag-icons/react/3x2";
 import { OcdLiveLogo } from "@/components/brand";
-import { TikTokLogo } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { AFRICA_VIEWBOX, AUDIENCE, LOME } from "./africa-points";
 import { LiveModal } from "./live-modal";
+import { LivePhone } from "./live-phone";
 
 /**
- * Hero : un présentateur enthousiaste montre son téléphone et nous parle,
- * devant la carte de l'Afrique.
- * - Personne : photo réelle détourée (Pexels 19518397, licence libre), en buste jusqu'à
- *   l'ourlet du pull (public/hero/presentateur-buste.webp, 1500 × 1731).
- * - Écran : vitre découpée dans la photo ; l'interface de live passe dessous (pur CSS).
- * - Carte : le continent africain en orange (vraies frontières), faisceaux du live depuis Lomé.
+ * Hero : la carte de l'Afrique, pays par pays, remplie des visages de commerçants,
+ * et devant elle un téléphone posé qui diffuse un live.
+ * - Carte : public/hero/afrique-mosaique.svg (vraies frontières, 6 régions = 6 photos),
+ *   faisceaux du live depuis le studio de Lomé (africa-points.ts).
+ * - Téléphone : LivePhone (le même que « Essaie avec ta caméra »), les lives défilent.
  */
 const NAV = [
   { href: "#comment-ca-marche", label: "Comment ça marche" },
@@ -26,29 +25,29 @@ const NAV = [
   { href: "#contact", label: "Contact" },
 ];
 
-const PHOTOS = [
-  "/hero/live/commercante.jpg",
-  "/hero/live/vendeur.jpg",
-  "/hero/live/couturiere.jpg",
-  "/hero/live/marche.jpg",
+/** Les lives qui passent dans le téléphone : un commerçant, son produit. */
+const LIVES = [
+  {
+    image: "/hero/live/commercante.jpg",
+    position: "38% 30%",
+    product: { name: "Poteries artisanales", price: "3 500 FCFA" },
+  },
+  {
+    image: "/hero/live/vendeur.jpg",
+    position: "50% 30%",
+    product: { name: "Panier de mangues", price: "2 000 FCFA" },
+  },
+  {
+    image: "/hero/live/couturiere.jpg",
+    position: "50% 35%",
+    product: { name: "Robe en wax sur mesure", price: "15 000 FCFA" },
+  },
+  {
+    image: "/hero/live/marche.jpg",
+    position: "45% 40%",
+    product: { name: "Pastèques du jour", price: "1 500 FCFA" },
+  },
 ];
-
-const REACTIONS = ["😍 Trop beau !", "🛒 Je commande", "🔥 Ça c'est du live"];
-
-/**
- * Écran du téléphone, en pur CSS (aucun JavaScript, donc toujours affiché) :
- * la vitre est découpée dans la photo et l'interface passe dessous. Les coins de la
- * vitre ont été mesurés sur la photo puis ajustés en parallélogramme élargi de 3 %
- * (l'écart, ≤ 7 px source, reste caché sous la coque). Le cadre ayant un ratio fixe
- * (1500 × 1038), position et taille en % et rotation en matrix() suffisent.
- */
-const SCREEN_STYLE = {
-  left: "13.702%",
-  top: "21.613%",
-  width: "12.02%",
-  height: "41.203%",
-  transform: "matrix(0.9606, 0.2781, -0.2785, 0.9604, 0, 0)",
-} as const;
 
 function useReducedMotion() {
   return useSyncExternalStore(
@@ -62,52 +61,6 @@ function useReducedMotion() {
   );
 }
 
-/**
- * Interface de live. Les tailles sont en cqw (largeur de l'écran) : elle garde
- * ses proportions quelle que soit la taille de la photo.
- */
-function PhoneLive({ active }: { active: number }) {
-  return (
-    <div
-      aria-hidden
-      className="[container-type:size] absolute origin-top-left"
-      style={SCREEN_STYLE}
-    >
-      <div className="absolute inset-0 overflow-hidden rounded-[9cqw] bg-night-950">
-        {PHOTOS.map((src, i) => (
-          <Image
-            key={src}
-            src={src}
-            alt=""
-            fill
-            sizes="160px"
-            preload={i === 0}
-            className={cn(
-              "object-cover transition-opacity duration-700",
-              i === active ? "opacity-100" : "opacity-0",
-            )}
-          />
-        ))}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60" />
-        <div className="absolute inset-x-[6cqw] top-[8cqw] flex items-center justify-between">
-          <span className="rounded-[3cqw] bg-[#fe2c55] px-[4cqw] py-[1cqw] text-[6.5cqw] leading-none font-extrabold tracking-wide text-white">
-            LIVE
-          </span>
-          <TikTokLogo className="size-[16cqw]" />
-        </div>
-        <div className="absolute inset-x-[6cqw] bottom-[8cqw] flex items-center gap-[4cqw]">
-          <span className="h-[17cqw] flex-1 rounded-full bg-white/25" />
-          <span className="flex size-[17cqw] items-center justify-center rounded-full bg-[#fe2c55]">
-            <Heart className="size-[9cqw] fill-white text-white" />
-          </span>
-        </div>
-        {/* Reflet sur la vitre */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-transparent" />
-      </div>
-    </div>
-  );
-}
-
 /** Faisceau courbe de Lomé vers une capitale (bombé vers le haut). */
 function beam(x: number, y: number) {
   const mx = (LOME.x + x) / 2;
@@ -116,133 +69,76 @@ function beam(x: number, y: number) {
 }
 
 /**
- * Le continent africain (vraies frontières, public/hero/afrique-continent.svg) et,
- * par-dessus, les faisceaux du live qui partent du studio de Lomé vers les capitales.
+ * La carte de l'Afrique : chaque pays dessiné, chaque région remplie de commerçants,
+ * et les faisceaux du live qui partent du studio de Lomé vers les capitales.
  */
-function AfricaArt({ className }: { className?: string }) {
+function AfricaMap({ className }: { className?: string }) {
   const { w, h } = AFRICA_VIEWBOX;
   return (
     <div aria-hidden className={cn("pointer-events-none absolute aspect-[600/640]", className)}>
-      {/* Halo chaud derrière le continent */}
-      <div className="absolute inset-[8%] rounded-full bg-live/25 blur-3xl" />
+      <div className="absolute inset-[6%] rounded-full bg-live/25 blur-3xl" />
       <Image
-        src="/hero/afrique-continent.svg"
+        src="/hero/afrique-mosaique.svg"
         alt=""
         fill
         unoptimized
         preload
-        className="object-contain drop-shadow-[0_30px_40px_rgba(158,69,2,0.25)]"
+        className="object-contain drop-shadow-[0_30px_40px_rgba(158,69,2,0.3)]"
       />
       <svg viewBox={`0 0 ${w} ${h}`} className="absolute inset-0 size-full overflow-visible">
-        {AUDIENCE.map((c, i) => (
-          <g key={c.code}>
-            <path
-              d={beam(c.x, c.y)}
-              fill="none"
-              stroke="#fff7ee"
-              strokeOpacity={0.85}
-              strokeWidth={1.6}
-              strokeLinecap="round"
-              strokeDasharray="2 6"
-              className="motion-safe:animate-[dash-flow_1.2s_linear_infinite]"
-            />
-            <circle
-              cx={c.x}
-              cy={c.y}
-              r={5}
-              fill="#fff7ee"
-              className="map-ping"
-              style={{ animationDelay: `${(i % 6) * 0.4}s` }}
-            />
-            <circle cx={c.x} cy={c.y} r={3.5} fill="#fff7ee" />
-          </g>
-        ))}
+        <g className="drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]">
+          {AUDIENCE.map((c, i) => (
+            <g key={c.code}>
+              <path
+                d={beam(c.x, c.y)}
+                fill="none"
+                stroke="#fff"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeDasharray="2 6"
+                className="motion-safe:animate-[dash-flow_1.2s_linear_infinite]"
+              />
+              <circle
+                cx={c.x}
+                cy={c.y}
+                r={5}
+                fill="#ee6b07"
+                className="map-ping"
+                style={{ animationDelay: `${(i % 6) * 0.4}s` }}
+              />
+              <circle cx={c.x} cy={c.y} r={4} fill="#ee6b07" stroke="#fff" strokeWidth={1.5} />
+            </g>
+          ))}
+        </g>
         {/* Le studio, à Lomé */}
-        <circle cx={LOME.x} cy={LOME.y} r={9} fill="#232326" className="map-ping" />
-        <circle cx={LOME.x} cy={LOME.y} r={7} fill="#232326" stroke="#fff7ee" strokeWidth={3} />
+        <circle cx={LOME.x} cy={LOME.y} r={9} fill="#ee6b07" className="map-ping" />
+        <circle cx={LOME.x} cy={LOME.y} r={7.5} fill="#232326" stroke="#fff" strokeWidth={3} />
       </svg>
     </div>
   );
 }
 
-/** Haut de la photo d'origine (1500 × 1038) : repère de l'écran, de la bulle, des réactions. */
-const FRAME = "absolute top-0 left-0 aspect-[1500/1038] w-full";
-
-/** La scène : carte, présentateur, téléphone en perspective, bulle de parole. */
-function Stage({ active }: { active: number }) {
+/**
+ * Le téléphone posé, légèrement incliné, avec son ombre au sol : il diffuse un live.
+ * Il est dessiné à sa vraie taille (300 px) puis réduit d'un bloc selon l'écran,
+ * pour que l'interface du live garde ses proportions.
+ */
+function StandingPhone({ active, running }: { active: number; running: boolean }) {
+  const live = LIVES[active]!;
   return (
-    /*
-     * La personne en buste, jusqu'à l'ourlet du pull (photo réelle 1500 × 1731).
-     * Sur grand écran, elle est posée sur le bas du hero et sa taille suit la hauteur
-     * de la scène (88cqh), plafonnée en largeur (108cqw).
-     * Sur mobile et tablette, elle part du haut de la scène et le bas du hero la coupe.
-     */
-    <div className="absolute top-0 left-[-6%] aspect-[1500/1731] w-[145%] sm:top-[8%] sm:left-0 sm:w-full lg:top-auto lg:bottom-0 lg:w-[min(108cqw,88cqh)] lg:-translate-x-[4%]">
-      {/*
-       * Cadre de référence : le haut de la photo (1500 × 1038), où sont mesurés
-       * les coins de l'écran, la bulle et les réactions.
-       */}
-      <div className={FRAME}>
-        {/* L'écran du téléphone, sous la photo : il apparaît par la vitre découpée */}
-        <PhoneLive active={active} />
-      </div>
-
-      <Image
-        src="/hero/presentateur-buste.webp"
-        alt="Un entrepreneur montre son téléphone : il est en live sur TikTok avec OCD Live"
-        fill
-        sizes="(min-width: 1024px) 50vw, 145vw"
-        preload
-        className="object-contain object-top"
-      />
-
-      <div className={FRAME}>
-        {/* Bulle de parole, reliée à la bouche */}
-        <div className="absolute top-[-6%] left-[28%] w-[40%] max-w-[19rem] sm:top-[18%] sm:left-[67%] sm:w-[31%] lg:top-[12%] lg:left-[63%] lg:w-[40%]">
-          <div className="relative rounded-3xl bg-white px-4 py-3 shadow-[0_18px_40px_-18px_rgba(35,35,38,0.5)] sm:px-5 sm:py-4">
-            <p className="font-display text-[clamp(0.85rem,1.25vw,1.1rem)] leading-tight font-extrabold text-night-950">
-              L&apos;Afrique entière te regarde{" "}
-              <span className="text-live-600">en live sur TikTok&nbsp;!</span>
-            </p>
-            <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold whitespace-nowrap text-muted">
-              <span className="flex size-5 items-center justify-center rounded-full bg-night-950">
-                <TikTokLogo className="size-3" />
-              </span>
-              House of Challenge
-            </span>
-            {/* Queue de la bulle, tournée vers la bouche (à droite sur mobile, à gauche ensuite) */}
-            <svg
-              aria-hidden
-              viewBox="0 0 28 20"
-              className="absolute right-6 -bottom-[18px] h-5 w-7 fill-white sm:hidden"
-            >
-              <path d="M0 0 H28 L24 20 Z" />
-            </svg>
-            <svg
-              aria-hidden
-              viewBox="0 0 28 20"
-              className="absolute -bottom-[18px] left-3 hidden h-5 w-7 fill-white sm:block"
-            >
-              <path d="M0 0 H28 L2 20 Z" />
-            </svg>
-          </div>
-        </div>
-
-        {/* Réactions qui sortent du téléphone */}
-        <ul
-          aria-hidden
-          className="absolute top-[12%] left-[26%] hidden flex-col items-start gap-2 sm:flex"
-        >
-          {REACTIONS.map((r, i) => (
-            <li
-              key={r}
-              className="reaction rounded-full bg-white px-3 py-1.5 text-[clamp(0.65rem,1vw,0.85rem)] font-semibold whitespace-nowrap text-night-950 shadow-lg"
-              style={{ animationDelay: `${i * 1.3}s` }}
-            >
-              {r}
-            </li>
-          ))}
-        </ul>
+    <div className="absolute bottom-[3%] left-[5%] w-[300px] origin-bottom-left scale-[0.7] sm:left-[6%] sm:scale-[0.84] lg:bottom-[4%] lg:left-0 lg:scale-[0.88] xl:scale-[0.92]">
+      {/* Ombre portée au sol */}
+      <div className="absolute -bottom-5 left-[6%] h-10 w-[92%] rounded-[50%] bg-night-950/35 blur-lg" />
+      <div className="-rotate-[5deg]">
+        <LivePhone
+          key={live.image}
+          image={live.image}
+          position={live.position}
+          product={live.product}
+          productKey={active}
+          running={running}
+          sizes="640px"
+        />
       </div>
     </div>
   );
@@ -255,7 +151,7 @@ export function Hero() {
 
   useEffect(() => {
     if (reduced) return;
-    const id = setInterval(() => setActive((a) => (a + 1) % PHOTOS.length), 4500);
+    const id = setInterval(() => setActive((a) => (a + 1) % LIVES.length), 6000);
     return () => clearInterval(id);
   }, [reduced]);
 
@@ -370,10 +266,10 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Scène */}
-        <div className="[container-type:size] relative -mx-5 mt-10 h-[26rem] sm:mx-0 sm:mt-4 sm:h-[36rem] lg:mt-0 lg:h-auto">
-          <AfricaArt className="top-[2%] left-1/2 h-[96cqh] -translate-x-[46%] lg:-top-[3%] lg:h-[min(104cqh,95cqw)] lg:-translate-x-[40%]" />
-          <Stage active={active} />
+        {/* Scène : la carte, le téléphone posé devant */}
+        <div className="[container-type:size] relative -mx-5 mt-10 h-[30rem] sm:mx-0 sm:mt-4 sm:h-[36rem] lg:mt-0 lg:h-auto">
+          <AfricaMap className="top-0 right-[-4%] h-[100cqh] max-h-[118cqw] lg:top-[2%] lg:right-[-2%] lg:h-[min(98cqh,108cqw)]" />
+          <StandingPhone active={active} running={!reduced} />
         </div>
       </div>
 
