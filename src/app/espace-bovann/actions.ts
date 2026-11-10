@@ -5,7 +5,6 @@ import { z } from "zod";
 import { appUrl } from "@/server/app-url";
 import { checkPassword, endSession, isAdmin, loginLocked, startSession } from "@/server/auth";
 import { cancelBooking, confirmBooking } from "@/server/bookings";
-import { emailsEnabled } from "@/server/env";
 import { sendEmail } from "@/server/notifications";
 import { testEmail } from "@/server/notifications/templates";
 import { getNotificationEmails, setNotificationEmails } from "@/server/settings";
@@ -72,13 +71,18 @@ export async function saveNotificationEmails(
 export async function sendTestNotification() {
   if (!(await isAdmin())) return { ok: false, message: "Session expirée, reconnecte-toi." };
   const to = await getNotificationEmails();
-  await sendEmail(testEmail(to, await appUrl()));
+  const sent = await sendEmail(testEmail(to, await appUrl()));
   refresh();
+  if (sent.ok) return { ok: true, message: `Email de test envoyé à ${to.join(", ")}.` };
+  if (sent.demo)
+    return {
+      ok: true,
+      message:
+        "Mode démo : l'email de test n'est pas envoyé (aucune clé Resend). Il partira dès que Resend sera configuré.",
+    };
   return {
-    ok: true,
-    message: emailsEnabled
-      ? `Email de test envoyé à ${to.join(", ")}.`
-      : `Mode démo : l'email de test n'est pas envoyé (aucune clé Resend). Il partira dès que Resend sera configuré.`,
+    ok: false,
+    message: `L'email n'est pas parti. Resend répond : ${sent.error ?? "erreur inconnue"}`,
   };
 }
 
