@@ -3,7 +3,7 @@
 import { ArrowRight, Camera, Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { OcdLiveLogo } from "@/components/brand";
 import { TikTokLogo } from "@/components/icons";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,7 @@ import { LiveModal } from "./live-modal";
  * devant la carte de l'Afrique.
  * - Personne : photo réelle détourée (Pexels 19518397, licence libre), en buste jusqu'à
  *   l'ourlet du pull (public/hero/presentateur-buste.webp, 1500 × 1731).
- * - Écran : vitre découpée dans la photo ; l'interface de live passe dessous, en perspective.
+ * - Écran : vitre découpée dans la photo ; l'interface de live passe dessous (pur CSS).
  * - Carte : continent en points noirs en toile de fond, Togo en orange (public/hero/afrique.svg).
  */
 const NAV = [
@@ -34,52 +34,19 @@ const PHOTOS = [
 const REACTIONS = ["😍 Trop beau !", "🛒 Je commande", "🔥 Ça c'est du live"];
 
 /**
- * Coins de l'écran dans la photo (fractions largeur / hauteur), mesurés sur les bords
- * de la vitre puis élargis de 1,5 % : l'écran de la photo est découpé (transparent)
- * et l'interface passe dessous, donc la coque et les doigts la recouvrent naturellement.
+ * Écran du téléphone, en pur CSS (aucun JavaScript, donc toujours affiché) :
+ * la vitre est découpée dans la photo et l'interface passe dessous. Les coins de la
+ * vitre ont été mesurés sur la photo puis ajustés en parallélogramme élargi de 3 %
+ * (l'écart, ≤ 7 px source, reste caché sous la coque). Le cadre ayant un ratio fixe
+ * (1500 × 1038), position et taille en % et rotation en matrix() suffisent.
  */
-const QUAD: [number, number][] = [
-  [0.1394, 0.2226], // haut gauche
-  [0.2478, 0.2695], // haut droite
-  [0.1744, 0.6537], // bas droite
-  [0.0586, 0.6068], // bas gauche
-];
-/** Taille de dessin de l'interface (px), avant mise en perspective. */
-const SW = 200;
-const SH = 430;
-
-/**
- * Matrice de perspective (homographie) qui envoie le rectangle SW × SH
- * sur les 4 coins de l'écran. Résolution d'un système linéaire 8 × 8.
- */
-function perspective(dst: [number, number][]) {
-  const src: [number, number][] = [
-    [0, 0],
-    [SW, 0],
-    [SW, SH],
-    [0, SH],
-  ];
-  const A: number[][] = [];
-  for (let i = 0; i < 4; i++) {
-    const [x, y] = src[i]!;
-    const [u, v] = dst[i]!;
-    A.push([x, y, 1, 0, 0, 0, -x * u, -y * u, u]);
-    A.push([0, 0, 0, x, y, 1, -x * v, -y * v, v]);
-  }
-  for (let c = 0; c < 8; c++) {
-    let piv = c;
-    for (let r = c + 1; r < 8; r++) if (Math.abs(A[r]![c]!) > Math.abs(A[piv]![c]!)) piv = r;
-    [A[c], A[piv]] = [A[piv]!, A[c]!];
-    for (let r = 0; r < 8; r++) {
-      if (r === c) continue;
-      const f = A[r]![c]! / A[c]![c]!;
-      for (let k = c; k < 9; k++) A[r]![k]! -= f * A[c]![k]!;
-    }
-  }
-  const [a, b, c, d, e, f, g, h] = A.map((row, i) => row[8]! / row[i]!) as number[];
-  // x' = (a x + b y + c) / (g x + h y + 1) ; y' = (d x + e y + f) / (g x + h y + 1)
-  return `matrix3d(${a},${d},0,${g},${b},${e},0,${h},0,0,1,0,${c},${f},0,1)`;
-}
+const SCREEN_STYLE = {
+  left: "13.702%",
+  top: "21.613%",
+  width: "12.02%",
+  height: "41.203%",
+  transform: "matrix(0.9606, 0.2781, -0.2785, 0.9604, 0, 0)",
+} as const;
 
 function useReducedMotion() {
   return useSyncExternalStore(
@@ -93,53 +60,58 @@ function useReducedMotion() {
   );
 }
 
-/** Interface de live dessinée à plat (SW × SH), puis mise en perspective. */
-function PhoneLive({ active, ref }: { active: number; ref: React.Ref<HTMLDivElement> }) {
+/**
+ * Interface de live. Les tailles sont en cqw (largeur de l'écran) : elle garde
+ * ses proportions quelle que soit la taille de la photo.
+ */
+function PhoneLive({ active }: { active: number }) {
   return (
     <div
-      ref={ref}
       aria-hidden
-      className="invisible absolute top-0 left-0 origin-top-left overflow-hidden rounded-[20px] bg-night-950 blur-[0.4px]"
-      style={{ width: SW, height: SH }}
+      className="[container-type:size] absolute origin-top-left"
+      style={SCREEN_STYLE}
     >
-      {PHOTOS.map((src, i) => (
-        <Image
-          key={src}
-          src={src}
-          alt=""
-          fill
-          sizes="220px"
-          className={cn(
-            "object-cover transition-opacity duration-700",
-            i === active ? "opacity-100" : "opacity-0",
-          )}
-        />
-      ))}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60" />
-      <div className="absolute inset-x-3 top-4 flex items-center justify-between">
-        <span className="rounded-md bg-[#fe2c55] px-2 py-0.5 text-[13px] font-extrabold tracking-wide text-white">
-          LIVE
-        </span>
-        <TikTokLogo className="size-9" />
+      <div className="absolute inset-0 overflow-hidden rounded-[9cqw] bg-night-950">
+        {PHOTOS.map((src, i) => (
+          <Image
+            key={src}
+            src={src}
+            alt=""
+            fill
+            sizes="160px"
+            preload={i === 0}
+            className={cn(
+              "object-cover transition-opacity duration-700",
+              i === active ? "opacity-100" : "opacity-0",
+            )}
+          />
+        ))}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60" />
+        <div className="absolute inset-x-[6cqw] top-[8cqw] flex items-center justify-between">
+          <span className="rounded-[3cqw] bg-[#fe2c55] px-[4cqw] py-[1cqw] text-[6.5cqw] leading-none font-extrabold tracking-wide text-white">
+            LIVE
+          </span>
+          <TikTokLogo className="size-[16cqw]" />
+        </div>
+        <div className="absolute inset-x-[6cqw] bottom-[8cqw] flex items-center gap-[4cqw]">
+          <span className="h-[17cqw] flex-1 rounded-full bg-white/25" />
+          <span className="flex size-[17cqw] items-center justify-center rounded-full bg-[#fe2c55]">
+            <Heart className="size-[9cqw] fill-white text-white" />
+          </span>
+        </div>
+        {/* Reflet sur la vitre */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-transparent" />
       </div>
-      <div className="absolute inset-x-3 bottom-4 flex items-center gap-2">
-        <span className="h-9 flex-1 rounded-full bg-white/25" />
-        <span className="flex size-9 items-center justify-center rounded-full bg-[#fe2c55]">
-          <Heart className="size-5 fill-white text-white" />
-        </span>
-      </div>
-      {/* Reflet sur la vitre */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/25 via-transparent to-transparent" />
     </div>
   );
 }
 
 /** Cadre de la carte de l'Afrique (partagé par la carte et le repère du Togo). */
 const MAP_BOX =
-  "pointer-events-none absolute top-[26%] left-1/2 aspect-[600/640] w-[140%] -translate-x-1/2 sm:top-[18%] sm:w-[110%] lg:top-[52%] lg:left-[calc(50%+80px)] lg:w-[min(56%,806px)] lg:-translate-y-1/2";
+  "pointer-events-none absolute top-[26%] left-1/2 aspect-[600/640] w-[140%] -translate-x-1/2 sm:top-[18%] sm:w-[110%] lg:top-[52%] lg:left-[calc(50%+36px)] lg:w-[min(56%,660px)] lg:-translate-y-1/2";
 
-/** Point orange sur le Togo (position dans afrique.svg), avec l'étiquette du studio. */
-function TogoPin({ label, className }: { label?: boolean; className?: string }) {
+/** Point orange sur le Togo (position dans afrique.svg) : le studio, à Lomé. */
+function TogoPin({ className }: { className?: string }) {
   return (
     <span
       className={cn(
@@ -149,11 +121,6 @@ function TogoPin({ label, className }: { label?: boolean; className?: string }) 
     >
       <span className="absolute inset-0 m-auto size-4 animate-ping rounded-full bg-live/50" />
       <span className="relative block size-4 rounded-full bg-live ring-4 ring-[#fff7ee]" />
-      {label && (
-        <span className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-night-950 px-2.5 py-1 text-[11px] font-bold whitespace-nowrap text-white shadow-md">
-          Studio · Lomé
-        </span>
-      )}
     </span>
   );
 }
@@ -163,48 +130,21 @@ const FRAME = "absolute top-0 left-0 aspect-[1500/1038] w-full";
 
 /** La scène : carte, présentateur, téléphone en perspective, bulle de parole. */
 function Stage({ active }: { active: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const screenRef = useRef<HTMLDivElement>(null);
-
-  // L'écran suit la taille réelle de la scène, sans attendre un rendu React :
-  // à chaque redimensionnement, après le chargement des polices, au resize de la fenêtre.
-  useLayoutEffect(() => {
-    const el = ref.current;
-    const screen = screenRef.current;
-    if (!el || !screen) return;
-    const place = () => {
-      const w = el.offsetWidth;
-      const h = el.offsetHeight;
-      if (!w || !h) return;
-      screen.style.transform = perspective(QUAD.map(([x, y]) => [x * w, y * h]));
-      screen.style.visibility = "visible";
-    };
-    place();
-    const ro = new ResizeObserver(place);
-    ro.observe(el);
-    window.addEventListener("resize", place);
-    document.fonts?.ready.then(place);
-    return () => {
-      ro.disconnect();
-      window.removeEventListener("resize", place);
-    };
-  }, []);
-
   return (
     /*
      * La personne en buste, jusqu'à l'ourlet du pull (photo réelle 1500 × 1731).
      * Sur grand écran, elle est posée sur le bas du hero et sa taille suit la hauteur
-     * de la scène (82cqh), plafonnée en largeur (108cqw).
+     * de la scène (88cqh), plafonnée en largeur (108cqw).
      * Sur mobile et tablette, elle part du haut de la scène et le bas du hero la coupe.
      */
-    <div className="absolute top-0 left-[-6%] aspect-[1500/1731] w-[145%] sm:top-[8%] sm:left-0 sm:w-full lg:top-auto lg:bottom-0 lg:w-[min(108cqw,82cqh)] lg:-translate-x-[4%]">
+    <div className="absolute top-0 left-[-6%] aspect-[1500/1731] w-[145%] sm:top-[8%] sm:left-0 sm:w-full lg:top-auto lg:bottom-0 lg:w-[min(108cqw,88cqh)] lg:-translate-x-[4%]">
       {/*
        * Cadre de référence : le haut de la photo (1500 × 1038), où sont mesurés
        * les coins de l'écran, la bulle et les réactions.
        */}
-      <div ref={ref} className={FRAME}>
+      <div className={FRAME}>
         {/* L'écran du téléphone, sous la photo : il apparaît par la vitre découpée */}
-        <PhoneLive active={active} ref={screenRef} />
+        <PhoneLive active={active} />
       </div>
 
       <Image
@@ -218,9 +158,9 @@ function Stage({ active }: { active: number }) {
 
       <div className={FRAME}>
         {/* Bulle de parole, reliée à la bouche */}
-        <div className="absolute top-[-6%] left-[28%] w-[40%] max-w-[19rem] sm:top-[18%] sm:left-[67%] sm:w-[31%]">
+        <div className="absolute top-[-6%] left-[28%] w-[40%] max-w-[19rem] sm:top-[18%] sm:left-[67%] sm:w-[31%] lg:top-[12%] lg:left-[63%] lg:w-[40%]">
           <div className="relative rounded-3xl bg-white px-4 py-3 shadow-[0_18px_40px_-18px_rgba(35,35,38,0.5)] sm:px-5 sm:py-4">
-            <p className="font-display text-[clamp(0.85rem,1.4vw,1.25rem)] leading-tight font-extrabold text-night-950">
+            <p className="font-display text-[clamp(0.85rem,1.25vw,1.1rem)] leading-tight font-extrabold text-night-950">
               L&apos;Afrique entière te regarde{" "}
               <span className="text-live-600">en live sur TikTok&nbsp;!</span>
             </p>
@@ -280,7 +220,7 @@ export function Hero() {
   }, [reduced]);
 
   return (
-    <section className="relative isolate flex flex-col overflow-hidden bg-[#fff7ee] text-night-950 lg:min-h-svh">
+    <section className="relative isolate flex flex-col overflow-hidden bg-[#fff7ee] text-night-950 lg:h-[min(100svh,46rem)] lg:min-h-[38rem]">
       {/* Toute la toile de fond : la carte de l'Afrique en points noirs */}
       <div aria-hidden className={cn(MAP_BOX, "-z-10")}>
         <Image
@@ -293,9 +233,9 @@ export function Hero() {
         />
         <TogoPin className="lg:hidden" />
       </div>
-      {/* Sur grand écran, le repère du Togo passe devant la photo pour rester lisible */}
+      {/* Sur grand écran, le point du Togo passe devant la photo pour rester visible */}
       <div aria-hidden className={cn(MAP_BOX, "z-10 hidden lg:block")}>
-        <TogoPin label />
+        <TogoPin />
       </div>
       <header className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
         <Link href="/" aria-label="OCD Live, accueil">
@@ -400,7 +340,7 @@ export function Hero() {
         </div>
 
         {/* Scène */}
-        <div className="relative -mx-5 mt-14 h-[24rem] sm:mx-0 sm:mt-0 sm:h-[34rem] lg:[container-type:size] lg:h-auto lg:min-h-[40rem]">
+        <div className="relative -mx-5 mt-14 h-[24rem] sm:mx-0 sm:mt-0 sm:h-[34rem] lg:[container-type:size] lg:h-auto">
           <Stage active={active} />
         </div>
       </div>
