@@ -13,8 +13,8 @@ import { LiveModal } from "./live-modal";
  * Hero : un présentateur enthousiaste montre son téléphone et nous parle,
  * devant la carte de l'Afrique.
  * - Personne : photo réelle détourée (Pexels 19518397, licence libre), recadrée 1950 × 1350.
- * - Écran : interface de live en code, posée en perspective exacte sur l'écran de la photo.
- * - Carte : continent en points orange, Togo en charbon (public/hero/afrique.svg).
+ * - Écran : vitre découpée dans la photo ; l'interface de live passe dessous, en perspective.
+ * - Carte : continent en points noirs en toile de fond, Togo en orange (public/hero/afrique.svg).
  */
 const NAV = [
   { href: "#comment-ca-marche", label: "Comment ça marche" },
@@ -32,12 +32,16 @@ const PHOTOS = [
 
 const REACTIONS = ["😍 Trop beau !", "🛒 Je commande", "🔥 Ça c'est du live"];
 
-/** Coins de l'écran dans l'image recadrée (fractions largeur / hauteur). */
+/**
+ * Coins de l'écran dans la photo (fractions largeur / hauteur), mesurés sur les bords
+ * de la vitre puis élargis de 1,5 % : l'écran de la photo est découpé (transparent)
+ * et l'interface passe dessous, donc la coque et les doigts la recouvrent naturellement.
+ */
 const QUAD: [number, number][] = [
-  [0.1395, 0.2407], // haut gauche
-  [0.2436, 0.2837], // haut droite
-  [0.1703, 0.6319], // bas droite
-  [0.0667, 0.5911], // bas gauche
+  [0.1394, 0.2226], // haut gauche
+  [0.2478, 0.2695], // haut droite
+  [0.1744, 0.6537], // bas droite
+  [0.0586, 0.6068], // bas gauche
 ];
 /** Taille de dessin de l'interface (px), avant mise en perspective. */
 const SW = 200;
@@ -93,7 +97,7 @@ function PhoneLive({ active, transform }: { active: number; transform: string })
   return (
     <div
       aria-hidden
-      className="absolute top-0 left-0 origin-top-left overflow-hidden rounded-[22px] bg-night-950 blur-[0.6px]"
+      className="absolute top-0 left-0 origin-top-left overflow-hidden rounded-[20px] bg-night-950 blur-[0.4px]"
       style={{ width: SW, height: SH, transform }}
     >
       {PHOTOS.map((src, i) => (
@@ -149,8 +153,11 @@ function Stage({ active }: { active: number }) {
   return (
     <div
       ref={ref}
-      className="absolute bottom-[2%] left-[-6%] aspect-[1950/1350] w-[145%] sm:left-0 sm:w-full lg:right-[-4%] lg:bottom-[9%] lg:left-auto lg:w-[106%]"
+      className="absolute bottom-[2%] left-[-6%] aspect-[1950/1350] w-[145%] sm:left-0 sm:w-full lg:top-[8%] lg:right-[-4%] lg:bottom-auto lg:left-auto lg:w-[106%]"
     >
+      {/* L'écran du téléphone, sous la photo : il apparaît par la vitre découpée */}
+      {transform && <PhoneLive active={active} transform={transform} />}
+
       {/* Les bords bas et droit de la photo d'origine s'effacent en douceur */}
       <div
         className="absolute inset-0"
@@ -164,7 +171,7 @@ function Stage({ active }: { active: number }) {
         }}
       >
         <Image
-          src="/hero/live-presentateur.webp"
+          src="/hero/presentateur-live.webp"
           alt="Un entrepreneur montre son téléphone : il est en live sur TikTok avec OCD Live"
           fill
           sizes="(min-width: 1024px) 60vw, 145vw"
@@ -172,16 +179,15 @@ function Stage({ active }: { active: number }) {
           className="object-contain object-bottom"
         />
       </div>
-      {transform && <PhoneLive active={active} transform={transform} />}
 
       {/* Bulle de parole, reliée à la bouche */}
-      <div className="absolute top-[-6%] left-[28%] w-[38%] max-w-[17rem] sm:top-[18%] sm:left-[67%] sm:w-[26%]">
+      <div className="absolute top-[-6%] left-[28%] w-[40%] max-w-[19rem] sm:top-[18%] sm:left-[67%] sm:w-[31%]">
         <div className="relative rounded-3xl bg-white px-4 py-3 shadow-[0_18px_40px_-18px_rgba(35,35,38,0.5)] sm:px-5 sm:py-4">
-          <p className="font-display text-[clamp(0.85rem,1.5vw,1.3rem)] leading-tight font-extrabold text-night-950">
+          <p className="font-display text-[clamp(0.85rem,1.4vw,1.25rem)] leading-tight font-extrabold text-night-950">
             L&apos;Afrique entière te regarde{" "}
             <span className="text-live-600">en live sur TikTok&nbsp;!</span>
           </p>
-          <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold text-muted">
+          <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold whitespace-nowrap text-muted">
             <span className="flex size-5 items-center justify-center rounded-full bg-night-950">
               <TikTokLogo className="size-3" />
             </span>
@@ -240,7 +246,7 @@ export function Hero() {
       {/* Toute la toile de fond : la carte de l'Afrique en points noirs, Togo en orange */}
       <div
         aria-hidden
-        className="pointer-events-none absolute top-[26%] left-1/2 -z-10 aspect-[600/640] w-[140%] -translate-x-1/2 sm:top-[18%] sm:w-[110%] lg:top-[52%] lg:left-[61%] lg:h-[96%] lg:w-auto lg:-translate-y-1/2"
+        className="pointer-events-none absolute top-[26%] left-1/2 -z-10 aspect-[600/640] w-[140%] -translate-x-1/2 sm:top-[18%] sm:w-[110%] lg:top-[52%] lg:left-[55%] lg:h-[96%] lg:w-auto lg:-translate-y-1/2"
       >
         <Image
           src="/hero/afrique.svg"
@@ -253,7 +259,7 @@ export function Hero() {
         <span className="absolute top-[41.3%] left-[28.7%] -translate-x-1/2 -translate-y-1/2">
           <span className="absolute inset-0 m-auto size-4 animate-ping rounded-full bg-live/50" />
           <span className="relative block size-4 rounded-full bg-live ring-4 ring-[#fff7ee]" />
-          <span className="absolute top-1/2 left-7 hidden -translate-y-1/2 rounded-full bg-night-950 px-2.5 py-1 text-[11px] font-bold whitespace-nowrap text-white lg:block">
+          <span className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 rounded-full bg-night-950 px-2.5 py-1 text-[11px] font-bold whitespace-nowrap text-white lg:block">
             Studio · Lomé
           </span>
         </span>
