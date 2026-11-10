@@ -3,7 +3,7 @@
 import { ArrowRight, Camera, Heart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { OcdLiveLogo } from "@/components/brand";
 import { TikTokLogo } from "@/components/icons";
 import { cn } from "@/lib/utils";
@@ -93,12 +93,13 @@ function useReducedMotion() {
 }
 
 /** Interface de live dessinée à plat (SW × SH), puis mise en perspective. */
-function PhoneLive({ active, transform }: { active: number; transform: string }) {
+function PhoneLive({ active, ref }: { active: number; ref: React.Ref<HTMLDivElement> }) {
   return (
     <div
+      ref={ref}
       aria-hidden
-      className="absolute top-0 left-0 origin-top-left overflow-hidden rounded-[20px] bg-night-950 blur-[0.4px]"
-      style={{ width: SW, height: SH, transform }}
+      className="invisible absolute top-0 left-0 origin-top-left overflow-hidden rounded-[20px] bg-night-950 blur-[0.4px]"
+      style={{ width: SW, height: SH }}
     >
       {PHOTOS.map((src, i) => (
         <Image
@@ -159,37 +160,49 @@ function TogoPin({ label, className }: { label?: boolean; className?: string }) 
 /** La scène : carte, présentateur, téléphone en perspective, bulle de parole. */
 function Stage({ active }: { active: number }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState<{ w: number; h: number } | null>(null);
+  const screenRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  // L'écran suit la taille réelle de la scène, sans attendre un rendu React :
+  // à chaque redimensionnement, après le chargement des polices, au resize de la fenêtre.
+  useLayoutEffect(() => {
     const el = ref.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([e]) => {
-      const r = e!.contentRect;
-      setSize({ w: r.width, h: r.height });
-    });
+    const screen = screenRef.current;
+    if (!el || !screen) return;
+    const place = () => {
+      const w = el.offsetWidth;
+      const h = el.offsetHeight;
+      if (!w || !h) return;
+      screen.style.transform = perspective(QUAD.map(([x, y]) => [x * w, y * h]));
+      screen.style.visibility = "visible";
+    };
+    place();
+    const ro = new ResizeObserver(place);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", place);
+    document.fonts?.ready.then(place);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", place);
+    };
   }, []);
-
-  const transform = size ? perspective(QUAD.map(([x, y]) => [x * size.w, y * size.h])) : undefined;
 
   return (
     <div
       ref={ref}
-      className="absolute top-0 left-[-6%] aspect-[1500/1038] w-[145%] sm:top-[8%] sm:left-0 sm:w-full lg:right-[-4%] lg:left-auto lg:w-[106%]"
+      className="absolute top-0 left-[-6%] aspect-[1500/1038] w-[145%] sm:top-[8%] sm:left-0 sm:w-full lg:w-[min(108cqw,88cqh)] lg:-translate-x-[4%]"
     >
       {/* L'écran du téléphone, sous la photo : il apparaît par la vitre découpée */}
-      {transform && <PhoneLive active={active} transform={transform} />}
+      <PhoneLive active={active} ref={screenRef} />
 
       {/*
        * Photo prolongée vers le bas (1500 × 2138 : le pull continue sous le cadrage
        * d'origine 1500 × 1038). Elle dépasse du cadre et descend jusqu'au bas du hero,
-       * qui la coupe net.
+       * qui la coupe net. Sur grand écran, la taille suit la hauteur du hero
+       * (88cqh) : le bas coupe toujours la personne juste sous la taille.
        */}
       <div className="absolute top-0 left-0 aspect-[1500/2138] w-full">
         <Image
-          src="/hero/presentateur-hero.webp"
+          src="/hero/presentateur.webp"
           alt="Un entrepreneur montre son téléphone : il est en live sur TikTok avec OCD Live"
           fill
           sizes="(min-width: 1024px) 60vw, 145vw"
@@ -380,7 +393,7 @@ export function Hero() {
         </div>
 
         {/* Scène */}
-        <div className="relative -mx-5 mt-14 h-[24rem] sm:mx-0 sm:mt-0 sm:h-[34rem] lg:h-auto lg:min-h-[40rem]">
+        <div className="relative -mx-5 mt-14 h-[24rem] sm:mx-0 sm:mt-0 sm:h-[34rem] lg:[container-type:size] lg:h-auto lg:min-h-[40rem]">
           <Stage active={active} />
         </div>
       </div>
