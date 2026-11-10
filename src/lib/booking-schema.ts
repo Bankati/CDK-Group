@@ -1,7 +1,15 @@
 import { z } from "zod";
 import { packages } from "@/config/site";
+import { countryByName } from "@/lib/countries";
 
 const packageIds = packages.map((p) => p.id) as [string, ...string[]];
+
+/** Pays : uniquement un des 54 pays d'Afrique de la liste. */
+const country = z
+  .string()
+  .trim()
+  .min(2, "Choisis ton pays")
+  .refine((name) => Boolean(countryByName(name)), "Choisis un pays d'Afrique dans la liste");
 
 const phone = z
   .string()
@@ -23,7 +31,7 @@ export const bookingInputSchema = z
     sector: z.string().trim().min(2, "Choisis un secteur").max(60),
     products: z.string().trim().min(3, "Dis-nous ce que tu vas présenter").max(500),
     tiktok: z.string().trim().max(60).optional(),
-    country: z.string().trim().min(2, "Choisis ton pays").max(60),
+    country,
     city: z.string().trim().min(2, "Indique ta ville").max(60),
     photo: z.string().startsWith("data:image/").max(1_400_000, "Photo trop lourde").optional(),
     clientTimezone: z.string().max(60).optional(),
@@ -40,6 +48,6 @@ export const detailsSchema = z.object({
   businessName: z.string().trim().min(2, "Indique le nom de ton business"),
   sector: z.string().trim().min(2, "Choisis un secteur"),
   products: z.string().trim().min(3, "Dis-nous ce que tu vas présenter"),
-  country: z.string().trim().min(2, "Choisis ton pays"),
+  country,
   city: z.string().trim().min(2, "Indique ta ville"),
 });
