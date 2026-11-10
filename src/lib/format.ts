@@ -1,4 +1,9 @@
-const nf = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+const intl = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 });
+/**
+ * Séparateur des milliers : espace insécable classique (U+00A0) au lieu de l'espace
+ * fine (U+202F) d'Intl, trop étroite ou absente dans certaines polices (« 33125 »).
+ */
+const nf = { format: (n: number) => intl.format(n).replace(/\u202f/g, "\u00a0") };
 
 /** 12000 → "12 000 FCFA" */
 export function fcfa(amount: number) {

@@ -7,6 +7,7 @@ import { fcfa, number } from "@/lib/format";
 import { formatDayFr, formatRangeFr } from "@/lib/time";
 import type { DisplayStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { ActionCenter } from "./action-center";
 import type { AudienceMap } from "@/server/audience-map";
 import {
   ActivityFeed,
@@ -656,6 +657,8 @@ export function Overview({
           }
         />
       </div>
+
+      <ActionCenter rows={all} now={now} onSeePending={() => go("liste", "pending")} />
 
       <div className="grid gap-5 xl:grid-cols-[1fr_22rem]">
         <FlowChart key={periodLabel(period)} rows={rows} now={now} initial={initialWeek} />
