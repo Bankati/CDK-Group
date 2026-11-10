@@ -23,6 +23,7 @@ Dès que les clés Supabase sont présentes, le site quitte automatiquement le m
 2. **Important** : tant qu'aucun domaine n'est vérifié, Resend n'envoie qu'à l'adresse du compte Resend.
    Pour envoyer aux clients : **Domains** → **Add domain** → `bovanngroup.com` → ajouter les enregistrements DNS indiqués chez l'hébergeur du domaine.
    Ensuite : `RESEND_FROM=OCD Live <reservations@bovanngroup.com>`.
+   Les réponses des clients arrivent toujours à l'adresse de Bovann Group (`site.company.email`), quel que soit le domaine d'envoi.
 
 ## C. Tester en local avec les vraies clés
 
@@ -30,10 +31,12 @@ Dans le fichier `.env.local` (à la racine du projet), remplis :
 
 ```
 SUPABASE_URL=https://xxxx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=sb_secret_...   # Project Settings > API Keys > clé secrète (ou l'ancienne « service_role » eyJ...)
 RESEND_API_KEY=re_...
+RESEND_FROM=OCD Live <reservations@bovanngroup.com>   # domaine vérifié dans Resend
+NEXT_PUBLIC_APP_URL=https://ton-site.vercel.app      # adresse utilisée dans les liens des emails
 NOTIFICATION_EMAIL=contact@bovanngroup.com   # adresse par défaut ; modifiable ensuite dans Espace Bovann → Réglages
-ADMIN_PASSWORD=un-mot-de-passe-solide
+ADMIN_PASSWORD=un-mot-de-passe-solide     # OBLIGATOIRE avec Supabase : « bovann2026 » est alors refusé
 ADMIN_SECRET=une-longue-phrase-au-hasard-de-32-caracteres-minimum
 ```
 

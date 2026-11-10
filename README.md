@@ -17,12 +17,13 @@ pnpm dev         # lance le site
 
 Ouvre **http://localhost:3000**.
 
-Le site démarre en **mode démo** : 8 réservations fictives sont déjà là (dont le 5 décembre complet), les emails ne partent pas (ils sont seulement notés dans la console du serveur) tant que Resend n'est pas branché.
-Redémarrer le serveur remet les données de départ.
+Sans fichier `.env.local`, le site démarre en **mode démo** : 8 réservations fictives sont déjà là (dont le 5 décembre complet), les emails ne partent pas (ils sont seulement notés dans la console du serveur). Redémarrer le serveur remet les données de départ.
+
+Avec `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` dans `.env.local`, le site utilise la **vraie base** (les réservations sont conservées) ; avec `RESEND_API_KEY` et `RESEND_FROM`, les **emails partent vraiment**. Voir [docs/ETAPE-2.md](docs/ETAPE-2.md).
 
 ### Espace Bovann (tableau de bord)
 
-**http://localhost:3000/espace-bovann** · mot de passe démo : **`bovann2026`**
+**http://localhost:3000/espace-bovann** · mot de passe : celui de `ADMIN_PASSWORD` (en mode démo seulement : **`bovann2026`** ; avec la vraie base, ce mot de passe par défaut est refusé)
 (lien discret aussi en bas de chaque page : « Espace Bovann »)
 
 ### Ouvrir le site sur ton téléphone
@@ -69,11 +70,12 @@ Les images de l'accueil sont dans `public/hero/` :
 
 - `afrique-mosaique.svg` : la carte du hero, pays par pays (frontières world-atlas), chaque région remplie d'une photo de commerçant ; les repères (Lomé, capitales) sont dans `src/components/home/africa-points.ts` ;
 - `live/*.jpg` : les lives qui défilent dans le téléphone du hero (tableau `LIVES` de `src/components/home/hero.tsx`) ;
-- `ocd-live-studio.jpg` (fenêtre « Essaie avec ta caméra »), `live-entrepreneure.jpg`, `live-couturier.jpg`, `live-commercante.jpg`, `affiche-lancement.jpg` (section « Lancement »).
+- `ocd-live-studio.jpg` (fenêtre « Essaie avec ta caméra »), `affiche-lancement.jpg` (section « Lancement ») ;
+- `live-entrepreneure.jpg`, `live-couturier.jpg`, `live-commercante.jpg` : photos d'origine, incrustées dans `afrique-mosaique.svg` (gardées pour pouvoir régénérer la carte).
 
-**Crédit photo de la page de réservation** (`public/booking/grand-marche-lome.webp`, en-tête) : « Lomé Grand Market in full swing », [Francisco Anzola](https://commons.wikimedia.org/wiki/File:Lom%C3%A9_Grand_Market_in_full_swing.jpg), licence [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) (recadrée).
+**Crédit photo du Grand Marché** (`public/booking/grand-marche-lome.webp` : bandeau de la réservation et section Packages) : « Lomé Grand Market in full swing », [Francisco Anzola](https://commons.wikimedia.org/wiki/File:Lom%C3%A9_Grand_Market_in_full_swing.jpg), licence [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) (recadrée).
 
-**Crédits photos du hero** (licence Unsplash : usage commercial gratuit, sans obligation de crédit) : [Ahmed Nasiru](https://unsplash.com/@ahmed_nasiru) (photo 2), [Ali Mkumbwa](https://unsplash.com/@mkumbwajr) (photos 3 et 4) ; la photo 1 est le visuel officiel OCD Live.
+**Crédits photos des commerçants** (carte et téléphone du hero ; licence Unsplash : usage commercial gratuit, sans obligation de crédit) : [Ahmed Nasiru](https://unsplash.com/@ahmed_nasiru), [Ali Mkumbwa](https://unsplash.com/@mkumbwajr) ; `ocd-live-studio.jpg` est le visuel officiel OCD Live.
 
 ---
 
