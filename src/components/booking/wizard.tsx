@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowLeft } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -224,8 +225,25 @@ export function BookingWizard({
 
   return (
     <div className="flex min-h-svh flex-col bg-paper">
-      <header className="sticky top-0 z-20 bg-night-900 text-white shadow-lg">
-        <div className="mx-auto flex h-16 w-full max-w-2xl items-center gap-3 px-4">
+      <header className="sticky top-0 z-20 overflow-hidden bg-night-900 text-white shadow-lg">
+        {/* Photo d'un marché africain en fond, assombrie pour garder le texte lisible */}
+        <Image
+          src="/hero/live/marche.jpg"
+          alt=""
+          fill
+          preload
+          sizes="100vw"
+          className="-z-10 object-cover object-[50%_45%]"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 bg-gradient-to-r from-night-950/90 via-night-950/70 to-night-950/80"
+        />
+        <div
+          aria-hidden
+          className="absolute -top-16 left-1/3 -z-10 h-32 w-72 rounded-full bg-live/30 blur-3xl"
+        />
+        <div className="relative mx-auto flex h-16 w-full max-w-2xl items-center gap-3 px-4">
           {step > 1 ? (
             <button
               type="button"
@@ -252,7 +270,7 @@ export function BookingWizard({
           </p>
         </div>
         <div
-          className="h-1 bg-white/10"
+          className="relative h-1 bg-white/10"
           role="progressbar"
           aria-valuemin={1}
           aria-valuemax={STEPS.length}
