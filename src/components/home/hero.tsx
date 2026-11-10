@@ -12,7 +12,8 @@ import { LiveModal } from "./live-modal";
 /**
  * Hero : un présentateur enthousiaste montre son téléphone et nous parle,
  * devant la carte de l'Afrique.
- * - Personne : photo réelle détourée (Pexels 19518397, licence libre), recadrée 1950 × 1350.
+ * - Personne : photo réelle détourée (Pexels 19518397, licence libre), en buste jusqu'à
+ *   l'ourlet du pull (public/hero/presentateur-buste.webp, 1500 × 1731).
  * - Écran : vitre découpée dans la photo ; l'interface de live passe dessous, en perspective.
  * - Carte : continent en points noirs en toile de fond, Togo en orange (public/hero/afrique.svg).
  */
@@ -135,7 +136,7 @@ function PhoneLive({ active, ref }: { active: number; ref: React.Ref<HTMLDivElem
 
 /** Cadre de la carte de l'Afrique (partagé par la carte et le repère du Togo). */
 const MAP_BOX =
-  "pointer-events-none absolute top-[26%] left-1/2 aspect-[600/640] w-[140%] -translate-x-1/2 sm:top-[18%] sm:w-[110%] lg:top-[52%] lg:left-[55%] lg:w-[56%] lg:-translate-y-1/2";
+  "pointer-events-none absolute top-[26%] left-1/2 aspect-[600/640] w-[140%] -translate-x-1/2 sm:top-[18%] sm:w-[110%] lg:top-[52%] lg:left-[calc(50%+80px)] lg:w-[min(56%,806px)] lg:-translate-y-1/2";
 
 /** Point orange sur le Togo (position dans afrique.svg), avec l'étiquette du studio. */
 function TogoPin({ label, className }: { label?: boolean; className?: string }) {
@@ -156,6 +157,9 @@ function TogoPin({ label, className }: { label?: boolean; className?: string }) 
     </span>
   );
 }
+
+/** Haut de la photo d'origine (1500 × 1038) : repère de l'écran, de la bulle, des réactions. */
+const FRAME = "absolute top-0 left-0 aspect-[1500/1038] w-full";
 
 /** La scène : carte, présentateur, téléphone en perspective, bulle de parole. */
 function Stage({ active }: { active: number }) {
@@ -187,76 +191,79 @@ function Stage({ active }: { active: number }) {
   }, []);
 
   return (
-    <div
-      ref={ref}
-      className="absolute top-0 left-[-6%] aspect-[1500/1038] w-[145%] sm:top-[8%] sm:left-0 sm:w-full lg:w-[min(108cqw,88cqh)] lg:-translate-x-[4%]"
-    >
-      {/* L'écran du téléphone, sous la photo : il apparaît par la vitre découpée */}
-      <PhoneLive active={active} ref={screenRef} />
-
+    /*
+     * La personne en buste, jusqu'à l'ourlet du pull (photo réelle 1500 × 1731).
+     * Sur grand écran, elle est posée sur le bas du hero et sa taille suit la hauteur
+     * de la scène (82cqh), plafonnée en largeur (108cqw).
+     * Sur mobile et tablette, elle part du haut de la scène et le bas du hero la coupe.
+     */
+    <div className="absolute top-0 left-[-6%] aspect-[1500/1731] w-[145%] sm:top-[8%] sm:left-0 sm:w-full lg:top-auto lg:bottom-0 lg:w-[min(108cqw,82cqh)] lg:-translate-x-[4%]">
       {/*
-       * Photo prolongée vers le bas (1500 × 2138 : le pull continue sous le cadrage
-       * d'origine 1500 × 1038). Elle dépasse du cadre et descend jusqu'au bas du hero,
-       * qui la coupe net. Sur grand écran, la taille suit la hauteur du hero
-       * (88cqh) : le bas coupe toujours la personne juste sous la taille.
+       * Cadre de référence : le haut de la photo (1500 × 1038), où sont mesurés
+       * les coins de l'écran, la bulle et les réactions.
        */}
-      <div className="absolute top-0 left-0 aspect-[1500/2138] w-full">
-        <Image
-          src="/hero/presentateur.webp"
-          alt="Un entrepreneur montre son téléphone : il est en live sur TikTok avec OCD Live"
-          fill
-          sizes="(min-width: 1024px) 60vw, 145vw"
-          preload
-          className="object-contain object-top"
-        />
+      <div ref={ref} className={FRAME}>
+        {/* L'écran du téléphone, sous la photo : il apparaît par la vitre découpée */}
+        <PhoneLive active={active} ref={screenRef} />
       </div>
 
-      {/* Bulle de parole, reliée à la bouche */}
-      <div className="absolute top-[-6%] left-[28%] w-[40%] max-w-[19rem] sm:top-[18%] sm:left-[67%] sm:w-[31%]">
-        <div className="relative rounded-3xl bg-white px-4 py-3 shadow-[0_18px_40px_-18px_rgba(35,35,38,0.5)] sm:px-5 sm:py-4">
-          <p className="font-display text-[clamp(0.85rem,1.4vw,1.25rem)] leading-tight font-extrabold text-night-950">
-            L&apos;Afrique entière te regarde{" "}
-            <span className="text-live-600">en live sur TikTok&nbsp;!</span>
-          </p>
-          <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold whitespace-nowrap text-muted">
-            <span className="flex size-5 items-center justify-center rounded-full bg-night-950">
-              <TikTokLogo className="size-3" />
+      <Image
+        src="/hero/presentateur-buste.webp"
+        alt="Un entrepreneur montre son téléphone : il est en live sur TikTok avec OCD Live"
+        fill
+        sizes="(min-width: 1024px) 50vw, 145vw"
+        preload
+        className="object-contain object-top"
+      />
+
+      <div className={FRAME}>
+        {/* Bulle de parole, reliée à la bouche */}
+        <div className="absolute top-[-6%] left-[28%] w-[40%] max-w-[19rem] sm:top-[18%] sm:left-[67%] sm:w-[31%]">
+          <div className="relative rounded-3xl bg-white px-4 py-3 shadow-[0_18px_40px_-18px_rgba(35,35,38,0.5)] sm:px-5 sm:py-4">
+            <p className="font-display text-[clamp(0.85rem,1.4vw,1.25rem)] leading-tight font-extrabold text-night-950">
+              L&apos;Afrique entière te regarde{" "}
+              <span className="text-live-600">en live sur TikTok&nbsp;!</span>
+            </p>
+            <span className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold whitespace-nowrap text-muted">
+              <span className="flex size-5 items-center justify-center rounded-full bg-night-950">
+                <TikTokLogo className="size-3" />
+              </span>
+              House of Challenge
             </span>
-            House of Challenge
-          </span>
-          {/* Queue de la bulle, tournée vers la bouche (à droite sur mobile, à gauche ensuite) */}
-          <svg
-            aria-hidden
-            viewBox="0 0 28 20"
-            className="absolute right-6 -bottom-[18px] h-5 w-7 fill-white sm:hidden"
-          >
-            <path d="M0 0 H28 L24 20 Z" />
-          </svg>
-          <svg
-            aria-hidden
-            viewBox="0 0 28 20"
-            className="absolute -bottom-[18px] left-3 hidden h-5 w-7 fill-white sm:block"
-          >
-            <path d="M0 0 H28 L2 20 Z" />
-          </svg>
+            {/* Queue de la bulle, tournée vers la bouche (à droite sur mobile, à gauche ensuite) */}
+            <svg
+              aria-hidden
+              viewBox="0 0 28 20"
+              className="absolute right-6 -bottom-[18px] h-5 w-7 fill-white sm:hidden"
+            >
+              <path d="M0 0 H28 L24 20 Z" />
+            </svg>
+            <svg
+              aria-hidden
+              viewBox="0 0 28 20"
+              className="absolute -bottom-[18px] left-3 hidden h-5 w-7 fill-white sm:block"
+            >
+              <path d="M0 0 H28 L2 20 Z" />
+            </svg>
+          </div>
         </div>
-      </div>
 
-      {/* Réactions qui sortent du téléphone */}
-      <ul
-        aria-hidden
-        className="absolute top-[12%] left-[26%] hidden flex-col items-start gap-2 sm:flex"
-      >
-        {REACTIONS.map((r, i) => (
-          <li
-            key={r}
-            className="reaction rounded-full bg-white px-3 py-1.5 text-[clamp(0.65rem,1vw,0.85rem)] font-semibold whitespace-nowrap text-night-950 shadow-lg"
-            style={{ animationDelay: `${i * 1.3}s` }}
-          >
-            {r}
-          </li>
-        ))}
-      </ul>
+        {/* Réactions qui sortent du téléphone */}
+        <ul
+          aria-hidden
+          className="absolute top-[12%] left-[26%] hidden flex-col items-start gap-2 sm:flex"
+        >
+          {REACTIONS.map((r, i) => (
+            <li
+              key={r}
+              className="reaction rounded-full bg-white px-3 py-1.5 text-[clamp(0.65rem,1vw,0.85rem)] font-semibold whitespace-nowrap text-night-950 shadow-lg"
+              style={{ animationDelay: `${i * 1.3}s` }}
+            >
+              {r}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
