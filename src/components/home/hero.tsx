@@ -132,6 +132,30 @@ function PhoneLive({ active, transform }: { active: number; transform: string })
   );
 }
 
+/** Cadre de la carte de l'Afrique (partagé par la carte et le repère du Togo). */
+const MAP_BOX =
+  "pointer-events-none absolute top-[26%] left-1/2 aspect-[600/640] w-[140%] -translate-x-1/2 sm:top-[18%] sm:w-[110%] lg:top-[52%] lg:left-[55%] lg:w-[56%] lg:-translate-y-1/2";
+
+/** Point orange sur le Togo (position dans afrique.svg), avec l'étiquette du studio. */
+function TogoPin({ label, className }: { label?: boolean; className?: string }) {
+  return (
+    <span
+      className={cn(
+        "absolute top-[41.3%] left-[28.7%] -translate-x-1/2 -translate-y-1/2",
+        className,
+      )}
+    >
+      <span className="absolute inset-0 m-auto size-4 animate-ping rounded-full bg-live/50" />
+      <span className="relative block size-4 rounded-full bg-live ring-4 ring-[#fff7ee]" />
+      {label && (
+        <span className="absolute bottom-6 left-1/2 -translate-x-1/2 rounded-full bg-night-950 px-2.5 py-1 text-[11px] font-bold whitespace-nowrap text-white shadow-md">
+          Studio · Lomé
+        </span>
+      )}
+    </span>
+  );
+}
+
 /** La scène : carte, présentateur, téléphone en perspective, bulle de parole. */
 function Stage({ active }: { active: number }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -153,30 +177,24 @@ function Stage({ active }: { active: number }) {
   return (
     <div
       ref={ref}
-      className="absolute bottom-[2%] left-[-6%] aspect-[1950/1350] w-[145%] sm:left-0 sm:w-full lg:top-[8%] lg:right-[-4%] lg:bottom-auto lg:left-auto lg:w-[106%]"
+      className="absolute top-0 left-[-6%] aspect-[1500/1038] w-[145%] sm:top-[8%] sm:left-0 sm:w-full lg:right-[-4%] lg:left-auto lg:w-[106%]"
     >
       {/* L'écran du téléphone, sous la photo : il apparaît par la vitre découpée */}
       {transform && <PhoneLive active={active} transform={transform} />}
 
-      {/* Les bords bas et droit de la photo d'origine s'effacent en douceur */}
-      <div
-        className="absolute inset-0"
-        style={{
-          maskImage:
-            "linear-gradient(to bottom, black 70%, transparent 97%), linear-gradient(to right, black 88%, transparent 99%)",
-          maskComposite: "intersect",
-          WebkitMaskImage:
-            "linear-gradient(to bottom, black 70%, transparent 97%), linear-gradient(to right, black 88%, transparent 99%)",
-          WebkitMaskComposite: "source-in",
-        }}
-      >
+      {/*
+       * Photo prolongée vers le bas (1500 × 2138 : le pull continue sous le cadrage
+       * d'origine 1500 × 1038). Elle dépasse du cadre et descend jusqu'au bas du hero,
+       * qui la coupe net.
+       */}
+      <div className="absolute top-0 left-0 aspect-[1500/2138] w-full">
         <Image
-          src="/hero/presentateur-live.webp"
+          src="/hero/presentateur-hero.webp"
           alt="Un entrepreneur montre son téléphone : il est en live sur TikTok avec OCD Live"
           fill
           sizes="(min-width: 1024px) 60vw, 145vw"
           preload
-          className="object-contain object-bottom"
+          className="object-contain object-top"
         />
       </div>
 
@@ -243,11 +261,8 @@ export function Hero() {
 
   return (
     <section className="relative isolate flex flex-col overflow-hidden bg-[#fff7ee] text-night-950 lg:min-h-svh">
-      {/* Toute la toile de fond : la carte de l'Afrique en points noirs, Togo en orange */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute top-[26%] left-1/2 -z-10 aspect-[600/640] w-[140%] -translate-x-1/2 sm:top-[18%] sm:w-[110%] lg:top-[52%] lg:left-[55%] lg:h-[96%] lg:w-auto lg:-translate-y-1/2"
-      >
+      {/* Toute la toile de fond : la carte de l'Afrique en points noirs */}
+      <div aria-hidden className={cn(MAP_BOX, "-z-10")}>
         <Image
           src="/hero/afrique.svg"
           alt=""
@@ -256,13 +271,11 @@ export function Hero() {
           preload
           className="object-contain opacity-[0.22]"
         />
-        <span className="absolute top-[41.3%] left-[28.7%] -translate-x-1/2 -translate-y-1/2">
-          <span className="absolute inset-0 m-auto size-4 animate-ping rounded-full bg-live/50" />
-          <span className="relative block size-4 rounded-full bg-live ring-4 ring-[#fff7ee]" />
-          <span className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 rounded-full bg-night-950 px-2.5 py-1 text-[11px] font-bold whitespace-nowrap text-white lg:block">
-            Studio · Lomé
-          </span>
-        </span>
+        <TogoPin className="lg:hidden" />
+      </div>
+      {/* Sur grand écran, le repère du Togo passe devant la photo pour rester lisible */}
+      <div aria-hidden className={cn(MAP_BOX, "z-10 hidden lg:block")}>
+        <TogoPin label />
       </div>
       <header className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
         <Link href="/" aria-label="OCD Live, accueil">
