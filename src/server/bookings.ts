@@ -1,6 +1,5 @@
 import "server-only";
 import { randomInt, randomUUID } from "node:crypto";
-import { headers } from "next/headers";
 import { after } from "next/server";
 import { booking as bookingRules } from "@/config/site";
 import {
@@ -12,10 +11,10 @@ import {
   overlaps,
 } from "@/lib/availability";
 import { bookingInputSchema } from "@/lib/booking-schema";
-import { env } from "@/lib/env";
 import { getPackage, monthlyPackage } from "@/lib/packages";
 import { addMonths, toDate } from "@/lib/time";
 import type { Booking } from "@/lib/types";
+import { appUrl } from "@/server/app-url";
 import { db } from "@/server/db";
 import { sendEmail } from "@/server/notifications";
 import { getNotificationEmails } from "@/server/settings";
@@ -58,14 +57,6 @@ export async function getDayAvailability(dateKey: string) {
     slots: daySlotsByPackage(dateKey, dayBookings, now),
     packRemaining: packRemaining(monthKey, bookings, now),
   };
-}
-
-async function appUrl() {
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  if (!host) return env.NEXT_PUBLIC_APP_URL;
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
 }
 
 function newCode() {

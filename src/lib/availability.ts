@@ -4,7 +4,7 @@
  */
 import { packages, schedule } from "@/config/site";
 import { shortestPackageMinutes } from "@/lib/packages";
-import { addMinutes, dateKeyOf, daysInMonth, toDate } from "@/lib/time";
+import { addMinutes, addMonths, dateKeyOf, daysInMonth, toDate } from "@/lib/time";
 import type { Booking } from "@/lib/types";
 
 export type BusyInterval = { start: number; end: number };
@@ -56,8 +56,14 @@ export function availableStarts(
   return result;
 }
 
+/** Dernier mois ouvert à la réservation (le calendrier en affiche `monthsAhead`). */
+const lastMonth = addMonths(schedule.firstDay.slice(0, 7), schedule.monthsAhead - 1);
+
 export function isBookableDay(dateKey: string, now: number) {
-  if (dateKey < schedule.firstDay) return false;
+  // Une vraie date (pas de « 31 février », qui deviendrait le 3 mars).
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateKey) || dateKeyOf(toDate(dateKey, "12:00")) !== dateKey)
+    return false;
+  if (dateKey < schedule.firstDay || dateKey.slice(0, 7) > lastMonth) return false;
   if (schedule.closedDates.includes(dateKey)) return false;
   return dateKey >= dateKeyOf(new Date(now));
 }

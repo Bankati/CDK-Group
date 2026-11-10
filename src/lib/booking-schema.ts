@@ -33,7 +33,12 @@ export const bookingInputSchema = z
     tiktok: z.string().trim().max(60).optional(),
     country,
     city: z.string().trim().min(2, "Indique ta ville").max(60),
-    photo: z.string().startsWith("data:image/").max(1_400_000, "Photo trop lourde").optional(),
+    // JPEG, PNG ou WebP seulement : jamais de SVG (il peut contenir du code).
+    photo: z
+      .string()
+      .regex(/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/, "Photo invalide")
+      .max(1_400_000, "Photo trop lourde")
+      .optional(),
     clientTimezone: z.string().max(60).optional(),
   })
   .strict();

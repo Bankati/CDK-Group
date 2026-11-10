@@ -14,10 +14,8 @@ export const metadata: Metadata = { title: "Espace Bovann", robots: { index: fal
 
 async function loadDashboard() {
   const now = Date.now();
-  const rows = (await db.list())
-    .map((b) => toAdmin(b, now))
-    .sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   const all = await db.list();
+  const rows = all.map((b) => toAdmin(b, now)).sort((a, b) => a.startsAt.localeCompare(b.startsAt));
   return {
     now,
     rows,

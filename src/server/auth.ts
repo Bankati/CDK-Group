@@ -1,7 +1,7 @@
 import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 import { cookies, headers } from "next/headers";
-import { serverEnv } from "@/server/env";
+import { isDemo, serverEnv, usingDefaultPassword } from "@/server/env";
 
 /** Session de l'Espace Bovann : cookie signé, valable 7 jours. */
 const COOKIE = "ocd_admin";
@@ -19,7 +19,14 @@ function safeEqual(a: string, b: string) {
   return timingSafeEqual(ha, hb);
 }
 
+/**
+ * Le mot de passe par défaut (« bovann2026 », public dans le code) n'ouvre que le MODE DÉMO.
+ * Avec les vraies données (Supabase), il faut définir ADMIN_PASSWORD.
+ */
+export const loginLocked = !isDemo && usingDefaultPassword;
+
 export function checkPassword(password: string) {
+  if (loginLocked) return false;
   return safeEqual(password, serverEnv.ADMIN_PASSWORD);
 }
 

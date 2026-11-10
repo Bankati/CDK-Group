@@ -1,9 +1,9 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { headers } from "next/headers";
 import { z } from "zod";
-import { checkPassword, endSession, isAdmin, startSession } from "@/server/auth";
+import { appUrl } from "@/server/app-url";
+import { checkPassword, endSession, isAdmin, loginLocked, startSession } from "@/server/auth";
 import { cancelBooking, confirmBooking } from "@/server/bookings";
 import { emailsEnabled } from "@/server/env";
 import { sendEmail } from "@/server/notifications";
@@ -11,6 +11,12 @@ import { testEmail } from "@/server/notifications/templates";
 import { getNotificationEmails, setNotificationEmails } from "@/server/settings";
 
 export async function login(_prev: { error?: string } | undefined, form: FormData) {
+  if (loginLocked) {
+    return {
+      error:
+        "Connexion désactivée : définis ADMIN_PASSWORD (mot de passe de l'Espace Bovann) sur le serveur.",
+    };
+  }
   const password = String(form.get("password") ?? "");
   if (!checkPassword(password)) {
     await new Promise((r) => setTimeout(r, 600)); // ralentit les essais au hasard
@@ -66,10 +72,7 @@ export async function saveNotificationEmails(
 export async function sendTestNotification() {
   if (!(await isAdmin())) return { ok: false, message: "Session expirée, reconnecte-toi." };
   const to = await getNotificationEmails();
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  await sendEmail(testEmail(to, `${proto}://${host}`));
+  await sendEmail(testEmail(to, await appUrl()));
   refresh();
   return {
     ok: true,

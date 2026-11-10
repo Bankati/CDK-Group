@@ -4,6 +4,9 @@ import { isAdmin } from "@/server/auth";
 import { db } from "@/server/db";
 import { applyFilters, toAdmin } from "../data";
 
+/** Début de texte qu'Excel exécuterait comme une formule (= + - @ tabulation, retour). */
+const FORMULA = /^[=+\-@\t\r]/;
+
 /** Export CSV compatible Excel (séparateur « ; », accents conservés). */
 export async function GET(req: Request) {
   await connection();
@@ -42,7 +45,9 @@ export async function GET(req: Request) {
     "Créée le",
   ];
   const cell = (v: unknown) => {
-    const s = String(v ?? "");
+    let s = String(v ?? "");
+    // Texte saisi par un client qui commence par = + - @ : Excel l'exécuterait comme une formule.
+    if (typeof v === "string" && FORMULA.test(s)) s = `'${s}`;
     return /[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
   };
   const lines = rows.map((b) => {

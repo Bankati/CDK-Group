@@ -106,6 +106,8 @@ export const supabaseRepository: BookingRepository = {
   },
 
   async get(id) {
+    // Lien abîmé ou inventé : « introuvable » plutôt qu'une erreur de la base.
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return null;
     const { data, error } = await client().from("bookings").select("*").eq("id", id).maybeSingle();
     if (error) throw new Error(`Supabase get: ${error.message}`);
     return data ? toBooking(data as Row) : null;
@@ -133,10 +135,11 @@ export const supabaseRepository: BookingRepository = {
   },
 
   async savePhoto(bookingId, dataUrl) {
-    const match = /^data:(image\/[a-z+]+);base64,(.+)$/.exec(dataUrl);
+    const match = /^data:image\/(jpeg|png|webp);base64,(.+)$/.exec(dataUrl);
     if (!match) throw new Error("Photo invalide");
-    const [, type, b64] = match as unknown as [string, string, string];
-    const path = `${bookingId}.${type.split("/")[1] === "png" ? "png" : "jpg"}`;
+    const [, ext, b64] = match as unknown as [string, string, string];
+    const type = `image/${ext}`;
+    const path = `${bookingId}.${ext === "jpeg" ? "jpg" : ext}`;
     const sb = client();
     const { error } = await sb.storage
       .from(PHOTO_BUCKET)
