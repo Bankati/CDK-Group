@@ -1,4 +1,5 @@
 import { ChevronDown, Mail, MapPin, Phone } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Suspense } from "react";
 import { booking, packages, schedule, site } from "@/config/site";
@@ -105,7 +106,25 @@ export function Packages() {
   );
 
   return (
-    <section id="packages" className="scroll-mt-6 bg-night-900 text-white">
+    <section id="packages" className="relative isolate scroll-mt-6 bg-night-900 text-white">
+      {/*
+       * En haut de la section : le Grand Marché de Lomé (photo Francisco Anzola, CC BY 2.0),
+       * qui se fond dans le fond sombre avant les cartes des packages.
+       */}
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 -z-10 h-[30rem] overflow-hidden sm:h-[34rem]"
+      >
+        <Image
+          src="/booking/grand-marche-lome.webp"
+          alt=""
+          fill
+          sizes="100vw"
+          className="object-cover object-[50%_45%] opacity-60 saturate-[1.1]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-night-900/40 via-night-900/70 to-night-900" />
+        <div className="absolute inset-0 bg-gradient-to-r from-night-900/70 via-transparent to-transparent" />
+      </div>
       <div className="mx-auto w-full max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
         <SectionTitle kicker="Packages" title="Choisis la durée de ton live" light />
         <p className="mt-4 max-w-xl text-white/70">Même prix en présentiel et à distance.</p>
