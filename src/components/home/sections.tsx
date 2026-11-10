@@ -106,7 +106,10 @@ export function Packages() {
   );
 
   return (
-    <section id="packages" className="relative isolate scroll-mt-6 bg-night-900 text-white">
+    <section
+      id="packages"
+      className="relative isolate scroll-mt-6 overflow-x-clip bg-night-900 text-white"
+    >
       {/*
        * En haut de la section : le Grand Marché de Lomé (photo Francisco Anzola, CC BY 2.0),
        * qui se fond dans le fond sombre avant les cartes des packages.
@@ -135,12 +138,34 @@ export function Packages() {
           ))}
         </div>
 
-        <h3 className="mt-16 font-display text-2xl font-bold">Avec Bovann</h3>
-        <p className="mt-1 text-white/70">Bovann présente lui-même ton business à sa communauté.</p>
-        <div data-gsap="cards" className="mt-6 grid gap-6 md:grid-cols-2">
-          {bovann.map((p) => (
-            <PackageCard key={p.id} pkg={p} footer={cta(p.id, true)} />
-          ))}
+        <div className="relative isolate mt-4 pt-12">
+          {/*
+           * Le marché revient derrière « Avec Bovann » (même photo, retournée et cadrée
+           * plus bas pour varier), sur toute la largeur de l'écran, fondue en haut et en bas.
+           */}
+          <div
+            aria-hidden
+            className="absolute top-0 left-1/2 -z-10 h-[26rem] w-screen -translate-x-1/2 overflow-hidden sm:h-[28rem]"
+          >
+            <Image
+              src="/booking/grand-marche-lome.webp"
+              alt=""
+              fill
+              sizes="100vw"
+              className="-scale-x-100 object-cover object-[50%_80%] opacity-55 saturate-[1.1]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-night-900 via-night-900/55 to-night-900" />
+            <div className="absolute inset-0 bg-gradient-to-r from-night-900/75 via-transparent to-night-900/40" />
+          </div>
+          <h3 className="font-display text-2xl font-bold">Avec Bovann</h3>
+          <p className="mt-1 text-white/70">
+            Bovann présente lui-même ton business à sa communauté.
+          </p>
+          <div data-gsap="cards" className="mt-6 grid gap-6 md:grid-cols-2">
+            {bovann.map((p) => (
+              <PackageCard key={p.id} pkg={p} footer={cta(p.id, true)} />
+            ))}
+          </div>
         </div>
 
         {monthlyPackage && (
