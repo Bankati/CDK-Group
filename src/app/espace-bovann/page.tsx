@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { isAdmin } from "@/server/auth";
+import { adminAccess } from "@/server/auth";
 import { audienceMap } from "@/server/audience-map";
 import { db } from "@/server/db";
 import { emailsEnabled, isDemo, usingDefaultPassword } from "@/server/env";
@@ -26,7 +26,9 @@ async function loadDashboard() {
 
 async function Gate() {
   await connection();
-  if (!(await isAdmin())) return <LoginForm demo={usingDefaultPassword} />;
+  const { account, signedIn } = await adminAccess();
+  if (!signedIn)
+    return <LoginForm demo={isDemo && usingDefaultPassword} setup={account === null} />;
   const { now, rows, notificationEmails, map } = await loadDashboard();
   return (
     <Dashboard
@@ -36,6 +38,7 @@ async function Gate() {
       demo={isDemo}
       emailsEnabled={emailsEnabled}
       notificationEmails={notificationEmails}
+      adminEmail={account?.email ?? ""}
       map={map}
     />
   );

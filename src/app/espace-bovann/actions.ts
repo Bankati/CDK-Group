@@ -3,27 +3,132 @@
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { appUrl } from "@/server/app-url";
-import { checkPassword, endSession, isAdmin, loginLocked, startSession } from "@/server/auth";
+import {
+  changeCredentials,
+  createResetCode,
+  endSession,
+  isAdmin,
+  loginLocked,
+  recoverWithKey,
+  resetWithCode,
+  signIn,
+} from "@/server/auth";
 import { cancelBooking, confirmBooking } from "@/server/bookings";
+import { emailsEnabled } from "@/server/env";
 import { sendEmail } from "@/server/notifications";
-import { testEmail } from "@/server/notifications/templates";
+import {
+  adminEmailChangedEmail,
+  adminResetCodeEmail,
+  testEmail,
+} from "@/server/notifications/templates";
+import { passwordProblem } from "@/server/passwords";
 import { getNotificationEmails, setNotificationEmails } from "@/server/settings";
 
-export async function login(_prev: { error?: string } | undefined, form: FormData) {
-  if (loginLocked) {
-    return {
-      error:
-        "Connexion désactivée : définis ADMIN_PASSWORD (mot de passe de l'Espace Bovann) sur le serveur.",
-    };
-  }
-  const password = String(form.get("password") ?? "");
-  if (!checkPassword(password)) {
-    await new Promise((r) => setTimeout(r, 600)); // ralentit les essais au hasard
-    return { error: "Mot de passe incorrect" };
-  }
-  await startSession();
+/** État renvoyé aux formulaires de connexion et de réinitialisation. */
+export type AuthState =
+  { error?: string; info?: string; step?: "code"; email?: string; done?: boolean } | undefined;
+
+const field = (form: FormData, name: string) => String(form.get(name) ?? "");
+const emailOk = (e: string) => z.email().safeParse(e.trim()).success;
+
+const LOCKED: AuthState = {
+  error:
+    "Accès désactivé : définis la clé de secours ADMIN_PASSWORD sur le serveur (voir docs/ETAPE-2.md).",
+};
+
+/** Nouveau mot de passe + confirmation : renvoie l'erreur à afficher, ou null. */
+function checkNewPassword(form: FormData) {
+  const pw = field(form, "password");
+  if (pw !== field(form, "confirm")) return "Les deux mots de passe ne sont pas identiques.";
+  return passwordProblem(pw);
+}
+
+/** Connexion : email + mot de passe. */
+export async function login(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const email = field(form, "email");
+  if (!emailOk(email)) return { error: "Indique ton adresse email.", email };
+  const res = await signIn(email, field(form, "password"));
+  if (!res.ok) return { error: res.error, email };
   refresh();
-  return {};
+  return { done: true };
+}
+
+/** Mot de passe oublié, étape 1 : envoie un code à 6 chiffres à l'adresse du compte. */
+export async function requestResetCode(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const email = field(form, "email").trim();
+  if (!emailOk(email)) return { error: "Indique une adresse email valide.", email };
+  const res = await createResetCode(email);
+  if (res && "wait" in res)
+    return {
+      error: `Un code vient d'être envoyé. Patiente ${res.wait} s avant d'en redemander un.`,
+      step: "code",
+      email,
+    };
+  if (res) {
+    const sent = await sendEmail(adminResetCodeEmail(res.to, res.code, await appUrl()));
+    if (!sent.ok && !sent.demo)
+      return { error: "L'email n'a pas pu partir. Réessaie dans un instant.", email };
+  }
+  return {
+    step: "code",
+    email,
+    info: emailsEnabled
+      ? "Si cette adresse est celle du compte, un code à 6 chiffres vient d'y être envoyé (valable 10 minutes)."
+      : "Mode démo : le code est affiché dans la console du serveur (aucun email n'est envoyé).",
+  };
+}
+
+/** Mot de passe oublié, étape 2 : code reçu + nouveau mot de passe. */
+export async function resetPassword(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const email = field(form, "email").trim();
+  const code = field(form, "code").replace(/\s/g, "");
+  if (!/^\d{6}$/.test(code)) return { error: "Le code fait 6 chiffres.", step: "code", email };
+  const problem = checkNewPassword(form);
+  if (problem) return { error: problem, step: "code", email };
+  const res = await resetWithCode(email, code, field(form, "password"));
+  if (!res.ok) return { error: res.error, step: "code", email };
+  refresh();
+  return { done: true };
+}
+
+/** Email oublié ou première connexion : la clé de secours redéfinit email + mot de passe. */
+export async function recoverAccount(_prev: AuthState, form: FormData): Promise<AuthState> {
+  if (loginLocked) return LOCKED;
+  const email = field(form, "email").trim();
+  if (!emailOk(email)) return { error: "Indique une adresse email valide.", email };
+  const problem = checkNewPassword(form);
+  if (problem) return { error: problem, email };
+  const res = await recoverWithKey(field(form, "key"), email, field(form, "password"));
+  if (!res.ok) return { error: res.error, email };
+  if (res.previousEmail && res.previousEmail !== email.toLowerCase())
+    await sendEmail(adminEmailChangedEmail(res.previousEmail, email.toLowerCase(), await appUrl()));
+  refresh();
+  return { done: true };
+}
+
+/** Réglages : changer l'email et/ou le mot de passe (mot de passe actuel exigé). */
+export async function updateCredentials(_prev: AuthState, form: FormData): Promise<AuthState> {
+  const email = field(form, "email").trim();
+  if (!emailOk(email)) return { error: "Indique une adresse email valide." };
+  const wantsNew = field(form, "password").length > 0;
+  if (wantsNew) {
+    const problem = checkNewPassword(form);
+    if (problem) return { error: problem };
+  }
+  const res = await changeCredentials(
+    field(form, "current"),
+    email,
+    wantsNew ? field(form, "password") : null,
+  );
+  if (!res.ok) return { error: res.error };
+  if (res.previousEmail)
+    await sendEmail(adminEmailChangedEmail(res.previousEmail, email.toLowerCase(), await appUrl()));
+  refresh();
+  return {
+    info: wantsNew
+      ? "Identifiants mis à jour. Les autres appareils connectés ont été déconnectés."
+      : "Adresse de connexion mise à jour.",
+  };
 }
 
 export async function logout() {

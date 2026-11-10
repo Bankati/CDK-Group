@@ -114,6 +114,38 @@ export function testEmail(to: string[], appUrl: string): Email {
   };
 }
 
+/** Code de réinitialisation du mot de passe de l'Espace Bovann (valable 10 minutes). */
+export function adminResetCodeEmail(to: string, code: string, appUrl: string): Email {
+  const text = `Ton code pour réinitialiser le mot de passe de l'Espace Bovann : ${code}. Il est valable 10 minutes. Si tu n'as rien demandé, ignore cet email : ton mot de passe actuel reste valable.`;
+  return {
+    to,
+    subject: `${code} : ton code Espace Bovann`,
+    text,
+    html: layout(
+      "🔐 Réinitialisation du mot de passe",
+      `<p style="font-size:15px;line-height:1.6">Voici ton code pour réinitialiser le mot de passe de l'Espace Bovann :</p>
+<p style="margin:20px 0;font-size:34px;font-weight:bold;letter-spacing:10px;font-family:'Courier New',monospace;color:#232326">${esc(code)}</p>
+<p style="font-size:14px;line-height:1.6;color:#6b665f">Il est valable <strong>10 minutes</strong>. Si tu n'as rien demandé, ignore cet email : ton mot de passe actuel reste valable.</p>`,
+      appUrl,
+    ),
+  };
+}
+
+/** Alerte envoyée à l'ANCIENNE adresse quand l'email administrateur change. */
+export function adminEmailChangedEmail(oldEmail: string, newEmail: string, appUrl: string): Email {
+  const text = `L'adresse de connexion de l'Espace Bovann vient d'être remplacée par ${newEmail}. Si ce n'est pas toi, utilise la clé de secours sur ${appUrl}/espace-bovann pour reprendre le compte.`;
+  return {
+    to: oldEmail,
+    subject: "⚠️ Espace Bovann : adresse de connexion modifiée",
+    text,
+    html: layout(
+      "⚠️ Adresse de connexion modifiée",
+      `<p style="font-size:15px;line-height:1.6">${esc(text)}</p>`,
+      appUrl,
+    ),
+  };
+}
+
 function clientTimeNote(b: Booking) {
   if (b.mode !== "distance" || !b.clientTimezone || b.clientTimezone === "Africa/Lome") return "";
   const start = new Date(b.startsAt);

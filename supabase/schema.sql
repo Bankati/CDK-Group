@@ -95,3 +95,23 @@ create table if not exists public.settings (
   updated_at timestamptz not null default now()
 );
 alter table public.settings enable row level security;
+
+-- ── Compte administrateur de l'Espace Bovann ──────────────────────
+-- Une seule ligne (id = 'main'). Aucune donnée sensible en clair :
+--   password_hash : empreinte scrypt du mot de passe (sel unique)
+--   otp_hash      : empreinte HMAC du code de réinitialisation (10 min)
+-- RLS activé sans politique : seul le serveur (clé secrète) y accède.
+create table if not exists public.admin_account (
+  id               text primary key default 'main' check (id = 'main'),
+  email            text not null,
+  password_hash    text not null,
+  session_version  integer not null default 1,
+  failed_logins    integer not null default 0,
+  locked_until     timestamptz,
+  otp_hash         text,
+  otp_expires_at   timestamptz,
+  otp_attempts     integer not null default 0,
+  otp_sent_at      timestamptz,
+  updated_at       timestamptz not null default now()
+);
+alter table public.admin_account enable row level security;

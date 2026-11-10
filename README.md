@@ -23,8 +23,14 @@ Avec `SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` dans `.env.local`, le site ut
 
 ### Espace Bovann (tableau de bord)
 
-**http://localhost:3000/espace-bovann** · mot de passe : celui de `ADMIN_PASSWORD` (en mode démo seulement : **`bovann2026`** ; avec la vraie base, ce mot de passe par défaut est refusé)
-(lien discret aussi en bas de chaque page : « Espace Bovann »)
+**http://localhost:3000/espace-bovann** · connexion par **email + mot de passe** du compte administrateur.
+
+- **Première connexion** : la page demande la **clé de secours** (variable `ADMIN_PASSWORD` ; en mode démo : **`bovann2026`**, refusée avec la vraie base), puis l'email et le mot de passe du compte.
+- **Mot de passe oublié** : un code à 6 chiffres est envoyé par email (valable 10 min, 5 essais).
+- **Email oublié** : la clé de secours permet de redéfinir l'email et le mot de passe.
+- Changer ses identifiants (Réglages → Compte administrateur) déconnecte les autres appareils ; l'ancienne adresse reçoit une alerte.
+- Rien n'est stocké en clair : mot de passe en empreinte **scrypt** (sel unique), code en empreinte **HMAC**, table `admin_account` fermée au public (RLS). Après 8 erreurs, la connexion est bloquée 15 minutes.
+  (lien discret aussi en bas de chaque page : « Espace Bovann »)
 
 ### Ouvrir le site sur ton téléphone
 

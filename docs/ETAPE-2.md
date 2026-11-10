@@ -36,7 +36,7 @@ RESEND_API_KEY=re_...
 RESEND_FROM=OCD Live <reservations@bovanngroup.com>   # domaine vérifié dans Resend
 NEXT_PUBLIC_APP_URL=https://ton-site.vercel.app      # adresse utilisée dans les liens des emails
 NOTIFICATION_EMAIL=contact@bovanngroup.com   # adresse par défaut ; modifiable ensuite dans Espace Bovann → Réglages
-ADMIN_PASSWORD=un-mot-de-passe-solide     # OBLIGATOIRE avec Supabase : « bovann2026 » est alors refusé
+ADMIN_PASSWORD=une-cle-de-secours-solide # CLÉ DE SECOURS : crée le compte admin (1re connexion) et le récupère si l'email est perdu. OBLIGATOIRE avec Supabase
 ADMIN_SECRET=une-longue-phrase-au-hasard-de-32-caracteres-minimum
 ```
 

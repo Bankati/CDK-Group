@@ -38,6 +38,7 @@ import {
   sendTestNotification,
 } from "./actions";
 import type { AudienceMap } from "@/server/audience-map";
+import { AccountCard } from "./account-card";
 import { Overview, type GoTo } from "./overview";
 import { applyFilters, type AdminBooking, type Filters, type kpis as kpisFn } from "./data";
 
@@ -61,6 +62,7 @@ export function Dashboard({
   demo,
   emailsEnabled,
   notificationEmails,
+  adminEmail,
   map,
 }: {
   bookings: AdminBooking[];
@@ -70,6 +72,8 @@ export function Dashboard({
   emailsEnabled: boolean;
   /** Adresses qui reçoivent les nouvelles réservations. */
   notificationEmails: string[];
+  /** Email de connexion du compte administrateur. */
+  adminEmail: string;
   /** Carte de l'audience, calculée côté serveur. */
   map: AudienceMap;
 }) {
@@ -371,7 +375,12 @@ export function Dashboard({
             {tab === "calendrier" && <CalendarView rows={visible} now={now} />}
             {tab === "stats" && <Stats rows={bookings} />}
             {tab === "reglages" && (
-              <SettingsPanel emails={notificationEmails} emailsEnabled={emailsEnabled} />
+              <>
+                <SettingsPanel emails={notificationEmails} emailsEnabled={emailsEnabled} />
+                <div className="max-w-2xl">
+                  <AccountCard email={adminEmail} />
+                </div>
+              </>
             )}
           </div>
         </main>
