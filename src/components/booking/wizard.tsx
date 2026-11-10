@@ -226,18 +226,18 @@ export function BookingWizard({
   return (
     <div className="flex min-h-svh flex-col bg-paper">
       <header className="sticky top-0 z-20 overflow-hidden bg-night-900 text-white shadow-lg">
-        {/* Photo d'un marché africain en fond, assombrie pour garder le texte lisible */}
+        {/* Le Grand Marché de Lomé en pleine activité (photo Francisco Anzola, CC BY 2.0), assombri pour la lisibilité */}
         <Image
-          src="/hero/live/marche.jpg"
+          src="/booking/grand-marche-lome.webp"
           alt=""
           fill
           preload
           sizes="100vw"
-          className="-z-10 object-cover object-[50%_45%]"
+          className="-z-10 object-cover object-[50%_55%] saturate-[1.15]"
         />
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-gradient-to-r from-night-950/90 via-night-950/70 to-night-950/80"
+          className="absolute inset-0 -z-10 bg-gradient-to-r from-night-950/85 via-night-950/55 to-night-950/75"
         />
         <div
           aria-hidden

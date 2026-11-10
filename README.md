@@ -71,6 +71,8 @@ Les images de l'accueil sont dans `public/hero/` :
 - `live/*.jpg` : les lives qui défilent dans le téléphone du hero (tableau `LIVES` de `src/components/home/hero.tsx`) ;
 - `ocd-live-studio.jpg` (fenêtre « Essaie avec ta caméra »), `live-entrepreneure.jpg`, `live-couturier.jpg`, `live-commercante.jpg`, `affiche-lancement.jpg` (section « Lancement »).
 
+**Crédit photo de la page de réservation** (`public/booking/grand-marche-lome.webp`, en-tête) : « Lomé Grand Market in full swing », [Francisco Anzola](https://commons.wikimedia.org/wiki/File:Lom%C3%A9_Grand_Market_in_full_swing.jpg), licence [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) (recadrée).
+
 **Crédits photos du hero** (licence Unsplash : usage commercial gratuit, sans obligation de crédit) : [Ahmed Nasiru](https://unsplash.com/@ahmed_nasiru) (photo 2), [Ali Mkumbwa](https://unsplash.com/@mkumbwajr) (photos 3 et 4) ; la photo 1 est le visuel officiel OCD Live.
 
 ---
