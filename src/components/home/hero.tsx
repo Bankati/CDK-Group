@@ -149,16 +149,29 @@ function Stage({ active }: { active: number }) {
   return (
     <div
       ref={ref}
-      className="absolute bottom-0 left-[-6%] aspect-[1950/1350] w-[145%] sm:left-0 sm:w-full lg:right-[-4%] lg:left-auto lg:w-[108%]"
+      className="absolute bottom-[2%] left-[-6%] aspect-[1950/1350] w-[145%] sm:left-0 sm:w-full lg:right-[-4%] lg:bottom-[9%] lg:left-auto lg:w-[106%]"
     >
-      <Image
-        src="/hero/live-presentateur.webp"
-        alt="Un entrepreneur montre son téléphone : il est en live sur TikTok avec OCD Live"
-        fill
-        sizes="(min-width: 1024px) 60vw, 145vw"
-        preload
-        className="object-contain object-bottom"
-      />
+      {/* Les bords bas et droit de la photo d'origine s'effacent en douceur */}
+      <div
+        className="absolute inset-0"
+        style={{
+          maskImage:
+            "linear-gradient(to bottom, black 70%, transparent 97%), linear-gradient(to right, black 88%, transparent 99%)",
+          maskComposite: "intersect",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black 70%, transparent 97%), linear-gradient(to right, black 88%, transparent 99%)",
+          WebkitMaskComposite: "source-in",
+        }}
+      >
+        <Image
+          src="/hero/live-presentateur.webp"
+          alt="Un entrepreneur montre son téléphone : il est en live sur TikTok avec OCD Live"
+          fill
+          sizes="(min-width: 1024px) 60vw, 145vw"
+          preload
+          className="object-contain object-bottom"
+        />
+      </div>
       {transform && <PhoneLive active={active} transform={transform} />}
 
       {/* Bulle de parole, reliée à la bouche */}
@@ -224,6 +237,27 @@ export function Hero() {
 
   return (
     <section className="relative isolate flex flex-col overflow-hidden bg-[#fff7ee] text-night-950 lg:min-h-svh">
+      {/* Toute la toile de fond : la carte de l'Afrique en points noirs, Togo en orange */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-[26%] left-1/2 -z-10 aspect-[600/640] w-[140%] -translate-x-1/2 sm:top-[18%] sm:w-[110%] lg:top-[52%] lg:left-[61%] lg:h-[96%] lg:w-auto lg:-translate-y-1/2"
+      >
+        <Image
+          src="/hero/afrique.svg"
+          alt=""
+          fill
+          unoptimized
+          preload
+          className="object-contain opacity-[0.22]"
+        />
+        <span className="absolute top-[41.3%] left-[28.7%] -translate-x-1/2 -translate-y-1/2">
+          <span className="absolute inset-0 m-auto size-4 animate-ping rounded-full bg-live/50" />
+          <span className="relative block size-4 rounded-full bg-live ring-4 ring-[#fff7ee]" />
+          <span className="absolute top-1/2 left-7 hidden -translate-y-1/2 rounded-full bg-night-950 px-2.5 py-1 text-[11px] font-bold whitespace-nowrap text-white lg:block">
+            Studio · Lomé
+          </span>
+        </span>
+      </div>
       <header className="relative z-20 mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
         <Link href="/" aria-label="OCD Live, accueil">
           <OcdLiveLogo tone="dark" className="text-xl sm:text-2xl" />
@@ -328,17 +362,6 @@ export function Hero() {
 
         {/* Scène */}
         <div className="relative -mx-5 mt-14 h-[24rem] sm:mx-0 sm:mt-0 sm:h-[34rem] lg:h-auto lg:min-h-[40rem]">
-          {/* Carte de l'Afrique, derrière */}
-          <div className="absolute top-0 left-1/2 aspect-[600/640] w-[90%] max-w-[40rem] -translate-x-1/2 opacity-90 lg:top-[-4%] lg:left-[55%] lg:w-[85%]">
-            <Image src="/hero/afrique.svg" alt="" fill unoptimized className="object-contain" />
-            <span className="absolute top-[41.4%] left-[29%] -translate-x-1/2 -translate-y-1/2">
-              <span className="absolute inset-0 m-auto size-3 animate-ping rounded-full bg-night-950/40" />
-              <span className="relative block size-3 rounded-full bg-night-950 ring-4 ring-[#fff7ee]" />
-              <span className="absolute top-1/2 right-5 hidden -translate-y-1/2 rounded-full bg-night-950 px-2.5 py-1 text-[11px] font-bold whitespace-nowrap text-white sm:block">
-                Studio · Lomé
-              </span>
-            </span>
-          </div>
           <Stage active={active} />
         </div>
       </div>
