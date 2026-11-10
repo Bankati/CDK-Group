@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchDay, fetchMonth, submitBooking } from "@/app/reserver/actions";
 import { OcdLiveLogo } from "@/components/brand";
 import { booking } from "@/config/site";
@@ -55,7 +55,6 @@ export function BookingWizard({
 }) {
   const router = useRouter();
   const tz = useTimeZone();
-  const topRef = useRef<HTMLDivElement>(null);
   const prefill = initialBusiness ? { businessName: initialBusiness } : {};
 
   const [s, setS] = useState<State>({
@@ -132,7 +131,8 @@ export function BookingWizard({
     setNotice(undefined);
     setFormError(undefined);
     setS((cur) => ({ ...cur, step }));
-    requestAnimationFrame(() => topRef.current?.scrollIntoView({ block: "start" }));
+    // Retour en haut de page : le bandeau affiche le titre de la nouvelle étape.
+    requestAnimationFrame(() => window.scrollTo({ top: 0 }));
   };
 
   const pkg = s.packageId ? getPackage(s.packageId) : undefined;
@@ -225,8 +225,11 @@ export function BookingWizard({
 
   return (
     <div className="flex min-h-svh flex-col bg-paper">
-      <header className="sticky top-0 z-20 overflow-hidden bg-night-900 text-white shadow-lg">
-        {/* Le Grand Marché de Lomé en pleine activité (photo Francisco Anzola, CC BY 2.0), assombri pour la lisibilité */}
+      {/*
+       * Bandeau : le Grand Marché de Lomé en pleine activité (photo Francisco Anzola,
+       * CC BY 2.0), le titre de l'étape et les 4 étapes du parcours.
+       */}
+      <header className="relative isolate overflow-hidden bg-night-900 text-white">
         <Image
           src="/booking/grand-marche-lome.webp"
           alt=""
@@ -237,19 +240,24 @@ export function BookingWizard({
         />
         <div
           aria-hidden
-          className="absolute inset-0 -z-10 bg-gradient-to-r from-night-950/85 via-night-950/55 to-night-950/75"
+          className="absolute inset-0 -z-10 bg-gradient-to-t from-night-950 via-night-950/60 to-night-950/40"
         />
         <div
           aria-hidden
-          className="absolute -top-16 left-1/3 -z-10 h-32 w-72 rounded-full bg-live/30 blur-3xl"
+          className="absolute inset-0 -z-10 bg-gradient-to-r from-night-950/70 via-transparent to-transparent"
         />
-        <div className="relative mx-auto flex h-16 w-full max-w-2xl items-center gap-3 px-4">
+        <div
+          aria-hidden
+          className="absolute -bottom-24 left-1/4 -z-10 h-48 w-96 rounded-full bg-live/25 blur-3xl"
+        />
+
+        <div className="mx-auto flex h-16 w-full max-w-2xl items-center gap-3 px-4">
           {step > 1 ? (
             <button
               type="button"
               onClick={() => goTo(step - 1)}
               aria-label="Étape précédente"
-              className="-ml-2 flex size-11 items-center justify-center rounded-full hover:bg-white/10"
+              className="-ml-2 flex size-11 items-center justify-center rounded-full bg-black/20 backdrop-blur-sm hover:bg-white/15"
             >
               <ArrowLeft className="size-5" />
             </button>
@@ -257,7 +265,7 @@ export function BookingWizard({
             <Link
               href="/"
               aria-label="Retour à l'accueil"
-              className="-ml-2 flex size-11 items-center justify-center rounded-full hover:bg-white/10"
+              className="-ml-2 flex size-11 items-center justify-center rounded-full bg-black/20 backdrop-blur-sm hover:bg-white/15"
             >
               <ArrowLeft className="size-5" />
             </Link>
@@ -265,12 +273,43 @@ export function BookingWizard({
           <Link href="/" aria-label="OCD Live, accueil">
             <OcdLiveLogo className="text-xl" />
           </Link>
-          <p className="ml-auto text-sm text-white/75">
-            Étape <strong className="text-white">{step}</strong>/{STEPS.length} · {STEPS[step - 1]}
+          <p className="ml-auto rounded-full bg-black/25 px-3 py-1 text-sm text-white/80 backdrop-blur-sm">
+            Étape <strong className="text-white">{step}</strong>/{STEPS.length}
           </p>
         </div>
+
+        <div className="mx-auto w-full max-w-2xl px-4 pt-6 pb-7 sm:pt-10 sm:pb-9">
+          <h1 className="font-display text-3xl font-extrabold tracking-tight drop-shadow-sm sm:text-4xl">
+            Réserve ton live
+          </h1>
+          <p className="mt-1.5 text-sm text-white/80 sm:text-base">
+            Sur le TikTok de House of Challenge · tout se confirme sur WhatsApp
+          </p>
+          <ol className="mt-5 flex flex-wrap gap-2" aria-label="Étapes de la réservation">
+            {STEPS.map((label, i) => {
+              const n = i + 1;
+              return (
+                <li
+                  key={label}
+                  aria-current={n === step ? "step" : undefined}
+                  className={cn(
+                    "flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold backdrop-blur-sm",
+                    n === step
+                      ? "bg-live text-night-950"
+                      : n < step
+                        ? "bg-white/20 text-white"
+                        : "bg-black/25 text-white/60",
+                  )}
+                >
+                  <span className="tabular-nums">{n < step ? "✓" : n}</span> {label}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+
         <div
-          className="relative h-1 bg-white/10"
+          className="h-1 bg-white/10"
           role="progressbar"
           aria-valuemin={1}
           aria-valuemax={STEPS.length}
@@ -284,7 +323,7 @@ export function BookingWizard({
         </div>
       </header>
 
-      <div ref={topRef} className="mx-auto w-full max-w-2xl scroll-mt-20 px-4 pt-5 pb-16">
+      <div className="mx-auto w-full max-w-2xl px-4 pt-6 pb-16">
         {summary.length > 0 && step > 1 && (
           <div className="mb-6 flex flex-wrap gap-2">
             {summary.map((t) => (
